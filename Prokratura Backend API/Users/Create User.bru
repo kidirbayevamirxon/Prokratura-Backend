@@ -1,0 +1,32 @@
+meta {
+  name: Create User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "first_name": "Temur",
+    "last_name": "Barlos",
+    "phone": "+998909998877",
+    "login": "rais_temur",
+    "password": "RaisPassword123",
+    "role": "mahalla_raisi",
+    "mahalla_id": 1,
+    "is_active": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Get Users
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/users?page=1&page_size=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  page_size: 10
+  ~name: Temur
+  ~phone: +998909998877
+  ~login: rais_temur
+  ~role: mahalla_raisi
+  ~mahalla_id: 1
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}

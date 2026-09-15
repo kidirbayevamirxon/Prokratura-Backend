@@ -1,0 +1,27 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "first_name": "Sardor",
+    "last_name": "Rahimov",
+    "phone": "+998901234567",
+    "login": "prokuror_admin",
+    "password": "Password123",
+    "role": "prokuror"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

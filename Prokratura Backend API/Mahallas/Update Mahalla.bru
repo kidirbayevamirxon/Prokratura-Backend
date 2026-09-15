@@ -1,0 +1,27 @@
+meta {
+  name: Update Mahalla
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/mahallas/1
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Yangi Oqtepa MFY",
+    "is_active": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prokratura API Docs - O'zbekiston Respublikasi Prokuraturasi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --surface: #0e131f;
+      --surface-card: #131b2e;
+      --surface-card-hover: #18223a;
+      --border: #222f4c;
+      --border-subtle: #172238;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --admin-color: #c084fc;
+      --prokuror-color: #f87171;
+      --rais-color: #fbbf24;
+      --staff-color: #38bdf8;
+
+      --m-get: #0284c7;
+      --m-post: #10b981;
+      --m-patch: #f59e0b;
+
+      --code-bg: #090d16;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 5rem;
+    }
+
+    /* Top Sticky Nav */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+    }
+
+    .nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #ffffff;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-left: 1px solid var(--border);
+      padding-left: 0.75rem;
+      margin-left: 0.25rem;
+    }
+
+    /* Language Switcher */
+    .lang-group {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.35rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .lang-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .lang-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1280px;
+      margin: 2rem auto 0;
+      padding: 0 1.5rem;
+    }
+
+    /* Hero */
+    .hero {
+      margin-bottom: 2rem;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.85rem;
+    }
+
+    .hero h1 {
+      font-size: 2.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.6rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 860px;
+    }
+
+    /* Quick Specs Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.85rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .spec-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.1rem;
+      transition: border-color 0.2s;
+    }
+
+    .spec-card:hover {
+      border-color: var(--border);
+    }
+
+    .spec-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .spec-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Hierarchy Matrix Banner */
+    .matrix-card {
+      background: linear-gradient(180deg, rgba(19, 27, 46, 0.7) 0%, rgba(14, 19, 31, 0.9) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .matrix-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .role-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .rbadge {
+      font-size: 0.82rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+      background: rgba(9, 13, 22, 0.8);
+      font-weight: 600;
+    }
+
+    .rbadge.admin { border-color: rgba(192, 132, 252, 0.4); color: var(--admin-color); }
+    .rbadge.prokuror { border-color: rgba(248, 113, 113, 0.4); color: var(--prokuror-color); }
+    .rbadge.rais { border-color: rgba(251, 191, 36, 0.4); color: var(--rais-color); }
+    .rbadge.members { border-color: rgba(56, 189, 248, 0.3); color: var(--text-muted); }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .cat-buttons {
+      display: flex;
+      gap: 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .cat-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.45rem 0.95rem;
+      border-radius: 4px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .cat-btn.active {
+      background: var(--surface-card);
+      color: #ffffff;
+      border: 1px solid var(--border);
+    }
+
+    .cat-btn:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .search-field {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      width: 300px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    .search-field:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    /* Endpoint Card */
+    .ep-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .ep-card:hover {
+      border-color: #2d3e63;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .ep-head {
+      padding: 1.1rem 1.4rem;
+      background: #111827;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .ep-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .m-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 0.78rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    .m-pill.get { background: var(--m-get); }
+    .m-pill.post { background: var(--m-post); }
+    .m-pill.patch { background: var(--m-patch); }
+
+    .ep-uri {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #ffffff;
+    }
+
+    .ep-role-badge {
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      letter-spacing: 0.03em;
+      border: 1px solid;
+    }
+
+    .role-b-admin { background: rgba(192, 132, 252, 0.12); color: var(--admin-color); border-color: rgba(192, 132, 252, 0.3); }
+    .role-b-prokuror { background: rgba(248, 113, 113, 0.12); color: var(--prokuror-color); border-color: rgba(248, 113, 113, 0.3); }
+    .role-b-rais { background: rgba(251, 191, 36, 0.12); color: var(--rais-color); border-color: rgba(251, 191, 36, 0.3); }
+    .role-b-staff { background: rgba(56, 189, 248, 0.12); color: var(--accent); border-color: rgba(56, 189, 248, 0.3); }
+    .role-b-public { background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+
+    .ep-main {
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    /* Info Sections */
+    .section-box {
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.15rem;
+      font-size: 0.88rem;
+      border-left: 3px solid;
+    }
+
+    .section-box.why {
+      background: rgba(56, 189, 248, 0.06);
+      border-left-color: var(--accent);
+    }
+
+    .section-box.fields {
+      background: rgba(192, 132, 252, 0.06);
+      border-left-color: var(--admin-color);
+    }
+
+    .section-box.edge {
+      background: rgba(251, 191, 36, 0.06);
+      border-left-color: var(--rais-color);
+    }
+
+    .s-head {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .section-box.why .s-head { color: var(--accent); }
+    .section-box.fields .s-head { color: var(--admin-color); }
+    .section-box.edge .s-head { color: var(--rais-color); }
+
+    .section-box p, .section-box ul {
+      color: #cbd5e1;
+    }
+
+    .section-box ul {
+      margin-left: 1.25rem;
+      margin-top: 0.35rem;
+    }
+
+    .section-box ul li {
+      margin-bottom: 0.3rem;
+    }
+
+    .f-key {
+      font-family: 'JetBrains Mono', monospace;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Code Split Grid */
+    .code-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.25rem;
+    }
+
+    @media (max-width: 850px) {
+      .code-grid { grid-template-columns: 1fr; }
+    }
+
+    .code-block-head {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .code-block-head span.model-name {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      text-transform: none;
+      font-weight: 600;
+    }
+
+    .code-container {
+      position: relative;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.95rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.81rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* Bruno Footer Bar */
+    .bruno-badge-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #090d16;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      font-size: 0.84rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .bruno-badge-bar code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .auth-pill {
+      font-size: 0.76rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      background: var(--surface);
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Nav -->
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <a href="#" class="brand">
+        <div class="brand-icon">⚖️</div>
+        <div>
+          <span class="brand-text">Prokratura API</span>
+          <span class="brand-sub">Uzbekistan</span>
+        </div>
+      </a>
+
+      <!-- 3-Language Selector -->
+      <div class="lang-group">
+        <button class="lang-btn active" onclick="switchLanguage('uz')" id="lbtn-uz">O'zbekcha</button>
+        <button class="lang-btn" onclick="switchLanguage('en')" id="lbtn-en">English</button>
+        <button class="lang-btn" onclick="switchLanguage('ru')" id="lbtn-ru">Русский</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-tag" id="txt-hero-tag">🇺🇿 O'zbekiston Respublikasi Prokuraturasi</div>
+      <h1 id="txt-hero-h1">Backend API & Bruno So'rovlar Ma'lumotnomasi</h1>
+      <p id="txt-hero-p">Frontend dasturchilar uchun mukammal texnik qo'llanma. Har bir so'rovning zarurati, talab qilinadigan maydonlar, maxsus holatlar (edge cases) va Bruno fayllari to'liq keltirilgan.</p>
+
+      <!-- Quick Specs -->
+      <div class="specs-grid">
+        <div class="spec-card">
+          <div class="spec-label" id="lbl-api">API Server Manzili</div>
+          <div class="spec-val">http://localhost:8000/api</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label" id="lbl-docker">Docker Port</div>
+          <div class="spec-val">5439:5432 (Postgres 17)</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label" id="lbl-swagger">Interaktiv Hujjatlar</div>
+          <div class="spec-val">/api/docs (Swagger UI)</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label" id="lbl-bruno">Bruno To'plami</div>
+          <div class="spec-val">/Prokratura Backend API</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hierarchy Banner -->
+    <div class="matrix-card">
+      <div class="matrix-title" id="txt-matrix-title">🏛️ Tizim Ierarxiyasi va Huquqlar Matritsasi</div>
+      <div class="role-badges">
+        <span class="rbadge admin" id="badge-info-admin">ADMIN: Mahallalar va Prokurorni qo'shadi (To'liq nazorat)</span>
+        <span class="rbadge prokuror" id="badge-info-prokuror">PROKUROR: Yagona tuman rahbari; Mahallaning 7 nafar xodimini tayinlaydi; Mahallani o'zi o'chira/yarata olmaydi</span>
+        <span class="rbadge rais" id="badge-info-rais">MAHALLA_RAISI: Mahalla rahbari; faqat o'z mahallasidagi xodimlarni ko'ra oladi; ularni o'zgartira olmaydi</span>
+        <span class="rbadge members" id="badge-info-members">QOLGAN 6 XODIM: Faqat o'z profilini ko'radi; boshqa xodimlarni ko'ra olmaydi</span>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="cat-buttons">
+        <button class="cat-btn active" onclick="setCategory('all')" id="cbtn-all">Barchasi (12)</button>
+        <button class="cat-btn" onclick="setCategory('auth')" id="cbtn-auth">Auth (4)</button>
+        <button class="cat-btn" onclick="setCategory('mahallas')" id="cbtn-mahallas">Mahalla (4)</button>
+        <button class="cat-btn" onclick="setCategory('users')" id="cbtn-users">Xodimlar (4)</button>
+      </div>
+      <input type="text" id="filterQuery" class="search-field" placeholder="So'rov yoki maydonni qidiring..." onkeyup="onSearch()">
+    </div>
+
+    <!-- Dynamic Endpoint Cards Container -->
+    <div id="endpointsList"></div>
+
+  </div>
+
+  <script>
+    // Master Endpoints Data with genuine multilingual content
+    const endpointsData = [
+      {
+        id: "auth-register",
+        cat: "auth",
+        method: "post",
+        path: "/auth/register",
+        role: "admin",
+        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
+        why: {
+          uz: "Faqat Administrator tomonidan Prokuror yoki tizim mas'ullarini ro'yxatdan o'tkazish uchun ishlatiladi. Xavfsizlik nuqtai nazaridan ommaviy ro'yxatdan o'tish butunlay o'chirilgan.",
+          en: "Used exclusively by the System Administrator to register Prokuror and staff accounts. Public self-registration is strictly disabled for security.",
+          ru: "Используется исключительно Администратором для регистрации Прокурора и сотрудников. Публичная регистрация отключена в целях безопасности."
+        },
+        fields: {
+          uz: [
+            "first_name, last_name: Yuridik audit va qonuniy javobgarlik uchun to'liq ism-sharif.",
+            "phone: O'zbekiston bo'yicha yagona telefon raqami. Telegram bot, SMS va xabarnomalar uchun asosiy bog'lanish nuqtasi.",
+            "login: Tizimga tezkor kirish uchun ixtiyoriy takrorlanmas login.",
+            "password: Xavfsiz bcrypt shifrlangan parol.",
+            "role: Foydalanuvchi darajasi (admin, prokuror)."
+          ],
+          en: [
+            "first_name, last_name: Legal officer identification for official audit logs.",
+            "phone: Primary unique contact in Uzbekistan for notifications, OTP, and Telegram bot integration.",
+            "login: Optional unique username for quick desktop login.",
+            "password: Secure bcrypt salted hash.",
+            "role: User permission tier (admin, prokuror)."
+          ],
+          ru: [
+            "first_name, last_name: Имя и фамилия сотрудника для официального аудита.",
+            "phone: Уникальный номер телефона в Узбекистане для связи, SMS и Telegram-бота.",
+            "login: Уникальный логин для быстрого входа.",
+            "password: Хэшированный пароль по алгоритму bcrypt.",
+            "role: Уровень прав (admin, prokuror)."
+          ]
+        },
+        edge: {
+          uz: [
+            "Telefon yoki login bazada avval mavjud bo'lsa: 409 Conflict qaytadi.",
+            "Admin bo'lmagan foydalanuvchi so'rov yuborsa: 403 Forbidden qaytadi."
+          ],
+          en: [
+            "Duplicate phone or login: returns 409 Conflict.",
+            "Non-admin caller: returns 403 Forbidden."
+          ],
+          ru: [
+            "Дубликат телефона или логина: возвращает 409 Conflict.",
+            "Запрос не от имени Админа: возвращает 403 Forbidden."
+          ]
+        },
+        payloadModel: "RegisterSchema",
+        payloadJson: JSON.stringify({
+          first_name: "Sardor",
+          last_name: "Rahimov",
+          phone: "+998901234567",
+          login: "prokuror_admin",
+          password: "Password123",
+          role: "prokuror"
+        }, null, 2),
+        responseModel: "TokenRes",
+        responseJson: JSON.stringify({
+          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          role: "prokuror",
+          user_id: 1,
+          mahalla_id: null
+        }, null, 2),
+        bruno: "Auth/Register.bru",
+        authHeader: "Admin Bearer"
+      },
+      {
+        id: "auth-login",
+        cat: "auth",
+        method: "post",
+        path: "/auth/login",
+        role: "public",
+        roleLabel: { uz: "Ommaviy", en: "Public", ru: "Публичный" },
+        why: {
+          uz: "Tizimdagi barcha faol xodimlar (Admin, Prokuror, Rais, 6 xodim) uchun autentifikatsiya qilish va JWT tokenlarini olish so'rovi.",
+          en: "Authenticates any active user (Admin, Prokuror, Rais, or Mahalla staff) and issues JWT access and refresh tokens.",
+          ru: "Аутентификация для любого активного пользователя (Админ, Прокурор, Раис, сотрудники) с выдачей JWT токенов."
+        },
+        fields: {
+          uz: [
+            "login: Universal identifikator. Login yoki telefon raqami (+998901234567) kiritilishi mumkin.",
+            "password: Foydalanuvchi paroli (bcrypt orqali tekshiriladi)."
+          ],
+          en: [
+            "login: Dual-purpose identifier. Can be username (prokuror_admin) or phone (+998901234567).",
+            "password: User password checked against stored bcrypt hash."
+          ],
+          ru: [
+            "login: Универсальный идентификатор: имя пользователя или номер телефона (+998901234567).",
+            "password: Пароль пользователя для проверки с хэшем bcrypt."
+          ]
+        },
+        edge: {
+          uz: [
+            "Foydalanuvchi nofaol bo'lsa (is_active=false): 401 Unauthorized qaytadi.",
+            "Noto'g'ri parol yoki mavjud bo'lmagan foydalanuvchi: foydalanuvchi qidiruv hujumlariga yo'l qo'ymaslik uchun yagona 'Invalid login or password' (401) qaytadi."
+          ],
+          en: [
+            "Deactivated user (is_active=false): rejected with 401 Unauthorized.",
+            "Wrong password or user not found: returns uniform 401 Invalid login or password (prevents username enumeration)."
+          ],
+          ru: [
+            "Отключенный пользователь (is_active=false): отказ 401 Unauthorized.",
+            "Неверный пароль или логин: возвращает единую ошибку 401 Invalid login or password для защиты от перебора."
+          ]
+        },
+        payloadModel: "LoginSchema",
+        payloadJson: JSON.stringify({
+          login: "prokuror_admin",
+          password: "Password123"
+        }, null, 2),
+        responseModel: "TokenRes",
+        responseJson: JSON.stringify({
+          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          role: "prokuror",
+          user_id: 1,
+          mahalla_id: null
+        }, null, 2),
+        bruno: "Auth/Login.bru",
+        authHeader: "None"
+      },
+      {
+        id: "auth-refresh",
+        cat: "auth",
+        method: "post",
+        path: "/auth/refresh",
+        role: "public",
+        roleLabel: { uz: "Ommaviy", en: "Public", ru: "Публичный" },
+        why: {
+          uz: "Muddati 1 kunlik bo'lgan access tokenni foydalanuvchini parolini qayta so'ramasdan 7 kunlik refresh token orqali yangilash.",
+          en: "Rotates and issues a new access token without re-entering credentials when the 1-day access token expires.",
+          ru: "Обновление access токена без повторного ввода логина и пароля с помощью refresh токена."
+        },
+        fields: {
+          uz: ["refresh_token: 7 kunlik yaroqli imzolangan JWT refresh tokeni."],
+          en: ["refresh_token: Valid signed 7-day JWT containing the user ID subject."],
+          ru: ["refresh_token: Действующий 7-дневный подписанный JWT токен."]
+        },
+        edge: {
+          uz: ["Muddati o'tgan yoki soxtalashtirilgan token: 401 Unauthorized."],
+          en: ["Expired or tampered token: returns 401 Unauthorized."],
+          ru: ["Истекший или поврежденный токен: 401 Unauthorized."]
+        },
+        payloadModel: "RefreshRequest",
+        payloadJson: JSON.stringify({
+          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }, null, 2),
+        responseModel: "RefreshResponse",
+        responseJson: JSON.stringify({
+          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }, null, 2),
+        bruno: "Auth/Refresh Token.bru",
+        authHeader: "None"
+      },
+      {
+        id: "auth-me",
+        cat: "auth",
+        method: "get",
+        path: "/auth/me",
+        role: "staff",
+        roleLabel: { uz: "Barcha Xodimlar", en: "All Staff", ru: "Все сотрудники" },
+        why: {
+          uz: "Frontend sahifa yuklanganda joriy foydalanuvchining kimligi, uning roli va qaysi mahallaga tegishli ekanligini aniqlab, mos interfeysni chizish uchun chaqiriladi.",
+          en: "Called by frontend upon page load to verify session identity, current user role, and assigned Mahalla ID.",
+          ru: "Вызывается фронтендом при загрузке страницы для проверки сессии, роли пользователя и ID привязанной махалли."
+        },
+        fields: {
+          uz: ["Javobda: id, first_name, last_name, phone, login, role, mahalla_id, is_active qaytadi."],
+          en: ["Returns: id, first_name, last_name, phone, login, role, mahalla_id, is_active."],
+          ru: ["Возвращает: id, first_name, last_name, phone, login, role, mahalla_id, is_active."]
+        },
+        edge: {
+          uz: ["Foydalanuvchi faol bo'lmasa yoki token bekor qilingan bo'lsa: 401/403 xatolik."],
+          en: ["If user was deactivated while token is still active: blocked with 403 Forbidden."],
+          ru: ["Если пользователь деактивирован во время активного токена: блокировка 403 Forbidden."]
+        },
+        payloadModel: "None",
+        payloadJson: "// GET so'rovi - body talab etilmaydi\n// Headers:\nAuthorization: Bearer {{token}}",
+        responseModel: "MeResponseSchema",
+        responseJson: JSON.stringify({
+          id: 1,
+          first_name: "Sardor",
+          last_name: "Rahimov",
+          phone: "+998901234567",
+          login: "prokuror_admin",
+          role: "prokuror",
+          mahalla_id: null,
+          is_active: true
+        }, null, 2),
+        bruno: "Auth/Get Me.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "mahallas-create",
+        cat: "mahallas",
+        method: "post",
+        path: "/mahallas",
+        role: "admin",
+        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
+        why: {
+          uz: "Faqat Administrator yangi mahallani tizimga qo'sha oladi. Prokuror mahallalarni yarata yoki o'chira OLMAYDI.",
+          en: "Allows Administrator to register new Mahallas. Prokuror CANNOT create or delete Mahallas.",
+          ru: "Позволяет только Администратору регистрировать махалли. Прокурор НЕ может создавать или удалять махалли."
+        },
+        fields: {
+          uz: ["name: Mahallaning rasmiy nomi (masalan, 'Oqtepa MFY'). Region, district va kodlar talabga binoan olib tashlangan."],
+          en: ["name: Official Mahalla title (e.g. 'Oqtepa MFY'). Region, district, and codes omitted per requirements."],
+          ru: ["name: Официальное название махалли (например, 'Октепа МФЙ'). Регион, район и коды исключены."]
+        },
+        edge: {
+          uz: [
+            "Prokuror yoki Rais chaqirsa: 403 Forbidden qaytadi.",
+            "Bir xil nomli mahalla mavjud bo'lsa: 409 Conflict qaytadi."
+          ],
+          en: [
+            "Prokuror or Rais caller: returns 403 Forbidden.",
+            "Duplicate Mahalla name: returns 409 Conflict."
+          ],
+          ru: [
+            "Вызов от Прокурора или Раиса: 403 Forbidden.",
+            "Дубликат названия махалли: 409 Conflict."
+          ]
+        },
+        payloadModel: "MahallaCreateSchema",
+        payloadJson: JSON.stringify({
+          name: "Oqtepa MFY"
+        }, null, 2),
+        responseModel: "MahallaDetailSchema",
+        responseJson: JSON.stringify({
+          id: 1,
+          name: "Oqtepa MFY",
+          is_active: true,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:00:00",
+          members: []
+        }, null, 2),
+        bruno: "Mahallas/Create Mahalla.bru",
+        authHeader: "Admin Bearer"
+      },
+      {
+        id: "mahallas-list",
+        cat: "mahallas",
+        method: "get",
+        path: "/mahallas",
+        role: "rais",
+        roleLabel: { uz: "Admin, Prokuror, Rais", en: "Admin, Prokuror, Rais", ru: "Админ, Прокурор, Раис" },
+        why: {
+          uz: "Prokuror va Admin barcha mahallalarni ko'rish va qidirish uchun. Mahalla Raisi esa faqat o'z mahallasini ko'ra oladi.",
+          en: "Enables Prokuror and Admin to list and search all Mahallas. Mahalla Raisi can only view his own Mahalla.",
+          ru: "Позволяет Прокурору и Админу просматривать и искать махалли. Раис видит только свою махаллю."
+        },
+        fields: {
+          uz: [
+            "page, page_size: Sahifalash parametrlari.",
+            "search: Mahalla nomi bo'yicha qidiruv."
+          ],
+          en: [
+            "page, page_size: Pagination controls.",
+            "search: Substring search by Mahalla name."
+          ],
+          ru: [
+            "page, page_size: Параметры пагинации.",
+            "search: Поиск по названию махалли."
+          ]
+        },
+        edge: {
+          uz: [
+            "Mahallaning qolgan 6 xodimi chaqirsa: 403 Forbidden (ular mahallalar ro'yxatini ko'ra olmaydi).",
+            "Rais chaqirsa: avtomatik ravishda faqat uning mahalla_id sidagi ma'lumot qaytadi."
+          ],
+          en: [
+            "Other 6 Mahalla members: blocked with 403 Forbidden.",
+            "Rais: automatically scoped to only their own mahalla_id."
+          ],
+          ru: [
+            "Остальные 6 сотрудников: блокировка 403 Forbidden.",
+            "Раис: автоматически получает только свою махаллю."
+          ]
+        },
+        payloadModel: "None (Query Params)",
+        payloadJson: "// GET so'rovi URL parametrlari:\n?page=1&page_size=10&search=Oqtepa",
+        responseModel: "PaginatedMahallaSchema",
+        responseJson: JSON.stringify({
+          items: [
+            {
+              id: 1,
+              name: "Oqtepa MFY",
+              is_active: true,
+              members: [
+                {
+                  id: 2,
+                  first_name: "Temur",
+                  last_name: "Barlos",
+                  phone: "+998909998877",
+                  login: "rais_oqtepa",
+                  role: "mahalla_raisi",
+                  is_active: true
+                }
+              ]
+            }
+          ],
+          total: 1,
+          page: 1,
+          page_size: 10
+        }, null, 2),
+        bruno: "Mahallas/Get Mahallas.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "mahallas-get-one",
+        cat: "mahallas",
+        method: "get",
+        path: "/mahallas/{mahalla_id}",
+        role: "rais",
+        roleLabel: { uz: "Admin, Prokuror, O'z Raisi", en: "Admin, Prokuror, Own Rais", ru: "Админ, Прокурор, Свой Раис" },
+        why: {
+          uz: "Alohida mahallani va unga tayinlangan 7 nafar xodimni ko'rish. Rais faqat o'z mahallasini ko'radi, boshqa mahallani ko'ra olmaydi.",
+          en: "Inspect details of a single Mahalla and its 7 appointed officials. Rais can only view their own Mahalla.",
+          ru: "Просмотр деталей отдельной махалли и её 7 сотрудников. Раис может видеть только свою махаллю."
+        },
+        fields: {
+          uz: ["mahalla_id: Mahalla unikal ID raqami."],
+          en: ["mahalla_id: Unique integer primary key."],
+          ru: ["mahalla_id: Уникальный ID махалли."]
+        },
+        edge: {
+          uz: [
+            "Rais boshqa mahallaning ID raqamini ko'rmoqchi bo'lsa: 403 Forbidden qaytadi.",
+            "Qolgan 6 xodim chaqirsa: 403 Forbidden qaytadi."
+          ],
+          en: [
+            "Rais calling another Mahalla ID: returns 403 Forbidden.",
+            "Other 6 members calling: returns 403 Forbidden."
+          ],
+          ru: [
+            "Раис пытается открыть чужую махаллю: 403 Forbidden.",
+            "Остальные 6 сотрудников: 403 Forbidden."
+          ]
+        },
+        payloadModel: "None",
+        payloadJson: "// GET /mahallas/1",
+        responseModel: "MahallaDetailSchema",
+        responseJson: JSON.stringify({
+          id: 1,
+          name: "Oqtepa MFY",
+          is_active: true,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:00:00",
+          members: [
+            {
+              id: 2,
+              first_name: "Temur",
+              last_name: "Barlos",
+              phone: "+998909998877",
+              login: "rais_oqtepa",
+              role: "mahalla_raisi",
+              is_active: true
+            }
+          ]
+        }, null, 2),
+        bruno: "Mahallas/Get Mahalla by ID.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "mahallas-patch",
+        cat: "mahallas",
+        method: "patch",
+        path: "/mahallas/{mahalla_id}",
+        role: "admin",
+        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
+        why: {
+          uz: "Mahalla nomini o'zgartirish yoki mahallani nofaol qilish (is_active: false). O'chirish (DELETE) o'rniga is_active ishlatiladi.",
+          en: "Updates Mahalla name or soft-deactivates it (is_active: false). DELETE endpoints are replaced with is_active.",
+          ru: "Обновление названия махалли или мягкое отключение (is_active: false). Вместо DELETE используется is_active."
+        },
+        fields: {
+          uz: [
+            "name: Ixtiyoriy yangi nom.",
+            "is_active: Mahallaning faollik holati (false = nofaol)."
+          ],
+          en: [
+            "name: Optional renamed title.",
+            "is_active: Boolean toggle for soft deactivation."
+          ],
+          ru: [
+            "name: Новое название (опционально).",
+            "is_active: Статус активности (false = отключена)."
+          ]
+        },
+        edge: {
+          uz: [
+            "DELETE metodi umuman mavjud emas (405 qaytadi).",
+            "Prokuror chaqirsa: 403 Forbidden (Prokuror mahallani o'zgartira olmaydi)."
+          ],
+          en: [
+            "DELETE method does not exist (returns 405 Method Not Allowed).",
+            "Prokuror caller: 403 Forbidden."
+          ],
+          ru: [
+            "Метод DELETE отсутствует (возвращает 405).",
+            "Вызов от Прокурора: 403 Forbidden."
+          ]
+        },
+        payloadModel: "MahallaUpdateSchema",
+        payloadJson: JSON.stringify({
+          name: "Yangi Oqtepa MFY",
+          is_active: false
+        }, null, 2),
+        responseModel: "MahallaDetailSchema",
+        responseJson: JSON.stringify({
+          id: 1,
+          name: "Yangi Oqtepa MFY",
+          is_active: false,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:05:00",
+          members: []
+        }, null, 2),
+        bruno: "Mahallas/Update Mahalla.bru",
+        authHeader: "Admin Bearer"
+      },
+      {
+        id: "users-create",
+        cat: "users",
+        method: "post",
+        path: "/users",
+        role: "prokuror",
+        roleLabel: { uz: "Admin yoki Prokuror", en: "Admin or Prokuror", ru: "Админ или Прокурор" },
+        why: {
+          uz: "Yagona xodim yaratish va mahallaga biriktirish so'rovi. Prokuror mahallaning 7 nafar xodimini tayinlash uchun faqat shu so'rovdan foydalanadi.",
+          en: "The unified endpoint for creating users and assigning them to Mahallas. Prokuror uses this to add the 7 Mahalla officials.",
+          ru: "Единый запрос создания пользователей и привязки к махаллям. Прокурор использует его для назначения 7 сотрудников."
+        },
+        fields: {
+          uz: [
+            "first_name, last_name, phone: Majburiy shaxsiy va aloqa ma'lumotlari.",
+            "role: Tayinlanayotgan lavozim.",
+            "mahalla_id: MAJBURIY agar lavozim 7 xodimdan biri bo'lsa! TAQIQLANGAN agar lavozim Prokuror yoki Admin bo'lsa.",
+            "password: Ixtiyoriy (kelgusida E-IMZO USB kalit yoki MyID bilan kiradigan xodimlar uchun bo'sh qoldirilishi mumkin)."
+          ],
+          en: [
+            "first_name, last_name, phone: Required contact and identity info.",
+            "role: Assigned role.",
+            "mahalla_id: MANDATORY if role is one of the 7 Mahalla roles! FORBIDDEN if role is Prokuror or Admin.",
+            "password: Optional for future E-IMZO USB key or MyID accounts."
+          ],
+          ru: [
+            "first_name, last_name, phone: Обязательные персональные данные.",
+            "role: Назначаемая должность.",
+            "mahalla_id: ОБЯЗАТЕЛЬНО если роль из 7 сотрудников махалли! ЗАПРЕЩЕНО для Прокурора и Админа.",
+            "password: Опционально для будущей авторизации через ЭЦП / MyID."
+          ]
+        },
+        edge: {
+          uz: [
+            "Yagona Prokuror qoidasi: Agar tizimda faol Prokuror mavjud bo'lsa, ikkinchi prokurorni yaratish 409 Conflict qaytaradi.",
+            "Prokuror cheklovi: Prokuror Admin yoki boshqa Prokurorni yarata OLMAYDI (403).",
+            "1 Lavozim - 1 Xodim qoidasi: Agar mahallada faol Rais bo'lsa va yangi Rais tayinlansa, avvalgi Rais avtomatik mahalladan chiqariladi (mahalla_id=null, is_active=false)."
+          ],
+          en: [
+            "Single Prokuror rule: only 1 active Prokuror can exist (attempting second returns 409 Conflict).",
+            "Prokuror limit: Prokuror cannot create an Admin or another Prokuror (403 Forbidden).",
+            "1 Official Per Role Per Mahalla: if a Mahalla already has a Rais, adding a new Rais automatically displaces the previous Rais."
+          ],
+          ru: [
+            "Правило одного Прокурора: в системе может быть только 1 активный Прокурор (второй вернет 409 Conflict).",
+            "Ограничение Прокурора: Прокурор не может создавать Админа или Прокурора (403).",
+            "1 роль на 1 человека в махалле: назначение нового Раиса автоматически смещает предыдущего."
+          ]
+        },
+        payloadModel: "UserCreateSchema",
+        payloadJson: JSON.stringify({
+          first_name: "Temur",
+          last_name: "Barlos",
+          phone: "+998909998877",
+          login: "rais_temur",
+          password: "RaisPassword123",
+          role: "mahalla_raisi",
+          mahalla_id: 1,
+          is_active: true
+        }, null, 2),
+        responseModel: "UserResponseSchema",
+        responseJson: JSON.stringify({
+          id: 2,
+          first_name: "Temur",
+          last_name: "Barlos",
+          phone: "+998909998877",
+          login: "rais_temur",
+          role: "mahalla_raisi",
+          mahalla_id: 1,
+          is_active: true,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:00:00"
+        }, null, 2),
+        bruno: "Users/Create User.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "users-list",
+        cat: "users",
+        method: "get",
+        path: "/users",
+        role: "rais",
+        roleLabel: { uz: "Admin, Prokuror, Rais", en: "Admin, Prokuror, Rais", ru: "Админ, Прокурор, Раис" },
+        why: {
+          uz: "Xodimlarni 3 ta alohida parametr (ism, telefon, login) orqali saralash va qidirish. Rais faqat o'z mahallasidagi xodimlarni ko'radi.",
+          en: "Search and filter officials using 3 distinct query parameters (name, phone, login). Rais only sees members in his own Mahalla.",
+          ru: "Поиск и фильтрация сотрудников по 3 отдельным параметрам (имя, телефон, логин). Раис видит только свою махаллю."
+        },
+        fields: {
+          uz: [
+            "name: Ism yoki familiya bo'yicha qidiruv (?name=Temur).",
+            "phone: Telefon raqami bo'yicha qidiruv (?phone=99890).",
+            "login: Login bo'yicha qidiruv (?login=rais).",
+            "role, mahalla_id: Qo'shimcha filtrlar."
+          ],
+          en: [
+            "name: Search by first or last name (?name=Temur).",
+            "phone: Search by phone number (?phone=99890).",
+            "login: Search by username (?login=rais).",
+            "role, mahalla_id: Category filters."
+          ],
+          ru: [
+            "name: Поиск по имени или фамилии (?name=Temur).",
+            "phone: Поиск по телефону (?phone=99890).",
+            "login: Поиск по логину (?login=rais).",
+            "role, mahalla_id: Фильтры категории."
+          ]
+        },
+        edge: {
+          uz: [
+            "Qolgan 6 xodim chaqirsa: 403 Forbidden (ular boshqa xodimlarni ko'ra olmaydi).",
+            "Rais chaqirsa: faqat o'zining mahalla_id siga tegishli xodimlar chiqadi."
+          ],
+          en: [
+            "Other 6 members: 403 Forbidden (cannot view other officials).",
+            "Rais: automatically restricted to users with matching mahalla_id."
+          ],
+          ru: [
+            "Остальные 6 сотрудников: 403 Forbidden (не могут видеть других).",
+            "Раис: видит только сотрудников своей махалли."
+          ]
+        },
+        payloadModel: "None (Query Params)",
+        payloadJson: "// 3 ta alohida qidiruv parametri:\n?page=1&page_size=10&name=Temur&phone=90999&login=rais",
+        responseModel: "PaginatedUserSchema",
+        responseJson: JSON.stringify({
+          items: [
+            {
+              id: 2,
+              first_name: "Temur",
+              last_name: "Barlos",
+              phone: "+998909998877",
+              login: "rais_temur",
+              role: "mahalla_raisi",
+              mahalla_id: 1,
+              is_active: true
+            }
+          ],
+          total: 1,
+          page: 1,
+          page_size: 10
+        }, null, 2),
+        bruno: "Users/Get Users.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "users-get-one",
+        cat: "users",
+        method: "get",
+        path: "/users/{user_id}",
+        role: "staff",
+        roleLabel: { uz: "Barcha Xodimlar", en: "All Staff", ru: "Все сотрудники" },
+        why: {
+          uz: "Alohida xodim profilini ko'rish. 6 xodim faqat o'z profilini ko'ra oladi (boshqalarnikini ko'ra olmaydi).",
+          en: "Inspect single official profile. The 6 officials can only view their own user profile.",
+          ru: "Просмотр профиля сотрудника. 6 сотрудников махалли могут видеть только свой собственный профиль."
+        },
+        fields: {
+          uz: ["user_id: Xodimning ID raqami."],
+          en: ["user_id: Integer user ID."],
+          ru: ["user_id: ID пользователя."]
+        },
+        edge: {
+          uz: [
+            "6 xodim boshqa xodimning ID sini chaqirsa: 403 Forbidden.",
+            "Rais boshqa mahalladagi xodimning ID sini chaqirsa: 403 Forbidden."
+          ],
+          en: [
+            "6 members calling another ID: 403 Forbidden.",
+            "Rais calling member of another Mahalla: 403 Forbidden."
+          ],
+          ru: [
+            "6 сотрудников вызывают чужой ID: 403 Forbidden.",
+            "Раис вызывает сотрудника другой махалли: 403 Forbidden."
+          ]
+        },
+        payloadModel: "None",
+        payloadJson: "// GET /users/2",
+        responseModel: "UserResponseSchema",
+        responseJson: JSON.stringify({
+          id: 2,
+          first_name: "Temur",
+          last_name: "Barlos",
+          phone: "+998909998877",
+          login: "rais_temur",
+          role: "mahalla_raisi",
+          mahalla_id: 1,
+          is_active: true,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:00:00"
+        }, null, 2),
+        bruno: "Users/Get User by ID.bru",
+        authHeader: "Bearer {{token}}"
+      },
+      {
+        id: "users-patch",
+        cat: "users",
+        method: "patch",
+        path: "/users/{user_id}",
+        role: "prokuror",
+        roleLabel: { uz: "Admin yoki Prokuror", en: "Admin or Prokuror", ru: "Админ или Прокурор" },
+        why: {
+          uz: "Xodim ma'lumotlarini yangilash yoki uni nofaol qilish (is_active: false). Rais xodimlarni o'zgartira OLMAYDI.",
+          en: "Updates officer info or soft-deactivates an official (is_active: false). Rais CANNOT edit the 6 officials.",
+          ru: "Обновление данных сотрудника или мягкое отключение (is_active: false). Раис НЕ может изменять сотрудников."
+        },
+        fields: {
+          uz: [
+            "first_name, last_name, phone, password: Ixtiyoriy yangilanadigan maydonlar.",
+            "is_active: false berilsa xodim nofaol qilinadi (tizimga kira olmaydi)."
+          ],
+          en: [
+            "first_name, last_name, phone, password: Optional update fields.",
+            "is_active: set to false to soft-deactivate officer access."
+          ],
+          ru: [
+            "first_name, last_name, phone, password: Поля для обновления.",
+            "is_active: false для отключения доступа сотрудника."
+          ]
+        },
+        edge: {
+          uz: [
+            "Rais yoki 6 xodim birovni o'zgartirmoqchi bo'lsa: 403 Forbidden ('rais cant change 6 people').",
+            "DELETE metodi o'chirilgan (405 qaytadi).",
+            "Prokuror o'zini yoki boshqa prokurorni o'zgartira olmaydi (403)."
+          ],
+          en: [
+            "Rais or 6 members attempting to modify others: 403 Forbidden ('rais cant change 6 people').",
+            "DELETE method is completely removed (returns 405 Method Not Allowed).",
+            "Prokuror cannot modify Admin or Prokuror accounts (403)."
+          ],
+          ru: [
+            "Раис или 6 сотрудников пытаются изменить других: 403 Forbidden.",
+            "Метод DELETE полностью удален (возвращает 405).",
+            "Прокурор не может изменять аккаунты Админа или Прокурора (403)."
+          ]
+        },
+        payloadModel: "UserUpdateSchema",
+        payloadJson: JSON.stringify({
+          first_name: "Temurbek",
+          is_active: false
+        }, null, 2),
+        responseModel: "UserResponseSchema",
+        responseJson: JSON.stringify({
+          id: 2,
+          first_name: "Temurbek",
+          last_name: "Barlos",
+          phone: "+998909998877",
+          login: "rais_temur",
+          role: "mahalla_raisi",
+          mahalla_id: 1,
+          is_active: false,
+          created_at: "2026-09-15T10:00:00",
+          updated_at: "2026-09-15T10:05:00"
+        }, null, 2),
+        bruno: "Users/Update User.bru",
+        authHeader: "Bearer {{token}}"
+      }
+    ];
+
+    let currentLang = "uz";
+    let currentCat = "all";
+
+    const uiTexts = {
+      uz: {
+        tag: "🇺🇿 O'zbekiston Respublikasi Prokuraturasi",
+        h1: "Backend API & Bruno So'rovlar Ma'lumotnomasi",
+        p: "Frontend dasturchilar uchun mukammal texnik qo'llanma. Har bir so'rovning zarurati, talab qilinadigan maydonlar, maxsus holatlar (edge cases) va Bruno fayllari to'liq keltirilgan.",
+        lblApi: "API Server Manzili",
+        lblDocker: "Docker Port",
+        lblSwagger: "Interaktiv Hujjatlar",
+        lblBruno: "Bruno To'plami",
+        matrixTitle: "🏛️ Tizim Ierarxiyasi va Huquqlar Matritsasi",
+        mAdmin: "ADMIN: Mahallalar va Prokurorni qo'shadi (To'liq nazorat)",
+        mProkuror: "PROKUROR: Yagona tuman rahbari; 7 nafar xodimni tayinlaydi; Mahallani o'zi yaratmaydi",
+        mRais: "MAHALLA_RAISI: Faqat o'z mahallasidagi xodimlarni ko'radi; ularni o'zgartira olmaydi",
+        mMembers: "QOLGAN 6 XODIM: Faqat o'z profilini ko'radi; boshqalarni ko'ra olmaydi",
+        btnAll: "Barchasi (12)",
+        btnAuth: "Auth (4)",
+        btnMahallas: "Mahalla (4)",
+        btnUsers: "Xodimlar (4)",
+        searchPlaceholder: "So'rov yoki maydonni qidiring...",
+        sWhy: "💡 Bu so'rov nima uchun kerak?",
+        sFields: "📋 Maydonlarning vazifasi",
+        sEdge: "⚠️ Maxsus holatlar va cheklovlar (Edge cases)",
+        payload: "Payload",
+        response: "Response",
+        brunoFile: "Bruno so'rovi:",
+        copy: "Nusxa"
+      },
+      en: {
+        tag: "🇺🇿 General Prosecutor's Office of Uzbekistan",
+        h1: "Backend API & Bruno Requests Reference",
+        p: "Complete reference for frontend developers. Explains endpoint rationale, required fields, edge-case behavior, and Bruno requests.",
+        lblApi: "Base API URL",
+        lblDocker: "Docker Port",
+        lblSwagger: "Interactive Docs",
+        lblBruno: "Bruno Collection",
+        matrixTitle: "🏛️ Role Access Matrix & Hierarchy Rules",
+        mAdmin: "ADMIN: Manages Mahallas & Prokuror (Full Access)",
+        mProkuror: "PROKUROR: Exactly 1 system boss; creates the 7 Mahalla officials; cannot CRUD Mahallas",
+        mRais: "MAHALLA_RAISI: Head of Mahalla; views only their own Mahalla's members; cannot edit them",
+        mMembers: "6 OTHER MEMBERS: View only their own profile; cannot view other officials",
+        btnAll: "All (12)",
+        btnAuth: "Auth (4)",
+        btnMahallas: "Mahallas (4)",
+        btnUsers: "Users (4)",
+        searchPlaceholder: "Search path or field...",
+        sWhy: "💡 Why this request is needed",
+        sFields: "📋 Field-by-field breakdown",
+        sEdge: "⚠️ Edge cases & Failure handling",
+        payload: "Payload",
+        response: "Response",
+        brunoFile: "Bruno Request:",
+        copy: "Copy"
+      },
+      ru: {
+        tag: "🇺🇿 Генеральная Прокуратура Республики Узбекистан",
+        h1: "Справочник Backend API и Bruno",
+        p: "Полное руководство для фронтенд разработчиков. Обоснование каждого запроса, назначение полей, граничные случаи и Bruno файлы.",
+        lblApi: "Базовый URL API",
+        lblDocker: "Порт Docker",
+        lblSwagger: "Интерактивная документация",
+        lblBruno: "Коллекция Bruno",
+        matrixTitle: "🏛️ Матрица Доступа и Иерархия Ролей",
+        mAdmin: "АДМИН: Управляет Махаллями и Прокурором (Полный доступ)",
+        mProkuror: "ПРОКУРОР: Единственный руководитель; назначает 7 сотрудников; не создает махалли",
+        mRais: "РАИС МАХАЛЛИ: Видит только сотрудников своей махалли; не может изменять их",
+        mMembers: "ОСТАЛЬНЫЕ 6 СОТРУДНИКОВ: Видят только свой профиль; не видят других",
+        btnAll: "Все (12)",
+        btnAuth: "Авторизация (4)",
+        btnMahallas: "Махалли (4)",
+        btnUsers: "Пользователи (4)",
+        searchPlaceholder: "Поиск по запросу или полю...",
+        sWhy: "💡 Зачем нужен этот запрос",
+        sFields: "📋 Назначение каждого поля",
+        sEdge: "⚠️ Граничные случаи и ошибки",
+        payload: "Тело запроса",
+        response: "Ответ",
+        brunoFile: "Запрос Bruno:",
+        copy: "Копия"
+      }
+    };
+
+    function renderEndpoints() {
+      const container = document.getElementById('endpointsList');
+      const q = document.getElementById('filterQuery').value.toLowerCase().trim();
+      const t = uiTexts[currentLang];
+
+      let html = "";
+
+      endpointsData.forEach(ep => {
+        if (currentCat !== "all" && ep.cat !== currentCat) return;
+
+        const hay = (ep.path + " " + ep.why[currentLang] + " " + ep.edge[currentLang].join(" ")).toLowerCase();
+        if (q && !hay.includes(q)) return;
+
+        let roleBadgeClass = "role-b-staff";
+        if (ep.role === "admin") roleBadgeClass = "role-b-admin";
+        else if (ep.role === "prokuror") roleBadgeClass = "role-b-prokuror";
+        else if (ep.role === "rais") roleBadgeClass = "role-b-rais";
+        else if (ep.role === "public") roleBadgeClass = "role-b-public";
+
+        const fieldsList = ep.fields[currentLang].map(f => {
+          const parts = f.split(":");
+          if (parts.length > 1) {
+            return `<li><span class="f-key">${escapeHtml(parts[0])}</span>: ${escapeHtml(parts.slice(1).join(":"))}</li>`;
+          }
+          return `<li>${escapeHtml(f)}</li>`;
+        }).join("");
+
+        const edgeList = ep.edge[currentLang].map(e => `<li>${escapeHtml(e)}</li>`).join("");
+
+        html += `
+          <div class="ep-card">
+            <div class="ep-head">
+              <div class="ep-left">
+                <span class="m-pill ${ep.method}">${ep.method}</span>
+                <span class="ep-uri">${escapeHtml(ep.path)}</span>
+              </div>
+              <span class="ep-role-badge ${roleBadgeClass}">${escapeHtml(ep.roleLabel[currentLang])}</span>
+            </div>
+            <div class="ep-main">
+              <!-- Why box -->
+              <div class="section-box why">
+                <div class="s-head">${t.sWhy}</div>
+                <p>${escapeHtml(ep.why[currentLang])}</p>
+              </div>
+
+              <!-- Fields box -->
+              <div class="section-box fields">
+                <div class="s-head">${t.sFields}</div>
+                <ul>${fieldsList}</ul>
+              </div>
+
+              <!-- Edge box -->
+              <div class="section-box edge">
+                <div class="s-head">${t.sEdge}</div>
+                <ul>${edgeList}</ul>
+              </div>
+
+              <!-- Code Grid -->
+              <div class="code-grid">
+                <div>
+                  <div class="code-block-head">
+                    <span>${t.payload}</span>
+                    <span class="model-name">${escapeHtml(ep.payloadModel)}</span>
+                  </div>
+                  <div class="code-container">
+                    <pre><code>${escapeHtml(ep.payloadJson)}</code></pre>
+                    <button class="copy-btn" onclick="copyCode(this)">${t.copy}</button>
+                  </div>
+                </div>
+                <div>
+                  <div class="code-block-head">
+                    <span>${t.response}</span>
+                    <span class="model-name">${escapeHtml(ep.responseModel)}</span>
+                  </div>
+                  <div class="code-container">
+                    <pre><code>${escapeHtml(ep.responseJson)}</code></pre>
+                    <button class="copy-btn" onclick="copyCode(this)">${t.copy}</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bruno bar -->
+              <div class="bruno-badge-bar">
+                <span>📁 <strong>${t.brunoFile}</strong> <code>${escapeHtml(ep.bruno)}</code></span>
+                <span class="auth-pill">Auth: ${escapeHtml(ep.authHeader)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      if (!html) {
+        html = `<div style="text-align: center; padding: 3rem; color: var(--text-dim);">Hech qanday so'rov topilmadi.</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function switchLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('lbtn-' + lang).classList.add('active');
+
+      const t = uiTexts[lang];
+      document.getElementById('txt-hero-tag').innerText = t.tag;
+      document.getElementById('txt-hero-h1').innerText = t.h1;
+      document.getElementById('txt-hero-p').innerText = t.p;
+      document.getElementById('lbl-api').innerText = t.lblApi;
+      document.getElementById('lbl-docker').innerText = t.lblDocker;
+      document.getElementById('lbl-swagger').innerText = t.lblSwagger;
+      document.getElementById('lbl-bruno').innerText = t.lblBruno;
+      document.getElementById('txt-matrix-title').innerText = t.matrixTitle;
+      document.getElementById('badge-info-admin').innerText = t.mAdmin;
+      document.getElementById('badge-info-prokuror').innerText = t.mProkuror;
+      document.getElementById('badge-info-rais').innerText = t.mRais;
+      document.getElementById('badge-info-members').innerText = t.mMembers;
+      document.getElementById('cbtn-all').innerText = t.btnAll;
+      document.getElementById('cbtn-auth').innerText = t.btnAuth;
+      document.getElementById('cbtn-mahallas').innerText = t.btnMahallas;
+      document.getElementById('cbtn-users').innerText = t.btnUsers;
+      document.getElementById('filterQuery').placeholder = t.searchPlaceholder;
+
+      renderEndpoints();
+    }
+
+    function setCategory(cat) {
+      currentCat = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('cbtn-' + cat).classList.add('active');
+      renderEndpoints();
+    }
+
+    function onSearch() {
+      renderEndpoints();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function copyCode(btn) {
+      const code = btn.previousElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.innerText;
+        btn.innerText = "✓";
+        setTimeout(() => { btn.innerText = orig; }, 1200);
+      });
+    }
+
+    // Initial render on load
+    document.addEventListener('DOMContentLoaded', () => {
+      renderEndpoints();
+    });
+  </script>
+</body>
+</html>

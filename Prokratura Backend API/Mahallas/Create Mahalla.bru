@@ -1,0 +1,26 @@
+meta {
+  name: Create Mahalla
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mahallas
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Oqtepa MFY"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

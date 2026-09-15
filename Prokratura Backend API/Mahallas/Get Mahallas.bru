@@ -1,0 +1,26 @@
+meta {
+  name: Get Mahallas
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/mahallas?page=1&page_size=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  page_size: 10
+  ~search: Oqtepa
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
+

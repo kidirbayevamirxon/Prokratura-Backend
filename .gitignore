@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+mchs-backend
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Docker Compose files
+docker-compose.yml
+docker-compose.yaml
+mchs-docker-compose.yml
+mchs-docker-compose.yaml
