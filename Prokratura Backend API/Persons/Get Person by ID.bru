@@ -1,0 +1,20 @@
+meta {
+  name: Get Person by ID
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/persons/1
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
+

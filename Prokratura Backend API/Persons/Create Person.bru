@@ -1,0 +1,28 @@
+meta {
+  name: Create Person
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/persons
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "full_name": "Даўлетбаев Айдос Муратбаевич",
+    "birth_date": "1990-07-30",
+    "mahalla_id": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

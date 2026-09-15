@@ -1,0 +1,20 @@
+meta {
+  name: Get Document by ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/documents/1
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
+

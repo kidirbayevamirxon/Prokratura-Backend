@@ -7,8 +7,13 @@ from sqlalchemy.orm import selectinload
 from backend.mahallas.schemas.create import MahallaCreateSchema
 from backend.mahallas.schemas.patch import MahallaUpdateSchema
 from backend.mahallas.schemas.get import PaginatedMahallaSchema, MahallaDetailSchema
+from backend.mahallas.schemas.stats import (
+    MahallaStatsCreateOrUpdateSchema,
+    MahallaStatsResponseSchema,
+)
 from db.models.mahalla import Mahalla
-from db.models.user import UserRole
+from db.models.mahalla_stats import MahallaStats
+from db.models.user import UserRole, MAHALLA_SEVEN_ROLES
 
 
 class MahallaService:
@@ -106,3 +111,84 @@ class MahallaService:
         await db.commit()
         await db.refresh(mahalla)
         return mahalla
+
+    @staticmethod
+    async def get_mahalla_stats(
+        mahalla_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> MahallaStats:
+        # Verify mahalla exists
+        mahalla = await db.get(Mahalla, mahalla_id)
+        if not mahalla:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mahalla with id {mahalla_id} not found",
+            )
+
+        # RBAC:
+        if caller_role in [UserRole.MAHALLA_RAISI, *MAHALLA_SEVEN_ROLES]:
+            if caller_mahalla_id != mahalla_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot view stats for another Mahalla",
+                )
+
+        stats = await db.scalar(
+            select(MahallaStats).where(MahallaStats.mahalla_id == mahalla_id)
+        )
+        if not stats:
+            # Create default empty stats row
+            stats = MahallaStats(mahalla_id=mahalla_id, extra_data={})
+            db.add(stats)
+            await db.commit()
+            await db.refresh(stats)
+
+        return stats
+
+    @staticmethod
+    async def update_mahalla_stats(
+        mahalla_id: int,
+        data: MahallaStatsCreateOrUpdateSchema,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> MahallaStats:
+        # Verify mahalla exists
+        mahalla = await db.get(Mahalla, mahalla_id)
+        if not mahalla:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mahalla with id {mahalla_id} not found",
+            )
+
+        # RBAC: Only Admin, Prokuror, or Rais of this mahalla can update stats
+        if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if caller_role == UserRole.MAHALLA_RAISI:
+                if caller_mahalla_id != mahalla_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Rais can only update stats for their own Mahalla",
+                    )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only Admin, Prokuror, or Mahalla Raisi can update stats",
+                )
+
+        stats = await db.scalar(
+            select(MahallaStats).where(MahallaStats.mahalla_id == mahalla_id)
+        )
+        if not stats:
+            stats = MahallaStats(mahalla_id=mahalla_id)
+            db.add(stats)
+
+        # Update all fields if provided
+        data_dict = data.model_dump(exclude_unset=True)
+        for key, value in data_dict.items():
+            setattr(stats, key, value)
+
+        await db.commit()
+        await db.refresh(stats)
+        return stats

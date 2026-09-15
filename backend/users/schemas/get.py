@@ -14,6 +14,11 @@ class UserResponseSchema(BaseModel):
     login: Optional[str] = None
     role: UserRole
     mahalla_id: Optional[int] = None
+    photo_url: Optional[str] = None
+    birth_date_text: Optional[str] = None
+    appointed_date_text: Optional[str] = None
+    specialization: Optional[str] = None
+    previous_workplace: Optional[str] = None
     is_active: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime

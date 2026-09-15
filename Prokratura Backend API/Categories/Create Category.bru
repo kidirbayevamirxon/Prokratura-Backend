@@ -1,0 +1,29 @@
+meta {
+  name: Create Category
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/categories
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Проф ҳисоб рўйхати",
+    "description": "Profilaktik hisobda turuvchi shaxslar",
+    "assigned_roles": ["profilaktika_inspektori"],
+    "default_frequency_days": 5
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

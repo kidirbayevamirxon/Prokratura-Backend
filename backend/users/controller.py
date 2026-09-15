@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.service import (
@@ -100,5 +100,26 @@ async def update_user(
         data=data,
         caller_id=current_user["id"],
         caller_role=current_user["role"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{user_id}/photo",
+    response_model=UserResponseSchema,
+    summary="Upload profile picture for a user/employee (Max 5 MB)",
+)
+async def upload_user_photo(
+    user_id: int,
+    photo: UploadFile = File(..., description="Employee photo (max 5 MB)"),
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await UserService.upload_photo(
+        user_id=user_id,
+        photo_file=photo,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )

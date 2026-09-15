@@ -11,5 +11,10 @@ class UserUpdateSchema(BaseModel):
     password: Optional[str] = Field(None, min_length=6)
     role: Optional[UserRole] = None
     mahalla_id: Optional[int] = None
+    photo_url: Optional[str] = None
+    birth_date_text: Optional[str] = None
+    appointed_date_text: Optional[str] = None
+    specialization: Optional[str] = None
+    previous_workplace: Optional[str] = None
     is_active: Optional[bool] = None
 

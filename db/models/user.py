@@ -2,7 +2,7 @@ from enum import Enum
 import datetime
 from typing import Optional, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import BigInteger, Enum as SQLEnum, ForeignKey
+from sqlalchemy import BigInteger, Enum as SQLEnum, ForeignKey, String
 from sqlalchemy.sql import func
 
 from db.connection import Base
@@ -55,6 +55,12 @@ class User(Base):
         nullable=True,
         index=True,
     )
+
+    photo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    birth_date_text: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    appointed_date_text: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    specialization: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    previous_workplace: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime.datetime] = mapped_column(

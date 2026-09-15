@@ -1,0 +1,24 @@
+meta {
+  name: Upload Category Icon
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/categories/1/icon
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:multipart-form {
+  icon: @file()
+}
+
+settings {
+  encodeUrl: true
+}
+

@@ -1,0 +1,20 @@
+meta {
+  name: Get Assignments
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/persons/assignments?overdue_only=false
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
+

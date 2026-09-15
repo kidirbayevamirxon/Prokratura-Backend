@@ -2,12 +2,16 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.auth.service import admin_guard, rais_guard, UserAuth
+from backend.auth.service import admin_guard, rais_guard, all_guard, UserAuth
 from backend.mahallas.schemas.create import MahallaCreateSchema
 from backend.mahallas.schemas.patch import MahallaUpdateSchema
 from backend.mahallas.schemas.get import (
     MahallaDetailSchema,
     PaginatedMahallaSchema,
+)
+from backend.mahallas.schemas.stats import (
+    MahallaStatsCreateOrUpdateSchema,
+    MahallaStatsResponseSchema,
 )
 from backend.mahallas.service import MahallaService
 from db.connection import get_async_db
@@ -88,3 +92,41 @@ async def update_mahalla(
     db: AsyncSession = Depends(get_async_db),
 ):
     return await MahallaService.update_mahalla(mahalla_id, data, db)
+
+
+@router.get(
+    "/{mahalla_id}/stats",
+    response_model=MahallaStatsResponseSchema,
+    summary="Get infrastructure, demographic, and characteristics stats for a Mahalla",
+)
+async def get_mahalla_stats(
+    mahalla_id: int,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await MahallaService.get_mahalla_stats(
+        mahalla_id=mahalla_id,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.put(
+    "/{mahalla_id}/stats",
+    response_model=MahallaStatsResponseSchema,
+    summary="Update or create infrastructure, demographic, and characteristics stats (Admin, Prokuror, or own Rais)",
+)
+async def update_mahalla_stats(
+    mahalla_id: int,
+    data: MahallaStatsCreateOrUpdateSchema,
+    current_user: UserAuth = Depends(rais_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await MahallaService.update_mahalla_stats(
+        mahalla_id=mahalla_id,
+        data=data,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )

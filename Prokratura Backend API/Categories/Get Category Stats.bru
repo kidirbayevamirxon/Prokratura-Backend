@@ -1,0 +1,20 @@
+meta {
+  name: Get Category Stats
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/categories/stats
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: true
+}
+

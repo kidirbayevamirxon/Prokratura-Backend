@@ -1,0 +1,28 @@
+meta {
+  name: Update Person
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/persons/1
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "full_name": "Каримова Зилола Рустамовна",
+    "birth_date": "1988-04-12",
+    "mahalla_id": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

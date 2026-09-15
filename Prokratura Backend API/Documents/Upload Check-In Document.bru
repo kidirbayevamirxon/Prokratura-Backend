@@ -1,0 +1,29 @@
+meta {
+  name: Upload Check-In Document
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:multipart-form {
+  assignment_id: 1
+  check_in_date: 2026-09-15
+  doc_type: regular
+  notes: Profilaktik suhbat o'tkazildi
+  photo: @file()
+  pdf: @file()
+}
+
+settings {
+  encodeUrl: true
+}
+

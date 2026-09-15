@@ -1,0 +1,24 @@
+meta {
+  name: Upload Employee Photo
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/users/1/photo
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:multipart-form {
+  photo: @file()
+}
+
+settings {
+  encodeUrl: true
+}
+

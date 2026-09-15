@@ -29,6 +29,8 @@
       --m-get: #0284c7;
       --m-post: #10b981;
       --m-patch: #f59e0b;
+      --m-put: #8b5cf6;
+      --m-delete: #ef4444;
 
       --code-bg: #090d16;
       --radius-sm: 6px;
@@ -59,7 +61,7 @@
     }
 
     .nav-inner {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -76,20 +78,20 @@
     }
 
     .brand-icon {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       background: linear-gradient(135deg, #0284c7, #38bdf8);
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
     }
 
     .brand-text {
       font-weight: 800;
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       letter-spacing: -0.02em;
     }
 
@@ -138,7 +140,7 @@
 
     /* Main Container */
     .container {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 2rem auto 0;
       padding: 0 1.5rem;
     }
@@ -177,7 +179,8 @@
     .hero p {
       color: var(--text-muted);
       font-size: 1rem;
-      max-width: 860px;
+      max-width: 960px;
+      line-height: 1.6;
     }
 
     /* Quick Specs Grid */
@@ -239,24 +242,34 @@
     }
 
     .role-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
     }
 
     .rbadge {
       font-size: 0.82rem;
-      padding: 0.35rem 0.75rem;
+      padding: 0.55rem 0.85rem;
       border-radius: var(--radius-sm);
       border: 1px solid;
       background: rgba(9, 13, 22, 0.8);
-      font-weight: 600;
+      font-weight: 500;
+      line-height: 1.45;
     }
 
-    .rbadge.admin { border-color: rgba(192, 132, 252, 0.4); color: var(--admin-color); }
-    .rbadge.prokuror { border-color: rgba(248, 113, 113, 0.4); color: var(--prokuror-color); }
-    .rbadge.rais { border-color: rgba(251, 191, 36, 0.4); color: var(--rais-color); }
-    .rbadge.members { border-color: rgba(56, 189, 248, 0.3); color: var(--text-muted); }
+    .rbadge strong {
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .rbadge.admin { border-color: rgba(192, 132, 252, 0.4); color: #e9d5ff; }
+    .rbadge.admin strong { color: var(--admin-color); }
+    .rbadge.prokuror { border-color: rgba(248, 113, 113, 0.4); color: #fecaca; }
+    .rbadge.prokuror strong { color: var(--prokuror-color); }
+    .rbadge.rais { border-color: rgba(251, 191, 36, 0.4); color: #fef08a; }
+    .rbadge.rais strong { color: var(--rais-color); }
+    .rbadge.members { border-color: rgba(56, 189, 248, 0.3); color: #bae6fd; }
+    .rbadge.members strong { color: var(--accent); }
 
     /* Filter Bar */
     .filter-bar {
@@ -270,10 +283,11 @@
 
     .cat-buttons {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.4rem;
       background: var(--surface);
       border: 1px solid var(--border-subtle);
-      padding: 3px;
+      padding: 4px;
       border-radius: var(--radius-sm);
     }
 
@@ -281,9 +295,9 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 0.45rem 0.95rem;
+      padding: 0.45rem 0.9rem;
       border-radius: 4px;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
@@ -294,20 +308,22 @@
       background: var(--surface-card);
       color: #ffffff;
       border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
     .cat-btn:hover:not(.active) {
       color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .search-field {
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.5rem 1rem;
+      padding: 0.55rem 1.1rem;
       border-radius: var(--radius-sm);
       font-size: 0.85rem;
-      width: 300px;
+      width: 320px;
       font-family: inherit;
       transition: border-color 0.15s;
     }
@@ -323,7 +339,7 @@
       background: var(--surface-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
       overflow: hidden;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
@@ -358,12 +374,15 @@
       padding: 0.25rem 0.65rem;
       border-radius: 4px;
       color: #ffffff;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .m-pill.get { background: var(--m-get); }
     .m-pill.post { background: var(--m-post); }
     .m-pill.patch { background: var(--m-patch); }
+    .m-pill.put { background: var(--m-put); }
+    .m-pill.delete { background: var(--m-delete); }
 
     .ep-uri {
       font-family: 'JetBrains Mono', monospace;
@@ -397,7 +416,7 @@
     /* Info Sections */
     .section-box {
       border-radius: var(--radius-sm);
-      padding: 1rem 1.15rem;
+      padding: 1rem 1.2rem;
       font-size: 0.88rem;
       border-left: 3px solid;
     }
@@ -422,7 +441,7 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.45rem;
     }
 
     .section-box.why .s-head { color: var(--accent); }
@@ -431,6 +450,7 @@
 
     .section-box p, .section-box ul {
       color: #cbd5e1;
+      line-height: 1.6;
     }
 
     .section-box ul {
@@ -439,7 +459,7 @@
     }
 
     .section-box ul li {
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.35rem;
     }
 
     .f-key {
@@ -460,7 +480,7 @@
       margin-top: 0.25rem;
     }
 
-    @media (max-width: 850px) {
+    @media (max-width: 900px) {
       .code-grid { grid-template-columns: 1fr; }
     }
 
@@ -498,6 +518,7 @@
       overflow-x: auto;
       white-space: pre;
       line-height: 1.5;
+      max-height: 380px;
     }
 
     .copy-btn {
@@ -508,7 +529,7 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: var(--text-muted);
       font-size: 0.72rem;
-      padding: 0.2rem 0.5rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 4px;
       cursor: pointer;
       font-family: inherit;
@@ -578,8 +599,8 @@
     <!-- Hero Header -->
     <div class="hero">
       <div class="hero-tag" id="txt-hero-tag">🇺🇿 O'zbekiston Respublikasi Prokuraturasi</div>
-      <h1 id="txt-hero-h1">Backend API & Bruno So'rovlar Ma'lumotnomasi</h1>
-      <p id="txt-hero-p">Frontend dasturchilar uchun mukammal texnik qo'llanma. Har bir so'rovning zarurati, talab qilinadigan maydonlar, maxsus holatlar (edge cases) va Bruno fayllari to'liq keltirilgan.</p>
+      <h1 id="txt-hero-h1">Backend API & Bruno So'rovlar Ma'lumotnomasi (1 & 2-bosqich)</h1>
+      <p id="txt-hero-p">Frontend dasturchilar uchun to'liq interaktiv qo'llanma: 7 xodim profillari va rasmlari, maxsus toifalar (risk cards), fuqarolar nazorati va qolgan kunlar hisobi, tekshiruv hujjatlari (foto va PDF) tasdiqlash jarayoni hamda mahalla pasporti statistikasi to'liq yoritilgan.</p>
 
       <!-- Quick Specs -->
       <div class="specs-grid">
@@ -606,20 +627,32 @@
     <div class="matrix-card">
       <div class="matrix-title" id="txt-matrix-title">🏛️ Tizim Ierarxiyasi va Huquqlar Matritsasi</div>
       <div class="role-badges">
-        <span class="rbadge admin" id="badge-info-admin">ADMIN: Mahallalar va Prokurorni qo'shadi (To'liq nazorat)</span>
-        <span class="rbadge prokuror" id="badge-info-prokuror">PROKUROR: Yagona tuman rahbari; Mahallaning 7 nafar xodimini tayinlaydi; Mahallani o'zi o'chira/yarata olmaydi</span>
-        <span class="rbadge rais" id="badge-info-rais">MAHALLA_RAISI: Mahalla rahbari; faqat o'z mahallasidagi xodimlarni ko'ra oladi; ularni o'zgartira olmaydi</span>
-        <span class="rbadge members" id="badge-info-members">QOLGAN 6 XODIM: Faqat o'z profilini ko'radi; boshqa xodimlarni ko'ra olmaydi</span>
+        <div class="rbadge admin" id="badge-info-admin">
+          <strong>ADMIN:</strong> Mahallalar va Prokurorni boshqaradi (Tizim bo'yicha to'liq nazorat).
+        </div>
+        <div class="rbadge prokuror" id="badge-info-prokuror">
+          <strong>PROKUROR:</strong> Tuman bo'yicha yagona rahbar; Mahallaning 7 nafar xodimini tayinlaydi; Maxsus toifalar (kategoriyalar) va fuqarolarni kiritadi; Qatnov davriyligini belgilaydi; Hujjatlarni tasdiqlaydi/rad etadi.
+        </div>
+        <div class="rbadge rais" id="badge-info-rais">
+          <strong>MAHALLA RAISI:</strong> Mahalla rahbari; Faqat o'z mahallasidagi fuqarolar va xodimlarni ko'radi; Hujjat yuklay oladi; Toifadan chiqarish so'rovini yuboradi; Pasport statistikasini to'ldiradi.
+        </div>
+        <div class="rbadge members" id="badge-info-members">
+          <strong>7 NAFAR XODIM:</strong> Biriktirilgan toifadagi fuqarolar huzuriga borib foto va PDF hisobot yuklaydi; Muddati yaqinlashgan (1-5 kun) tekshiruvlarni kuzatib boradi.
+        </div>
       </div>
     </div>
 
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="cat-buttons">
-        <button class="cat-btn active" onclick="setCategory('all')" id="cbtn-all">Barchasi (12)</button>
+        <button class="cat-btn active" onclick="setCategory('all')" id="cbtn-all">Barchasi (32)</button>
         <button class="cat-btn" onclick="setCategory('auth')" id="cbtn-auth">Auth (4)</button>
+        <button class="cat-btn" onclick="setCategory('users')" id="cbtn-users">Xodimlar (5)</button>
         <button class="cat-btn" onclick="setCategory('mahallas')" id="cbtn-mahallas">Mahalla (4)</button>
-        <button class="cat-btn" onclick="setCategory('users')" id="cbtn-users">Xodimlar (4)</button>
+        <button class="cat-btn" onclick="setCategory('categories')" id="cbtn-categories">Kategoriyalar (6)</button>
+        <button class="cat-btn" onclick="setCategory('persons')" id="cbtn-persons">Fuqarolar (7)</button>
+        <button class="cat-btn" onclick="setCategory('documents')" id="cbtn-documents">Hujjatlar (4)</button>
+        <button class="cat-btn" onclick="setCategory('stats')" id="cbtn-stats">Statistika (2)</button>
       </div>
       <input type="text" id="filterQuery" class="search-field" placeholder="So'rov yoki maydonni qidiring..." onkeyup="onSearch()">
     </div>
@@ -632,689 +665,1693 @@
   <script>
     // Master Endpoints Data with genuine multilingual content
     const endpointsData = [
-      {
-        id: "auth-register",
-        cat: "auth",
-        method: "post",
-        path: "/auth/register",
-        role: "admin",
-        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
-        why: {
-          uz: "Faqat Administrator tomonidan Prokuror yoki tizim mas'ullarini ro'yxatdan o'tkazish uchun ishlatiladi. Xavfsizlik nuqtai nazaridan ommaviy ro'yxatdan o'tish butunlay o'chirilgan.",
-          en: "Used exclusively by the System Administrator to register Prokuror and staff accounts. Public self-registration is strictly disabled for security.",
-          ru: "Используется исключительно Администратором для регистрации Прокурора и сотрудников. Публичная регистрация отключена в целях безопасности."
-        },
-        fields: {
-          uz: [
-            "first_name, last_name: Yuridik audit va qonuniy javobgarlik uchun to'liq ism-sharif.",
-            "phone: O'zbekiston bo'yicha yagona telefon raqami. Telegram bot, SMS va xabarnomalar uchun asosiy bog'lanish nuqtasi.",
-            "login: Tizimga tezkor kirish uchun ixtiyoriy takrorlanmas login.",
-            "password: Xavfsiz bcrypt shifrlangan parol.",
-            "role: Foydalanuvchi darajasi (admin, prokuror)."
-          ],
-          en: [
-            "first_name, last_name: Legal officer identification for official audit logs.",
-            "phone: Primary unique contact in Uzbekistan for notifications, OTP, and Telegram bot integration.",
-            "login: Optional unique username for quick desktop login.",
-            "password: Secure bcrypt salted hash.",
-            "role: User permission tier (admin, prokuror)."
-          ],
-          ru: [
-            "first_name, last_name: Имя и фамилия сотрудника для официального аудита.",
-            "phone: Уникальный номер телефона в Узбекистане для связи, SMS и Telegram-бота.",
-            "login: Уникальный логин для быстрого входа.",
-            "password: Хэшированный пароль по алгоритму bcrypt.",
-            "role: Уровень прав (admin, prokuror)."
-          ]
-        },
-        edge: {
-          uz: [
-            "Telefon yoki login bazada avval mavjud bo'lsa: 409 Conflict qaytadi.",
-            "Admin bo'lmagan foydalanuvchi so'rov yuborsa: 403 Forbidden qaytadi."
-          ],
-          en: [
-            "Duplicate phone or login: returns 409 Conflict.",
-            "Non-admin caller: returns 403 Forbidden."
-          ],
-          ru: [
-            "Дубликат телефона или логина: возвращает 409 Conflict.",
-            "Запрос не от имени Админа: возвращает 403 Forbidden."
-          ]
-        },
-        payloadModel: "RegisterSchema",
-        payloadJson: JSON.stringify({
-          first_name: "Sardor",
-          last_name: "Rahimov",
-          phone: "+998901234567",
-          login: "prokuror_admin",
-          password: "Password123",
-          role: "prokuror"
-        }, null, 2),
-        responseModel: "TokenRes",
-        responseJson: JSON.stringify({
-          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          role: "prokuror",
-          user_id: 1,
-          mahalla_id: null
-        }, null, 2),
-        bruno: "Auth/Register.bru",
-        authHeader: "Admin Bearer"
-      },
-      {
-        id: "auth-login",
-        cat: "auth",
-        method: "post",
-        path: "/auth/login",
-        role: "public",
-        roleLabel: { uz: "Ommaviy", en: "Public", ru: "Публичный" },
-        why: {
-          uz: "Tizimdagi barcha faol xodimlar (Admin, Prokuror, Rais, 6 xodim) uchun autentifikatsiya qilish va JWT tokenlarini olish so'rovi.",
-          en: "Authenticates any active user (Admin, Prokuror, Rais, or Mahalla staff) and issues JWT access and refresh tokens.",
-          ru: "Аутентификация для любого активного пользователя (Админ, Прокурор, Раис, сотрудники) с выдачей JWT токенов."
-        },
-        fields: {
-          uz: [
-            "login: Universal identifikator. Login yoki telefon raqami (+998901234567) kiritilishi mumkin.",
-            "password: Foydalanuvchi paroli (bcrypt orqali tekshiriladi)."
-          ],
-          en: [
-            "login: Dual-purpose identifier. Can be username (prokuror_admin) or phone (+998901234567).",
-            "password: User password checked against stored bcrypt hash."
-          ],
-          ru: [
-            "login: Универсальный идентификатор: имя пользователя или номер телефона (+998901234567).",
-            "password: Пароль пользователя для проверки с хэшем bcrypt."
-          ]
-        },
-        edge: {
-          uz: [
-            "Foydalanuvchi nofaol bo'lsa (is_active=false): 401 Unauthorized qaytadi.",
-            "Noto'g'ri parol yoki mavjud bo'lmagan foydalanuvchi: foydalanuvchi qidiruv hujumlariga yo'l qo'ymaslik uchun yagona 'Invalid login or password' (401) qaytadi."
-          ],
-          en: [
-            "Deactivated user (is_active=false): rejected with 401 Unauthorized.",
-            "Wrong password or user not found: returns uniform 401 Invalid login or password (prevents username enumeration)."
-          ],
-          ru: [
-            "Отключенный пользователь (is_active=false): отказ 401 Unauthorized.",
-            "Неверный пароль или логин: возвращает единую ошибку 401 Invalid login or password для защиты от перебора."
-          ]
-        },
-        payloadModel: "LoginSchema",
-        payloadJson: JSON.stringify({
-          login: "prokuror_admin",
-          password: "Password123"
-        }, null, 2),
-        responseModel: "TokenRes",
-        responseJson: JSON.stringify({
-          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          role: "prokuror",
-          user_id: 1,
-          mahalla_id: null
-        }, null, 2),
-        bruno: "Auth/Login.bru",
-        authHeader: "None"
-      },
-      {
-        id: "auth-refresh",
-        cat: "auth",
-        method: "post",
-        path: "/auth/refresh",
-        role: "public",
-        roleLabel: { uz: "Ommaviy", en: "Public", ru: "Публичный" },
-        why: {
-          uz: "Muddati 1 kunlik bo'lgan access tokenni foydalanuvchini parolini qayta so'ramasdan 7 kunlik refresh token orqali yangilash.",
-          en: "Rotates and issues a new access token without re-entering credentials when the 1-day access token expires.",
-          ru: "Обновление access токена без повторного ввода логина и пароля с помощью refresh токена."
-        },
-        fields: {
-          uz: ["refresh_token: 7 kunlik yaroqli imzolangan JWT refresh tokeni."],
-          en: ["refresh_token: Valid signed 7-day JWT containing the user ID subject."],
-          ru: ["refresh_token: Действующий 7-дневный подписанный JWT токен."]
-        },
-        edge: {
-          uz: ["Muddati o'tgan yoki soxtalashtirilgan token: 401 Unauthorized."],
-          en: ["Expired or tampered token: returns 401 Unauthorized."],
-          ru: ["Истекший или поврежденный токен: 401 Unauthorized."]
-        },
-        payloadModel: "RefreshRequest",
-        payloadJson: JSON.stringify({
-          refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        }, null, 2),
-        responseModel: "RefreshResponse",
-        responseJson: JSON.stringify({
-          access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        }, null, 2),
-        bruno: "Auth/Refresh Token.bru",
-        authHeader: "None"
-      },
-      {
-        id: "auth-me",
-        cat: "auth",
-        method: "get",
-        path: "/auth/me",
-        role: "staff",
-        roleLabel: { uz: "Barcha Xodimlar", en: "All Staff", ru: "Все сотрудники" },
-        why: {
-          uz: "Frontend sahifa yuklanganda joriy foydalanuvchining kimligi, uning roli va qaysi mahallaga tegishli ekanligini aniqlab, mos interfeysni chizish uchun chaqiriladi.",
-          en: "Called by frontend upon page load to verify session identity, current user role, and assigned Mahalla ID.",
-          ru: "Вызывается фронтендом при загрузке страницы для проверки сессии, роли пользователя и ID привязанной махалли."
-        },
-        fields: {
-          uz: ["Javobda: id, first_name, last_name, phone, login, role, mahalla_id, is_active qaytadi."],
-          en: ["Returns: id, first_name, last_name, phone, login, role, mahalla_id, is_active."],
-          ru: ["Возвращает: id, first_name, last_name, phone, login, role, mahalla_id, is_active."]
-        },
-        edge: {
-          uz: ["Foydalanuvchi faol bo'lmasa yoki token bekor qilingan bo'lsa: 401/403 xatolik."],
-          en: ["If user was deactivated while token is still active: blocked with 403 Forbidden."],
-          ru: ["Если пользователь деактивирован во время активного токена: блокировка 403 Forbidden."]
-        },
-        payloadModel: "None",
-        payloadJson: "// GET so'rovi - body talab etilmaydi\n// Headers:\nAuthorization: Bearer {{token}}",
-        responseModel: "MeResponseSchema",
-        responseJson: JSON.stringify({
-          id: 1,
-          first_name: "Sardor",
-          last_name: "Rahimov",
-          phone: "+998901234567",
-          login: "prokuror_admin",
-          role: "prokuror",
-          mahalla_id: null,
-          is_active: true
-        }, null, 2),
-        bruno: "Auth/Get Me.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "mahallas-create",
-        cat: "mahallas",
-        method: "post",
-        path: "/mahallas",
-        role: "admin",
-        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
-        why: {
-          uz: "Faqat Administrator yangi mahallani tizimga qo'sha oladi. Prokuror mahallalarni yarata yoki o'chira OLMAYDI.",
-          en: "Allows Administrator to register new Mahallas. Prokuror CANNOT create or delete Mahallas.",
-          ru: "Позволяет только Администратору регистрировать махалли. Прокурор НЕ может создавать или удалять махалли."
-        },
-        fields: {
-          uz: ["name: Mahallaning rasmiy nomi (masalan, 'Oqtepa MFY'). Region, district va kodlar talabga binoan olib tashlangan."],
-          en: ["name: Official Mahalla title (e.g. 'Oqtepa MFY'). Region, district, and codes omitted per requirements."],
-          ru: ["name: Официальное название махалли (например, 'Октепа МФЙ'). Регион, район и коды исключены."]
-        },
-        edge: {
-          uz: [
-            "Prokuror yoki Rais chaqirsa: 403 Forbidden qaytadi.",
-            "Bir xil nomli mahalla mavjud bo'lsa: 409 Conflict qaytadi."
-          ],
-          en: [
-            "Prokuror or Rais caller: returns 403 Forbidden.",
-            "Duplicate Mahalla name: returns 409 Conflict."
-          ],
-          ru: [
-            "Вызов от Прокурора или Раиса: 403 Forbidden.",
-            "Дубликат названия махалли: 409 Conflict."
-          ]
-        },
-        payloadModel: "MahallaCreateSchema",
-        payloadJson: JSON.stringify({
-          name: "Oqtepa MFY"
-        }, null, 2),
-        responseModel: "MahallaDetailSchema",
-        responseJson: JSON.stringify({
-          id: 1,
-          name: "Oqtepa MFY",
-          is_active: true,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:00:00",
-          members: []
-        }, null, 2),
-        bruno: "Mahallas/Create Mahalla.bru",
-        authHeader: "Admin Bearer"
-      },
-      {
-        id: "mahallas-list",
-        cat: "mahallas",
-        method: "get",
-        path: "/mahallas",
-        role: "rais",
-        roleLabel: { uz: "Admin, Prokuror, Rais", en: "Admin, Prokuror, Rais", ru: "Админ, Прокурор, Раис" },
-        why: {
-          uz: "Prokuror va Admin barcha mahallalarni ko'rish va qidirish uchun. Mahalla Raisi esa faqat o'z mahallasini ko'ra oladi.",
-          en: "Enables Prokuror and Admin to list and search all Mahallas. Mahalla Raisi can only view his own Mahalla.",
-          ru: "Позволяет Прокурору и Админу просматривать и искать махалли. Раис видит только свою махаллю."
-        },
-        fields: {
-          uz: [
-            "page, page_size: Sahifalash parametrlari.",
-            "search: Mahalla nomi bo'yicha qidiruv."
-          ],
-          en: [
-            "page, page_size: Pagination controls.",
-            "search: Substring search by Mahalla name."
-          ],
-          ru: [
-            "page, page_size: Параметры пагинации.",
-            "search: Поиск по названию махалли."
-          ]
-        },
-        edge: {
-          uz: [
-            "Mahallaning qolgan 6 xodimi chaqirsa: 403 Forbidden (ular mahallalar ro'yxatini ko'ra olmaydi).",
-            "Rais chaqirsa: avtomatik ravishda faqat uning mahalla_id sidagi ma'lumot qaytadi."
-          ],
-          en: [
-            "Other 6 Mahalla members: blocked with 403 Forbidden.",
-            "Rais: automatically scoped to only their own mahalla_id."
-          ],
-          ru: [
-            "Остальные 6 сотрудников: блокировка 403 Forbidden.",
-            "Раис: автоматически получает только свою махаллю."
-          ]
-        },
-        payloadModel: "None (Query Params)",
-        payloadJson: "// GET so'rovi URL parametrlari:\n?page=1&page_size=10&search=Oqtepa",
-        responseModel: "PaginatedMahallaSchema",
-        responseJson: JSON.stringify({
-          items: [
-            {
-              id: 1,
-              name: "Oqtepa MFY",
-              is_active: true,
-              members: [
-                {
-                  id: 2,
-                  first_name: "Temur",
-                  last_name: "Barlos",
-                  phone: "+998909998877",
-                  login: "rais_oqtepa",
-                  role: "mahalla_raisi",
-                  is_active: true
-                }
-              ]
-            }
-          ],
-          total: 1,
-          page: 1,
-          page_size: 10
-        }, null, 2),
-        bruno: "Mahallas/Get Mahallas.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "mahallas-get-one",
-        cat: "mahallas",
-        method: "get",
-        path: "/mahallas/{mahalla_id}",
-        role: "rais",
-        roleLabel: { uz: "Admin, Prokuror, O'z Raisi", en: "Admin, Prokuror, Own Rais", ru: "Админ, Прокурор, Свой Раис" },
-        why: {
-          uz: "Alohida mahallani va unga tayinlangan 7 nafar xodimni ko'rish. Rais faqat o'z mahallasini ko'radi, boshqa mahallani ko'ra olmaydi.",
-          en: "Inspect details of a single Mahalla and its 7 appointed officials. Rais can only view their own Mahalla.",
-          ru: "Просмотр деталей отдельной махалли и её 7 сотрудников. Раис может видеть только свою махаллю."
-        },
-        fields: {
-          uz: ["mahalla_id: Mahalla unikal ID raqami."],
-          en: ["mahalla_id: Unique integer primary key."],
-          ru: ["mahalla_id: Уникальный ID махалли."]
-        },
-        edge: {
-          uz: [
-            "Rais boshqa mahallaning ID raqamini ko'rmoqchi bo'lsa: 403 Forbidden qaytadi.",
-            "Qolgan 6 xodim chaqirsa: 403 Forbidden qaytadi."
-          ],
-          en: [
-            "Rais calling another Mahalla ID: returns 403 Forbidden.",
-            "Other 6 members calling: returns 403 Forbidden."
-          ],
-          ru: [
-            "Раис пытается открыть чужую махаллю: 403 Forbidden.",
-            "Остальные 6 сотрудников: 403 Forbidden."
-          ]
-        },
-        payloadModel: "None",
-        payloadJson: "// GET /mahallas/1",
-        responseModel: "MahallaDetailSchema",
-        responseJson: JSON.stringify({
-          id: 1,
-          name: "Oqtepa MFY",
-          is_active: true,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:00:00",
-          members: [
-            {
-              id: 2,
-              first_name: "Temur",
-              last_name: "Barlos",
-              phone: "+998909998877",
-              login: "rais_oqtepa",
-              role: "mahalla_raisi",
-              is_active: true
-            }
-          ]
-        }, null, 2),
-        bruno: "Mahallas/Get Mahalla by ID.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "mahallas-patch",
-        cat: "mahallas",
-        method: "patch",
-        path: "/mahallas/{mahalla_id}",
-        role: "admin",
-        roleLabel: { uz: "Faqat Admin", en: "Admin Only", ru: "Только Админ" },
-        why: {
-          uz: "Mahalla nomini o'zgartirish yoki mahallani nofaol qilish (is_active: false). O'chirish (DELETE) o'rniga is_active ishlatiladi.",
-          en: "Updates Mahalla name or soft-deactivates it (is_active: false). DELETE endpoints are replaced with is_active.",
-          ru: "Обновление названия махалли или мягкое отключение (is_active: false). Вместо DELETE используется is_active."
-        },
-        fields: {
-          uz: [
-            "name: Ixtiyoriy yangi nom.",
-            "is_active: Mahallaning faollik holati (false = nofaol)."
-          ],
-          en: [
-            "name: Optional renamed title.",
-            "is_active: Boolean toggle for soft deactivation."
-          ],
-          ru: [
-            "name: Новое название (опционально).",
-            "is_active: Статус активности (false = отключена)."
-          ]
-        },
-        edge: {
-          uz: [
-            "DELETE metodi umuman mavjud emas (405 qaytadi).",
-            "Prokuror chaqirsa: 403 Forbidden (Prokuror mahallani o'zgartira olmaydi)."
-          ],
-          en: [
-            "DELETE method does not exist (returns 405 Method Not Allowed).",
-            "Prokuror caller: 403 Forbidden."
-          ],
-          ru: [
-            "Метод DELETE отсутствует (возвращает 405).",
-            "Вызов от Прокурора: 403 Forbidden."
-          ]
-        },
-        payloadModel: "MahallaUpdateSchema",
-        payloadJson: JSON.stringify({
-          name: "Yangi Oqtepa MFY",
-          is_active: false
-        }, null, 2),
-        responseModel: "MahallaDetailSchema",
-        responseJson: JSON.stringify({
-          id: 1,
-          name: "Yangi Oqtepa MFY",
-          is_active: false,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:05:00",
-          members: []
-        }, null, 2),
-        bruno: "Mahallas/Update Mahalla.bru",
-        authHeader: "Admin Bearer"
-      },
-      {
-        id: "users-create",
-        cat: "users",
-        method: "post",
-        path: "/users",
-        role: "prokuror",
-        roleLabel: { uz: "Admin yoki Prokuror", en: "Admin or Prokuror", ru: "Админ или Прокурор" },
-        why: {
-          uz: "Yagona xodim yaratish va mahallaga biriktirish so'rovi. Prokuror mahallaning 7 nafar xodimini tayinlash uchun faqat shu so'rovdan foydalanadi.",
-          en: "The unified endpoint for creating users and assigning them to Mahallas. Prokuror uses this to add the 7 Mahalla officials.",
-          ru: "Единый запрос создания пользователей и привязки к махаллям. Прокурор использует его для назначения 7 сотрудников."
-        },
-        fields: {
-          uz: [
-            "first_name, last_name, phone: Majburiy shaxsiy va aloqa ma'lumotlari.",
-            "role: Tayinlanayotgan lavozim.",
-            "mahalla_id: MAJBURIY agar lavozim 7 xodimdan biri bo'lsa! TAQIQLANGAN agar lavozim Prokuror yoki Admin bo'lsa.",
-            "password: Ixtiyoriy (kelgusida E-IMZO USB kalit yoki MyID bilan kiradigan xodimlar uchun bo'sh qoldirilishi mumkin)."
-          ],
-          en: [
-            "first_name, last_name, phone: Required contact and identity info.",
-            "role: Assigned role.",
-            "mahalla_id: MANDATORY if role is one of the 7 Mahalla roles! FORBIDDEN if role is Prokuror or Admin.",
-            "password: Optional for future E-IMZO USB key or MyID accounts."
-          ],
-          ru: [
-            "first_name, last_name, phone: Обязательные персональные данные.",
-            "role: Назначаемая должность.",
-            "mahalla_id: ОБЯЗАТЕЛЬНО если роль из 7 сотрудников махалли! ЗАПРЕЩЕНО для Прокурора и Админа.",
-            "password: Опционально для будущей авторизации через ЭЦП / MyID."
-          ]
-        },
-        edge: {
-          uz: [
-            "Yagona Prokuror qoidasi: Agar tizimda faol Prokuror mavjud bo'lsa, ikkinchi prokurorni yaratish 409 Conflict qaytaradi.",
-            "Prokuror cheklovi: Prokuror Admin yoki boshqa Prokurorni yarata OLMAYDI (403).",
-            "1 Lavozim - 1 Xodim qoidasi: Agar mahallada faol Rais bo'lsa va yangi Rais tayinlansa, avvalgi Rais avtomatik mahalladan chiqariladi (mahalla_id=null, is_active=false)."
-          ],
-          en: [
-            "Single Prokuror rule: only 1 active Prokuror can exist (attempting second returns 409 Conflict).",
-            "Prokuror limit: Prokuror cannot create an Admin or another Prokuror (403 Forbidden).",
-            "1 Official Per Role Per Mahalla: if a Mahalla already has a Rais, adding a new Rais automatically displaces the previous Rais."
-          ],
-          ru: [
-            "Правило одного Прокурора: в системе может быть только 1 активный Прокурор (второй вернет 409 Conflict).",
-            "Ограничение Прокурора: Прокурор не может создавать Админа или Прокурора (403).",
-            "1 роль на 1 человека в махалле: назначение нового Раиса автоматически смещает предыдущего."
-          ]
-        },
-        payloadModel: "UserCreateSchema",
-        payloadJson: JSON.stringify({
-          first_name: "Temur",
-          last_name: "Barlos",
-          phone: "+998909998877",
-          login: "rais_temur",
-          password: "RaisPassword123",
-          role: "mahalla_raisi",
-          mahalla_id: 1,
-          is_active: true
-        }, null, 2),
-        responseModel: "UserResponseSchema",
-        responseJson: JSON.stringify({
-          id: 2,
-          first_name: "Temur",
-          last_name: "Barlos",
-          phone: "+998909998877",
-          login: "rais_temur",
-          role: "mahalla_raisi",
-          mahalla_id: 1,
-          is_active: true,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:00:00"
-        }, null, 2),
-        bruno: "Users/Create User.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "users-list",
-        cat: "users",
-        method: "get",
-        path: "/users",
-        role: "rais",
-        roleLabel: { uz: "Admin, Prokuror, Rais", en: "Admin, Prokuror, Rais", ru: "Админ, Прокурор, Раис" },
-        why: {
-          uz: "Xodimlarni 3 ta alohida parametr (ism, telefon, login) orqali saralash va qidirish. Rais faqat o'z mahallasidagi xodimlarni ko'radi.",
-          en: "Search and filter officials using 3 distinct query parameters (name, phone, login). Rais only sees members in his own Mahalla.",
-          ru: "Поиск и фильтрация сотрудников по 3 отдельным параметрам (имя, телефон, логин). Раис видит только свою махаллю."
-        },
-        fields: {
-          uz: [
-            "name: Ism yoki familiya bo'yicha qidiruv (?name=Temur).",
-            "phone: Telefon raqami bo'yicha qidiruv (?phone=99890).",
-            "login: Login bo'yicha qidiruv (?login=rais).",
-            "role, mahalla_id: Qo'shimcha filtrlar."
-          ],
-          en: [
-            "name: Search by first or last name (?name=Temur).",
-            "phone: Search by phone number (?phone=99890).",
-            "login: Search by username (?login=rais).",
-            "role, mahalla_id: Category filters."
-          ],
-          ru: [
-            "name: Поиск по имени или фамилии (?name=Temur).",
-            "phone: Поиск по телефону (?phone=99890).",
-            "login: Поиск по логину (?login=rais).",
-            "role, mahalla_id: Фильтры категории."
-          ]
-        },
-        edge: {
-          uz: [
-            "Qolgan 6 xodim chaqirsa: 403 Forbidden (ular boshqa xodimlarni ko'ra olmaydi).",
-            "Rais chaqirsa: faqat o'zining mahalla_id siga tegishli xodimlar chiqadi."
-          ],
-          en: [
-            "Other 6 members: 403 Forbidden (cannot view other officials).",
-            "Rais: automatically restricted to users with matching mahalla_id."
-          ],
-          ru: [
-            "Остальные 6 сотрудников: 403 Forbidden (не могут видеть других).",
-            "Раис: видит только сотрудников своей махалли."
-          ]
-        },
-        payloadModel: "None (Query Params)",
-        payloadJson: "// 3 ta alohida qidiruv parametri:\n?page=1&page_size=10&name=Temur&phone=90999&login=rais",
-        responseModel: "PaginatedUserSchema",
-        responseJson: JSON.stringify({
-          items: [
-            {
-              id: 2,
-              first_name: "Temur",
-              last_name: "Barlos",
-              phone: "+998909998877",
-              login: "rais_temur",
-              role: "mahalla_raisi",
-              mahalla_id: 1,
-              is_active: true
-            }
-          ],
-          total: 1,
-          page: 1,
-          page_size: 10
-        }, null, 2),
-        bruno: "Users/Get Users.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "users-get-one",
-        cat: "users",
-        method: "get",
-        path: "/users/{user_id}",
-        role: "staff",
-        roleLabel: { uz: "Barcha Xodimlar", en: "All Staff", ru: "Все сотрудники" },
-        why: {
-          uz: "Alohida xodim profilini ko'rish. 6 xodim faqat o'z profilini ko'ra oladi (boshqalarnikini ko'ra olmaydi).",
-          en: "Inspect single official profile. The 6 officials can only view their own user profile.",
-          ru: "Просмотр профиля сотрудника. 6 сотрудников махалли могут видеть только свой собственный профиль."
-        },
-        fields: {
-          uz: ["user_id: Xodimning ID raqami."],
-          en: ["user_id: Integer user ID."],
-          ru: ["user_id: ID пользователя."]
-        },
-        edge: {
-          uz: [
-            "6 xodim boshqa xodimning ID sini chaqirsa: 403 Forbidden.",
-            "Rais boshqa mahalladagi xodimning ID sini chaqirsa: 403 Forbidden."
-          ],
-          en: [
-            "6 members calling another ID: 403 Forbidden.",
-            "Rais calling member of another Mahalla: 403 Forbidden."
-          ],
-          ru: [
-            "6 сотрудников вызывают чужой ID: 403 Forbidden.",
-            "Раис вызывает сотрудника другой махалли: 403 Forbidden."
-          ]
-        },
-        payloadModel: "None",
-        payloadJson: "// GET /users/2",
-        responseModel: "UserResponseSchema",
-        responseJson: JSON.stringify({
-          id: 2,
-          first_name: "Temur",
-          last_name: "Barlos",
-          phone: "+998909998877",
-          login: "rais_temur",
-          role: "mahalla_raisi",
-          mahalla_id: 1,
-          is_active: true,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:00:00"
-        }, null, 2),
-        bruno: "Users/Get User by ID.bru",
-        authHeader: "Bearer {{token}}"
-      },
-      {
-        id: "users-patch",
-        cat: "users",
-        method: "patch",
-        path: "/users/{user_id}",
-        role: "prokuror",
-        roleLabel: { uz: "Admin yoki Prokuror", en: "Admin or Prokuror", ru: "Админ или Прокурор" },
-        why: {
-          uz: "Xodim ma'lumotlarini yangilash yoki uni nofaol qilish (is_active: false). Rais xodimlarni o'zgartira OLMAYDI.",
-          en: "Updates officer info or soft-deactivates an official (is_active: false). Rais CANNOT edit the 6 officials.",
-          ru: "Обновление данных сотрудника или мягкое отключение (is_active: false). Раис НЕ может изменять сотрудников."
-        },
-        fields: {
-          uz: [
-            "first_name, last_name, phone, password: Ixtiyoriy yangilanadigan maydonlar.",
-            "is_active: false berilsa xodim nofaol qilinadi (tizimga kira olmaydi)."
-          ],
-          en: [
-            "first_name, last_name, phone, password: Optional update fields.",
-            "is_active: set to false to soft-deactivate officer access."
-          ],
-          ru: [
-            "first_name, last_name, phone, password: Поля для обновления.",
-            "is_active: false для отключения доступа сотрудника."
-          ]
-        },
-        edge: {
-          uz: [
-            "Rais yoki 6 xodim birovni o'zgartirmoqchi bo'lsa: 403 Forbidden ('rais cant change 6 people').",
-            "DELETE metodi o'chirilgan (405 qaytadi).",
-            "Prokuror o'zini yoki boshqa prokurorni o'zgartira olmaydi (403)."
-          ],
-          en: [
-            "Rais or 6 members attempting to modify others: 403 Forbidden ('rais cant change 6 people').",
-            "DELETE method is completely removed (returns 405 Method Not Allowed).",
-            "Prokuror cannot modify Admin or Prokuror accounts (403)."
-          ],
-          ru: [
-            "Раис или 6 сотрудников пытаются изменить других: 403 Forbidden.",
-            "Метод DELETE полностью удален (возвращает 405).",
-            "Прокурор не может изменять аккаунты Админа или Прокурора (403)."
-          ]
-        },
-        payloadModel: "UserUpdateSchema",
-        payloadJson: JSON.stringify({
-          first_name: "Temurbek",
-          is_active: false
-        }, null, 2),
-        responseModel: "UserResponseSchema",
-        responseJson: JSON.stringify({
-          id: 2,
-          first_name: "Temurbek",
-          last_name: "Barlos",
-          phone: "+998909998877",
-          login: "rais_temur",
-          role: "mahalla_raisi",
-          mahalla_id: 1,
-          is_active: false,
-          created_at: "2026-09-15T10:00:00",
-          updated_at: "2026-09-15T10:05:00"
-        }, null, 2),
-        bruno: "Users/Update User.bru",
-        authHeader: "Bearer {{token}}"
-      }
-    ];
+  {
+    "id": "auth-register",
+    "cat": "auth",
+    "method": "post",
+    "path": "/auth/register",
+    "role": "admin",
+    "roleLabel": {
+      "uz": "Faqat Admin",
+      "en": "Admin Only",
+      "ru": "Только Админ"
+    },
+    "why": {
+      "uz": "Faqat Administrator tomonidan Prokuror yoki boshqaruv hisoblarini yaratish uchun. Ommaviy ro'yxatdan o'tish yopiq.",
+      "en": "Used exclusively by Admin to register Prokuror or system manager accounts. Public signup is disabled.",
+      "ru": "Используется исключительно Администратором для регистрации Прокурора и служебных аккаунтов. Публичная регистрация отключена."
+    },
+    "fields": {
+      "uz": [
+        "first_name, last_name: Xodimning F.I.SH (audit va jurnallar uchun).",
+        "phone: O'zbekiston formati (+998901234567). Takrorlanmas bo'lishi shart.",
+        "login: Tizimga kirish uchun unikal login.",
+        "password: Parol (bcrypt bilan shifrlanadi).",
+        "role: admin yoki prokuror."
+      ],
+      "en": [
+        "first_name, last_name: Official's full legal name.",
+        "phone: Unique phone number in Uzbekistan format (+998901234567).",
+        "login: Unique username for authentication.",
+        "password: Password string (stored as bcrypt hash).",
+        "role: admin or prokuror."
+      ],
+      "ru": [
+        "first_name, last_name: Полное имя сотрудника для аудита.",
+        "phone: Уникальный номер телефона в формате Узбекистана (+998901234567).",
+        "login: Уникальный логин для входа.",
+        "password: Строка пароля (хэшируется в bcrypt).",
+        "role: admin или prokuror."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Telefon yoki login bazada avval ro'yxatdan o'tgan bo'lsa: 409 Conflict.",
+        "Admin bo'lmagan foydalanuvchi chaqirsa: 403 Forbidden."
+      ],
+      "en": [
+        "Duplicate phone or login: returns 409 Conflict.",
+        "Non-admin caller: returns 403 Forbidden."
+      ],
+      "ru": [
+        "Дубликат телефона или логина: возвращает 409 Conflict.",
+        "Запрос не от имени Админа: возвращает 403 Forbidden."
+      ]
+    },
+    "payloadModel": "RegisterSchema",
+    "payloadJson": "{\n  \"first_name\": \"Sardor\",\n  \"last_name\": \"Rahimov\",\n  \"phone\": \"+998901234567\",\n  \"login\": \"prokuror_admin\",\n  \"password\": \"Password123\",\n  \"role\": \"prokuror\"\n}",
+    "responseModel": "TokenRes",
+    "responseJson": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"role\": \"prokuror\",\n  \"user_id\": 1,\n  \"mahalla_id\": null\n}",
+    "bruno": "Auth/Register.bru",
+    "authHeader": "Admin Bearer"
+  },
+  {
+    "id": "auth-login",
+    "cat": "auth",
+    "method": "post",
+    "path": "/auth/login",
+    "role": "public",
+    "roleLabel": {
+      "uz": "Ommaviy",
+      "en": "Public",
+      "ru": "Публичный"
+    },
+    "why": {
+      "uz": "Barcha foydalanuvchilar (Admin, Prokuror, Rais, 6 xodim) uchun autentifikatsiya va JWT tokenlarni olish.",
+      "en": "Universal authentication endpoint for Admin, Prokuror, Rais, and 6 Mahalla members.",
+      "ru": "Универсальный вход для всех сотрудников с получением JWT токенов."
+    },
+    "fields": {
+      "uz": [
+        "login: Foydalanuvchi logini yoki telefon raqami (+998901234567).",
+        "password: Parol."
+      ],
+      "en": [
+        "login: Either unique username or full phone number.",
+        "password: Password."
+      ],
+      "ru": [
+        "login: Логин или номер телефона.",
+        "password: Пароль."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Xodim nofaol qilingan bo'lsa (is_active=false): 401 Unauthorized.",
+        "Noto'g'ri login yoki parol kiritilsa: 401 Invalid login or password."
+      ],
+      "en": [
+        "Deactivated user (is_active=false): 401 Unauthorized.",
+        "Wrong login or password: 401 Invalid login or password."
+      ],
+      "ru": [
+        "Отключенный аккаунт (is_active=false): 401 Unauthorized.",
+        "Неверный логин или пароль: 401 Invalid login or password."
+      ]
+    },
+    "payloadModel": "LoginSchema",
+    "payloadJson": "{\n  \"login\": \"prokuror_admin\",\n  \"password\": \"Password123\"\n}",
+    "responseModel": "TokenRes",
+    "responseJson": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"role\": \"prokuror\",\n  \"user_id\": 1,\n  \"mahalla_id\": null\n}",
+    "bruno": "Auth/Login.bru",
+    "authHeader": "None"
+  },
+  {
+    "id": "auth-refresh",
+    "cat": "auth",
+    "method": "post",
+    "path": "/auth/refresh",
+    "role": "public",
+    "roleLabel": {
+      "uz": "Ommaviy",
+      "en": "Public",
+      "ru": "Публичный"
+    },
+    "why": {
+      "uz": "Access token muddati (1 kun) tugaganda parolsiz 7 kunlik refresh token orqali yangi access token olish.",
+      "en": "Rotates expired 1-day access token using valid 7-day refresh token without asking user credentials.",
+      "ru": "Получение нового access токена по истечении 1 дня без повторного ввода пароля."
+    },
+    "fields": {
+      "uz": [
+        "refresh_token: Avval olingan 7 kunlik refresh token."
+      ],
+      "en": [
+        "refresh_token: Active 7-day refresh JWT string."
+      ],
+      "ru": [
+        "refresh_token: Действующий 7-дневный refresh токен."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Muddati o'tgan yoki soxta token yuborilsa: 401 Unauthorized."
+      ],
+      "en": [
+        "Expired or tampered token returns 401 Unauthorized."
+      ],
+      "ru": [
+        "Истекший токен возвращает 401 Unauthorized."
+      ]
+    },
+    "payloadModel": "RefreshRequest",
+    "payloadJson": "{\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+    "responseModel": "RefreshResponse",
+    "responseJson": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+    "bruno": "Auth/Refresh Token.bru",
+    "authHeader": "None"
+  },
+  {
+    "id": "auth-me",
+    "cat": "auth",
+    "method": "get",
+    "path": "/auth/me",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Frontend yuklanganda joriy foydalanuvchining shaxsi, roli va qaysi mahallaga tegishli ekanligini aniqlash.",
+      "en": "Used by Frontend SPA on boot to verify session and route permissions based on user role and mahalla_id.",
+      "ru": "Проверка текущей сессии на фронтенде: получение роли и ID привязанной махалли."
+    },
+    "fields": {
+      "uz": [
+        "Javob: id, first_name, last_name, phone, login, role, mahalla_id, is_active."
+      ],
+      "en": [
+        "Returns: id, first_name, last_name, phone, login, role, mahalla_id, is_active."
+      ],
+      "ru": [
+        "Возвращает: id, first_name, last_name, phone, login, role, mahalla_id, is_active."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Token yuborilmasa: 401 Unauthorized. Foydalanuvchi bazada o'chirilgan bo'lsa: 403 Forbidden."
+      ],
+      "en": [
+        "Missing token: 401 Unauthorized. Deactivated user: 403 Forbidden."
+      ],
+      "ru": [
+        "Отсутствие токена: 401 Unauthorized. Деактивированный пользователь: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET so'rovi (URL query yoki body yo'q)\n// Headers: Authorization: Bearer {{token}}",
+    "responseModel": "MeResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"first_name\": \"Sardor\",\n  \"last_name\": \"Rahimov\",\n  \"phone\": \"+998901234567\",\n  \"login\": \"prokuror_admin\",\n  \"role\": \"prokuror\",\n  \"mahalla_id\": null,\n  \"is_active\": true\n}",
+    "bruno": "Auth/Get Me.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "users-create",
+    "cat": "users",
+    "method": "post",
+    "path": "/users",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Admin yoki Prokuror",
+      "en": "Admin or Prokuror",
+      "ru": "Админ или Прокурор"
+    },
+    "why": {
+      "uz": "Yagona xodim yaratish so'rovi. Prokuror mahallaning 7 nafar xodimini tayinlash uchun faqat shu so'rovdan foydalanadi.",
+      "en": "Unified endpoint for creating officials. Prokuror uses this to assign the 7 Mahalla officials.",
+      "ru": "Единый запрос назначения сотрудников. Прокурор использует его для назначения 7 сотрудников махалли."
+    },
+    "fields": {
+      "uz": [
+        "first_name, last_name, phone: Shaxsiy ma'lumotlar.",
+        "role: Tayinlanayotgan lavozim (mahalla_raisi, profilaktika_inspektori, xotin_qizlar_faoli, yoshlar_yetakchisi, hokim_yordamchisi, soliq_inspektori, ijtimoiy_xodim).",
+        "mahalla_id: MAJBURIY agar lavozim 7 xodimdan biri bo'lsa! TAQIQLANGAN agar Prokuror yoki Admin bo'lsa.",
+        "password: Parol (bo'sh qoldirilsa keyinchalik E-IMZO orqali kiradi)."
+      ],
+      "en": [
+        "first_name, last_name, phone: Officer's identity & contact.",
+        "role: One of the 7 Mahalla roles or executive roles.",
+        "mahalla_id: MANDATORY for the 7 Mahalla roles; FORBIDDEN for Admin/Prokuror.",
+        "password: Optional password string."
+      ],
+      "ru": [
+        "first_name, last_name, phone: Персональные данные.",
+        "role: Должность из 7 сотрудников махалли.",
+        "mahalla_id: ОБЯЗАТЕЛЬНО для сотрудников махалли; ЗАПРЕЩЕНО для Админа/Прокурора.",
+        "password: Пароль (опционально)."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "1 Lavozim - 1 Xodim qoidasi: Agar mahallada avval faol Rais bo'lsa va yangi Rais tayinlansa, avvalgisi avtomatik bo'shatiladi (mahalla_id=null, is_active=false).",
+        "Yagona Prokuror qoidasi: Tizimda faqat 1 ta faol Prokuror bo'lishi mumkin (ikkinchisi 409).",
+        "Prokuror cheklovi: Prokuror Admin yoki boshqa Prokurorni yarata OLMAYDI (403)."
+      ],
+      "en": [
+        "1 Official Per Role Per Mahalla: Existing official of that role in that mahalla is displaced automatically.",
+        "Single Prokuror rule: Only 1 active Prokuror allowed across system (duplicate -> 409).",
+        "Prokuror limit: Prokuror cannot create Admin or another Prokuror (403)."
+      ],
+      "ru": [
+        "1 должность на 1 человека в махалле: Предыдущий сотрудник автоматически смещается.",
+        "Правило одного Прокурора: Только 1 активный Прокурор в системе (409).",
+        "Прокурор не может создавать Админа или другого Прокурора (403)."
+      ]
+    },
+    "payloadModel": "UserCreateSchema",
+    "payloadJson": "{\n  \"first_name\": \"Temur\",\n  \"last_name\": \"Barlos\",\n  \"phone\": \"+998909998877\",\n  \"login\": \"rais_temur\",\n  \"password\": \"RaisPassword123\",\n  \"role\": \"mahalla_raisi\",\n  \"mahalla_id\": 1,\n  \"is_active\": true\n}",
+    "responseModel": "UserResponseSchema",
+    "responseJson": "{\n  \"id\": 2,\n  \"first_name\": \"Temur\",\n  \"last_name\": \"Barlos\",\n  \"phone\": \"+998909998877\",\n  \"login\": \"rais_temur\",\n  \"role\": \"mahalla_raisi\",\n  \"mahalla_id\": 1,\n  \"photo_url\": null,\n  \"birth_date_text\": null,\n  \"appointed_date_text\": null,\n  \"specialization\": null,\n  \"previous_workplace\": null,\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:00:00\"\n}",
+    "bruno": "Users/Create User.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "users-list",
+    "cat": "users",
+    "method": "get",
+    "path": "/users",
+    "role": "rais",
+    "roleLabel": {
+      "uz": "Admin, Prokuror, Rais",
+      "en": "Admin, Prokuror, Rais",
+      "ru": "Админ, Прокурор, Раис"
+    },
+    "why": {
+      "uz": "Xodimlarni 3 ta alohida parametr (ism, telefon, login) orqali qidirish. Rais faqat o'z mahallasidagi xodimlarni ko'radi.",
+      "en": "Search officials with dedicated filters (name, phone, login). Rais is restricted to their own Mahalla.",
+      "ru": "Поиск сотрудников по 3 отдельным полям (имя, телефон, логин). Раис видит только свою махаллю."
+    },
+    "fields": {
+      "uz": [
+        "name: Ism yoki familiya bo'yicha qidiruv (?name=Temur).",
+        "phone: Telefon bo'yicha qidiruv (?phone=99890).",
+        "login: Login bo'yicha qidiruv (?login=rais).",
+        "role: Lavozim bo'yicha filtr.",
+        "mahalla_id: Mahalla bo'yicha filtr (Prokuror/Admin)."
+      ],
+      "en": [
+        "name: Filter by first or last name (?name=Temur).",
+        "phone: Filter by phone (?phone=99890).",
+        "login: Filter by username (?login=rais).",
+        "role: Filter by UserRole enum.",
+        "mahalla_id: Filter by Mahalla ID (Admin/Prokuror)."
+      ],
+      "ru": [
+        "name: Поиск по имени или фамилии (?name=Temur).",
+        "phone: Поиск по номеру телефона (?phone=99890).",
+        "login: Поиск по логину (?login=rais).",
+        "role: Фильтр по роли.",
+        "mahalla_id: Фильтр по махалле."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Qolgan 6 xodim chaqirsa: 403 Forbidden (boshqa xodimlarni ko'ra olmaydi).",
+        "Rais chaqirsa: avtomatik uning mahalla_id siga mos xodimlar chiqadi."
+      ],
+      "en": [
+        "Other 6 officials calling: 403 Forbidden.",
+        "Rais: automatically scoped to own mahalla_id."
+      ],
+      "ru": [
+        "Остальные 6 сотрудников: 403 Forbidden.",
+        "Раис: автоматически получает только сотрудников своей махалли."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /users?page=1&page_size=10&name=Temur&phone=90999&login=rais",
+    "responseModel": "PaginatedUserSchema",
+    "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 2,\n      \"first_name\": \"Temur\",\n      \"last_name\": \"Barlos\",\n      \"phone\": \"+998909998877\",\n      \"login\": \"rais_temur\",\n      \"role\": \"mahalla_raisi\",\n      \"mahalla_id\": 1,\n      \"photo_url\": \"/uploads/photos/2026/09/15/temur.jpg\",\n      \"birth_date_text\": \"12.04.1985\",\n      \"appointed_date_text\": \"01.02.2023 yildan\",\n      \"specialization\": \"Yurist / Boshqaruv\",\n      \"previous_workplace\": \"Tuman hokimligi tashkiliy bo'lim bosh mutaxassisi\",\n      \"is_active\": true\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
+    "bruno": "Users/Get Users.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "users-get-one",
+    "cat": "users",
+    "method": "get",
+    "path": "/users/{user_id}",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Alohida xodim kartochkasi (1-rasmdagi foto, tayinlangan sana, mutaxassislik, oldingi ish joyi kabi ma'lumotlar bilan). 6 xodim faqat o'z profilini ko'ra oladi.",
+      "en": "Fetch full official profile card (with photo, appointment date, specialization, previous workplace). The 6 officials can only inspect their own profile.",
+      "ru": "Просмотр карточки сотрудника (фото, дата назначения, специальность, предыдущее место работы). 6 сотрудников могут смотреть только себя."
+    },
+    "fields": {
+      "uz": [
+        "user_id: Xodimning unikal ID raqami."
+      ],
+      "en": [
+        "user_id: Unique user integer ID."
+      ],
+      "ru": [
+        "user_id: ID сотрудника."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "6 xodim boshqa xodim ID sini so'rasa: 403 Forbidden.",
+        "Rais boshqa mahalladagi xodim ID sini so'rasa: 403 Forbidden."
+      ],
+      "en": [
+        "6 officials attempting to inspect another user: 403 Forbidden.",
+        "Rais calling officer from another Mahalla: 403 Forbidden."
+      ],
+      "ru": [
+        "6 сотрудников запрашивают чужой профиль: 403 Forbidden.",
+        "Раис запрашивает сотрудника другой махалли: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /users/2\n// Headers: Authorization: Bearer {{token}}",
+    "responseModel": "UserResponseSchema",
+    "responseJson": "{\n  \"id\": 2,\n  \"first_name\": \"Temur\",\n  \"last_name\": \"Barlos\",\n  \"phone\": \"+998909998877\",\n  \"login\": \"rais_temur\",\n  \"role\": \"mahalla_raisi\",\n  \"mahalla_id\": 1,\n  \"photo_url\": \"/uploads/photos/2026/09/15/temur.jpg\",\n  \"birth_date_text\": \"12.04.1985\",\n  \"appointed_date_text\": \"01.02.2023 yildan\",\n  \"specialization\": \"Yurist / Davlat boshqaruvi\",\n  \"previous_workplace\": \"Tuman adliya bo'limi bosh maslahatchisi\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:00:00\"\n}",
+    "bruno": "Users/Get User by ID.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "users-patch",
+    "cat": "users",
+    "method": "patch",
+    "path": "/users/{user_id}",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Admin yoki Prokuror",
+      "en": "Admin or Prokuror",
+      "ru": "Админ или Прокурор"
+    },
+    "why": {
+      "uz": "Xodimning martaba va biografik ma'lumotlarini (mutaxassislik, oldingi ish joyi, tayinlangan sana) yangilash yoki xodimni nofaol qilish. Rais xodimlarni tahrirlay OLMAYDI.",
+      "en": "Update official biography and career details (specialization, appointment date, previous workplace) or deactivate account. Rais CANNOT modify officials.",
+      "ru": "Обновление биографических данных и специальности сотрудника или деактивация. Раис НЕ может редактировать сотрудников."
+    },
+    "fields": {
+      "uz": [
+        "birth_date_text: Tug'ilgan sana (matn, masalan '12.04.1988').",
+        "appointed_date_text: Tayinlangan sana (masalan '01.02.2023 yildan').",
+        "specialization: Mutaxassisligi (masalan 'Iqtisodchi / Moliya').",
+        "previous_workplace: Oldingi ish joyi va lavozimi.",
+        "photo_url: Rasm havolasi (yoki /users/{id}/photo orqali yuklanadi).",
+        "first_name, last_name, phone, password, is_active: Asosiy parametrlar."
+      ],
+      "en": [
+        "birth_date_text: Human readable birth date string (e.g. '12.04.1988').",
+        "appointed_date_text: Appointment date string (e.g. '01.02.2023 yildan').",
+        "specialization: Professional qualification / major.",
+        "previous_workplace: Prior employment history.",
+        "photo_url: Direct URL to image (or upload via /users/{id}/photo).",
+        "first_name, last_name, phone, password, is_active: Standard user fields."
+      ],
+      "ru": [
+        "birth_date_text: Дата рождения текстом ('12.04.1988').",
+        "appointed_date_text: Дата назначения ('01.02.2023 года').",
+        "specialization: Специальность / квалификация.",
+        "previous_workplace: Предыдущее место работы.",
+        "photo_url: Ссылка на фотографию.",
+        "first_name, last_name, phone, password, is_active: Основные поля."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais chaqirsa: 403 Forbidden ('rais cant change 6 people').",
+        "DELETE metodi olib tashlangan (405). O'chirish o'rniga is_active=false qo'llaniladi."
+      ],
+      "en": [
+        "Rais calling: 403 Forbidden ('rais cant change 6 people').",
+        "DELETE method removed (405). Soft delete via is_active=false."
+      ],
+      "ru": [
+        "Вызов от Раиса: 403 Forbidden ('rais cant change 6 people').",
+        "DELETE метод удален (405). Отключение через is_active=false."
+      ]
+    },
+    "payloadModel": "UserUpdateSchema",
+    "payloadJson": "{\n  \"birth_date_text\": \"12.04.1985\",\n  \"appointed_date_text\": \"01.02.2023 yildan\",\n  \"specialization\": \"Iqtisodchi / Moliya\",\n  \"previous_workplace\": \"Xalq banki tuman filiali bosh mutaxassisi\"\n}",
+    "responseModel": "UserResponseSchema",
+    "responseJson": "{\n  \"id\": 2,\n  \"first_name\": \"Temur\",\n  \"last_name\": \"Barlos\",\n  \"phone\": \"+998909998877\",\n  \"login\": \"rais_temur\",\n  \"role\": \"mahalla_raisi\",\n  \"mahalla_id\": 1,\n  \"photo_url\": \"/uploads/photos/2026/09/15/temur.jpg\",\n  \"birth_date_text\": \"12.04.1985\",\n  \"appointed_date_text\": \"01.02.2023 yildan\",\n  \"specialization\": \"Iqtisodchi / Moliya\",\n  \"previous_workplace\": \"Xalq banki tuman filiali bosh mutaxassisi\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:15:00\"\n}",
+    "bruno": "Users/Update User.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "users-photo",
+    "cat": "users",
+    "method": "post",
+    "path": "/users/{user_id}/photo",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "O'zi, Rais, Prokuror, Admin",
+      "en": "Self, Rais, Prokuror, Admin",
+      "ru": "Сам сотрудник, Раис, Прокурор"
+    },
+    "why": {
+      "uz": "1-rasmdagi xodim profil rasmini (avatar) serverga yuklash. Fayllar avtomatik /uploads/photos/YYYY/MM/DD/ jildiga saqlanadi.",
+      "en": "Upload official portrait photo. Automatically saved to date-partitioned directory /uploads/photos/YYYY/MM/DD/.",
+      "ru": "Загрузка фото сотрудника для карточки. Файлы сохраняются в /uploads/photos/YYYY/MM/DD/."
+    },
+    "fields": {
+      "uz": [
+        "photo: Multipart form-data fayl (png, jpg, jpeg, webp). Maksimal hajm: 5 MB.",
+        "DIQQAT FRONTEND: Content-Type sarlavhasini qo'lda o'rnatmang! FormData obyektidan foydalaning, brauzer multipart boundary ni o'zi qo'yadi."
+      ],
+      "en": [
+        "photo: Multipart form-data file (png, jpg, jpeg, webp). Max size: 5 MB.",
+        "FRONTEND NOTE: Do not set Content-Type header manually. Use FormData and let browser handle the multipart boundary."
+      ],
+      "ru": [
+        "photo: Файл в multipart form-data (png, jpg, jpeg, webp). Макс размер: 5 МБ.",
+        "ДЛЯ ФРОНТЕНДА: Не устанавливайте заголовок Content-Type вручную. Используйте FormData."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Fayl hajmi 5 MB dan oshsa: 413 File size exceeds maximum allowed 5 MB.",
+        "Rasm bo'lmagan fayl yuklansa: 400 Bad Request.",
+        "Boshqa xodimning suratini ruxsatsiz o'zgartirish: 403 Forbidden."
+      ],
+      "en": [
+        "File size > 5 MB: 413 File size exceeds maximum allowed 5 MB.",
+        "Invalid non-image extension: 400 Bad Request.",
+        "Unauthorized user attempting to change another's photo: 403 Forbidden."
+      ],
+      "ru": [
+        "Размер файла > 5 МБ: 413 File size exceeds maximum allowed 5 MB.",
+        "Недопустимый формат файла: 400 Bad Request.",
+        "Попытка изменить фото другого сотрудника без прав: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "FormData (multipart/form-data)",
+    "payloadJson": "// JavaScript misoli:\nconst fd = new FormData();\nfd.append('photo', fileInputElement.files[0]);\n\nawait axios.post('/api/users/2/photo', fd);",
+    "responseModel": "UserResponseSchema",
+    "responseJson": "{\n  \"id\": 2,\n  \"first_name\": \"Temur\",\n  \"last_name\": \"Barlos\",\n  \"phone\": \"+998909998877\",\n  \"login\": \"rais_temur\",\n  \"role\": \"mahalla_raisi\",\n  \"mahalla_id\": 1,\n  \"photo_url\": \"/uploads/photos/2026/09/15/848b1110e53a479b88cf3b42907beab2.jpg\",\n  \"birth_date_text\": \"12.04.1985\",\n  \"appointed_date_text\": \"01.02.2023 yildan\",\n  \"specialization\": \"Iqtisodchi\",\n  \"previous_workplace\": \"Xalq banki\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:20:00\"\n}",
+    "bruno": "Users/Upload Employee Photo.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "mahallas-create",
+    "cat": "mahallas",
+    "method": "post",
+    "path": "/mahallas",
+    "role": "admin",
+    "roleLabel": {
+      "uz": "Faqat Admin",
+      "en": "Admin Only",
+      "ru": "Только Админ"
+    },
+    "why": {
+      "uz": "Yangi mahallani ro'yxatga olish. Prokuror mahallalarni yarata yoki o'chira OLMAYDI.",
+      "en": "Register a new Mahalla. Prokuror CANNOT create or delete Mahallas.",
+      "ru": "Регистрация новой махалли. Прокурор НЕ может создавать или удалять махалли."
+    },
+    "fields": {
+      "uz": [
+        "name: Mahallaning rasmiy nomi (masalan, 'Oqtepa MFY')."
+      ],
+      "en": [
+        "name: Official title of the Mahalla (e.g. 'Oqtepa MFY')."
+      ],
+      "ru": [
+        "name: Название махалли (например, 'Октепа МФЙ')."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Prokuror yoki Rais chaqirsa: 403 Forbidden.",
+        "Bir xil nomli mahalla mavjud bo'lsa: 409 Conflict."
+      ],
+      "en": [
+        "Prokuror or Rais caller: 403 Forbidden.",
+        "Duplicate Mahalla name: 409 Conflict."
+      ],
+      "ru": [
+        "Вызов от Прокурора или Раиса: 403 Forbidden.",
+        "Дубликат названия махалли: 409 Conflict."
+      ]
+    },
+    "payloadModel": "MahallaCreateSchema",
+    "payloadJson": "{\n  \"name\": \"Oqtepa MFY\"\n}",
+    "responseModel": "MahallaDetailSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Oqtepa MFY\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:00:00\",\n  \"members\": []\n}",
+    "bruno": "Mahallas/Create Mahalla.bru",
+    "authHeader": "Admin Bearer"
+  },
+  {
+    "id": "mahallas-list",
+    "cat": "mahallas",
+    "method": "get",
+    "path": "/mahallas",
+    "role": "rais",
+    "roleLabel": {
+      "uz": "Admin, Prokuror, Rais",
+      "en": "Admin, Prokuror, Rais",
+      "ru": "Админ, Прокурор, Раис"
+    },
+    "why": {
+      "uz": "Mahallalar ro'yxatini ko'rish va qidirish. Rais faqat o'z mahallasini ko'ra oladi.",
+      "en": "List and search Mahallas. Rais is restricted to their own Mahalla.",
+      "ru": "Список махаллей с пагинацией и поиском. Раис видит только свою махаллю."
+    },
+    "fields": {
+      "uz": [
+        "page, page_size: Sahifalash.",
+        "search: Mahalla nomi bo'yicha qidiruv."
+      ],
+      "en": [
+        "page, page_size: Pagination.",
+        "search: Search substring for name."
+      ],
+      "ru": [
+        "page, page_size: Пагинация.",
+        "search: Поиск по названию."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Qolgan 6 xodim chaqirsa: 403 Forbidden.",
+        "Rais chaqirsa faqat o'z mahallasi chiqadi."
+      ],
+      "en": [
+        "6 Mahalla officials: 403 Forbidden.",
+        "Rais: automatically scoped to own mahalla_id."
+      ],
+      "ru": [
+        "Остальные 6 сотрудников: 403 Forbidden.",
+        "Раис: получает только свою махаллю."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /mahallas?page=1&page_size=10&search=Oqtepa",
+    "responseModel": "PaginatedMahallaSchema",
+    "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"name\": \"Oqtepa MFY\",\n      \"is_active\": true,\n      \"members\": []\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
+    "bruno": "Mahallas/Get Mahallas.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "mahallas-get-one",
+    "cat": "mahallas",
+    "method": "get",
+    "path": "/mahallas/{mahalla_id}",
+    "role": "rais",
+    "roleLabel": {
+      "uz": "Admin, Prokuror, O'z Raisi",
+      "en": "Admin, Prokuror, Own Rais",
+      "ru": "Админ, Прокурор, Свой Раис"
+    },
+    "why": {
+      "uz": "Alohida mahalla va unga tayinlangan 7 xodimlar ro'yxatini ko'rish.",
+      "en": "Inspect single Mahalla and its appointed 7 officials.",
+      "ru": "Просмотр махалли и списка назначенных 7 сотрудников."
+    },
+    "fields": {
+      "uz": [
+        "mahalla_id: Mahalla ID raqami."
+      ],
+      "en": [
+        "mahalla_id: Mahalla ID."
+      ],
+      "ru": [
+        "mahalla_id: ID махалли."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais boshqa mahalla ID sini chaqirsa: 403 Forbidden."
+      ],
+      "en": [
+        "Rais requesting another Mahalla: 403 Forbidden."
+      ],
+      "ru": [
+        "Раис запрашивает чужую махаллю: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /mahallas/1",
+    "responseModel": "MahallaDetailSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Oqtepa MFY\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:00:00\",\n  \"members\": [\n    {\n      \"id\": 2,\n      \"first_name\": \"Temur\",\n      \"last_name\": \"Barlos\",\n      \"role\": \"mahalla_raisi\",\n      \"phone\": \"+998909998877\",\n      \"is_active\": true\n    }\n  ]\n}",
+    "bruno": "Mahallas/Get Mahalla by ID.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "mahallas-patch",
+    "cat": "mahallas",
+    "method": "patch",
+    "path": "/mahallas/{mahalla_id}",
+    "role": "admin",
+    "roleLabel": {
+      "uz": "Faqat Admin",
+      "en": "Admin Only",
+      "ru": "Только Админ"
+    },
+    "why": {
+      "uz": "Mahalla nomini o'zgartirish yoki mahallani nofaol qilish (is_active: false).",
+      "en": "Update Mahalla title or soft deactivate it (is_active: false).",
+      "ru": "Изменение названия махалли или отключение (is_active: false)."
+    },
+    "fields": {
+      "uz": [
+        "name: Yangi nom.",
+        "is_active: Faollik holati (false = nofaol)."
+      ],
+      "en": [
+        "name: Updated name.",
+        "is_active: Boolean status flag."
+      ],
+      "ru": [
+        "name: Новое название.",
+        "is_active: Статус активности."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Prokuror chaqirsa: 403 Forbidden (Prokuror mahallani o'zgartira olmaydi)."
+      ],
+      "en": [
+        "Prokuror caller: 403 Forbidden."
+      ],
+      "ru": [
+        "Вызов от Прокурора: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "MahallaUpdateSchema",
+    "payloadJson": "{\n  \"name\": \"Yangi Oqtepa MFY\",\n  \"is_active\": true\n}",
+    "responseModel": "MahallaDetailSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Yangi Oqtepa MFY\",\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T10:00:00\",\n  \"updated_at\": \"2026-09-15T10:30:00\",\n  \"members\": []\n}",
+    "bruno": "Mahallas/Update Mahalla.bru",
+    "authHeader": "Admin Bearer"
+  },
+  {
+    "id": "categories-create",
+    "cat": "categories",
+    "method": "post",
+    "path": "/categories",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Yangi maxsus toifa (hujjat turi) yaratish. Prokuror toifa nomi, tavsifi, unga mas'ul 7 xodim rollari va standart kelish davriyligini (kunlarda) belgilaydi.",
+      "en": "Create special risk category / docs type. Prokuror specifies title, description, responsible staff roles, and default check-in frequency.",
+      "ru": "Создание категории риска (типа документа). Прокурор задает название, ответственные роли из 7 сотрудников и периодичность проверок."
+    },
+    "fields": {
+      "uz": [
+        "name: Toifa nomi (masalan, 'Boquvchisi bo'lmagan yolg'iz ayollar', 'Prof hisob ro'yxati').",
+        "description: Toifa haqida izoh yoki huquqiy asos.",
+        "assigned_roles: Mas'ul etib tayinlangan xodim rollari massivi (masalan, ['xotin_qizlar_faoli', 'ijtimoiy_xodim']).",
+        "default_frequency_days: Fuqaroning mahallaga kelish yoki xonadoniga borish davriyligi (kunlarda, masalan 5, 10, 15)."
+      ],
+      "en": [
+        "name: Category title (e.g. 'Single women without breadwinner', 'Preventive supervision').",
+        "description: Purpose and legal notes.",
+        "assigned_roles: Array of responsible staff roles (e.g. ['xotin_qizlar_faoli', 'ijtimoiy_xodim']).",
+        "default_frequency_days: Default check-in frequency in days (e.g. 5, 15)."
+      ],
+      "ru": [
+        "name: Название категории ('Одинокие женщины без кормильца', 'Проф учет').",
+        "description: Описание и правовые основания.",
+        "assigned_roles: Массив ответственных ролей (из 7 сотрудников).",
+        "default_frequency_days: Периодичность проверок в днях (например 5, 15)."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais yoki oddiy xodim chaqirsa: 403 Forbidden (faqat Prokuror/Admin yaratishi mumkin).",
+        "Bir xil nomli toifa mavjud bo'lsa: 409 Conflict."
+      ],
+      "en": [
+        "Rais or staff caller: 403 Forbidden (only Prokuror/Admin can create).",
+        "Duplicate name: 409 Conflict."
+      ],
+      "ru": [
+        "Вызов от Раиса или сотрудника: 403 Forbidden (только Прокурор/Админ).",
+        "Дубликат названия: 409 Conflict."
+      ]
+    },
+    "payloadModel": "CategoryCreateSchema",
+    "payloadJson": "{\n  \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar nazorati\",\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\"\n  ],\n  \"default_frequency_days\": 15\n}",
+    "responseModel": "CategoryResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"icon_url\": null,\n  \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar nazorati\",\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\"\n  ],\n  \"default_frequency_days\": 15,\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:00:00\"\n}",
+    "bruno": "Categories/Create Category.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "categories-list",
+    "cat": "categories",
+    "method": "get",
+    "path": "/categories",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Barcha faol toifalar ro'yxatini olish (Select/Dropdown, toifalar jadvali yoki filtrlarda foydalanish uchun).",
+      "en": "List all active categories for dropdown selection, tables, and filters.",
+      "ru": "Список всех категорий для выпадающих списков, таблиц и фильтрации."
+    },
+    "fields": {
+      "uz": [
+        "page, page_size: Sahifalash.",
+        "search: Toifa nomi bo'yicha qidiruv.",
+        "is_active: Faol yoki nofaol toifalarni saralash."
+      ],
+      "en": [
+        "page, page_size: Pagination.",
+        "search: Search by category name.",
+        "is_active: Filter by active status."
+      ],
+      "ru": [
+        "page, page_size: Пагинация.",
+        "search: Поиск по названию категории.",
+        "is_active: Фильтр по статусу активности."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Token yuborilmasa: 401 Unauthorized."
+      ],
+      "en": [
+        "Missing authorization token: 401 Unauthorized."
+      ],
+      "ru": [
+        "Отсутствие токена: 401 Unauthorized."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /categories?page=1&page_size=10&search=ayollar",
+    "responseModel": "PaginatedCategorySchema",
+    "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n      \"icon_url\": \"/uploads/icons/2026/09/15/category_1.png\",\n      \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar\",\n      \"assigned_roles\": [\n        \"xotin_qizlar_faoli\",\n        \"ijtimoiy_xodim\"\n      ],\n      \"default_frequency_days\": 15,\n      \"is_active\": true\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
+    "bruno": "Categories/Get Categories.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "categories-stats",
+    "cat": "categories",
+    "method": "get",
+    "path": "/categories/stats",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "2-rasmdagi interaktiv toifa risk kartochkalarini (har bir toifa uchun umumiy fuqarolar soni, faol biriktirilganlar va muddati o'tib ketgan tekshiruvlar soni) chizish.",
+      "en": "Powers the interactive risk cards (as in screenshot 2), displaying total registered persons, active assignments, and overdue check-ins count per category.",
+      "ru": "Выводит интерактивные карточки риска (как на 2-м скриншоте) с количеством граждан, активных проверок и просроченных отчетов."
+    },
+    "fields": {
+      "uz": [
+        "mahalla_id: Mahalla bo'yicha filtr (Prokuror/Admin uchun ixtiyoriy; Rais va xodimlar uchun avtomatik ularning mahallasiga cheklanadi).",
+        "Javobda: persons_count, active_assignments_count, overdue_count har bir toifa uchun hisoblab beriladi."
+      ],
+      "en": [
+        "mahalla_id: Optional filter for Prokuror/Admin; automatically scoped to own Mahalla for staff/Rais.",
+        "Returns: live calculated persons_count, active_assignments_count, overdue_count per category."
+      ],
+      "ru": [
+        "mahalla_id: Опционально для Прокурора/Админа; для сотрудников автоматически фильтруется по их махалле.",
+        "Возвращает: persons_count, active_assignments_count, overdue_count по каждой категории."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Agar birorta ham fuqaro biriktirilmagan bo'lsa, sonlar 0 qaytadi (null bo'lmaydi)."
+      ],
+      "en": [
+        "Categories without assigned persons return 0 counts (never null)."
+      ],
+      "ru": [
+        "Категории без граждан возвращают 0 (не null)."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /categories/stats?mahalla_id=1\n// Headers: Authorization: Bearer {{token}}",
+    "responseModel": "List[CategoryStatsSchema]",
+    "responseJson": "[\n  {\n    \"id\": 1,\n    \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n    \"icon_url\": \"/uploads/icons/2026/09/15/category_1.png\",\n    \"assigned_roles\": [\n      \"xotin_qizlar_faoli\",\n      \"ijtimoiy_xodim\"\n    ],\n    \"default_frequency_days\": 15,\n    \"persons_count\": 42,\n    \"active_assignments_count\": 42,\n    \"overdue_count\": 3\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Profilaktik hisobda turuvchi shaxslar\",\n    \"icon_url\": \"/uploads/icons/2026/09/15/category_2.png\",\n    \"assigned_roles\": [\n      \"profilaktika_inspektori\"\n    ],\n    \"default_frequency_days\": 5,\n    \"persons_count\": 18,\n    \"active_assignments_count\": 18,\n    \"overdue_count\": 1\n  }\n]",
+    "bruno": "Categories/Get Category Stats.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "categories-get-one",
+    "cat": "categories",
+    "method": "get",
+    "path": "/categories/{category_id}",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Alohida toifa haqidagi to'liq ma'lumotlarni olish.",
+      "en": "Fetch details of a single category by ID.",
+      "ru": "Получение подробных данных отдельной категории по ID."
+    },
+    "fields": {
+      "uz": [
+        "category_id: Toifa unikal ID raqami."
+      ],
+      "en": [
+        "category_id: Category integer ID."
+      ],
+      "ru": [
+        "category_id: ID категории."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Toifa topilmasa: 404 Not Found."
+      ],
+      "en": [
+        "Category does not exist: 404 Not Found."
+      ],
+      "ru": [
+        "Категория не найдена: 404 Not Found."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /categories/1",
+    "responseModel": "CategoryResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"icon_url\": \"/uploads/icons/2026/09/15/category_1.png\",\n  \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar nazorati\",\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\"\n  ],\n  \"default_frequency_days\": 15,\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:00:00\"\n}",
+    "bruno": "Categories/Get Category by ID.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "categories-icon",
+    "cat": "categories",
+    "method": "post",
+    "path": "/categories/{category_id}/icon",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "2-rasmdagi toifa kartochkalari uchun maxsus ikonka yoki rasm yuklash. Fayl /uploads/icons/YYYY/MM/DD/ ga saqlanadi.",
+      "en": "Upload custom icon/image for risk category cards. Saved to /uploads/icons/YYYY/MM/DD/.",
+      "ru": "Загрузка иконки для карточки категории риска. Сохраняется в /uploads/icons/YYYY/MM/DD/."
+    },
+    "fields": {
+      "uz": [
+        "icon: Multipart fayl (png, jpg, jpeg, svg, webp). Maksimal hajm: 2 MB.",
+        "FRONTEND: FormData obyektidan foydalaning (Content-Type ni qo'lda qo'ymang)."
+      ],
+      "en": [
+        "icon: Multipart file (png, jpg, jpeg, svg, webp). Max size: 2 MB.",
+        "FRONTEND: Use FormData object without manual Content-Type header."
+      ],
+      "ru": [
+        "icon: Файл иконки (png, jpg, jpeg, svg, webp). Макс размер: 2 МБ.",
+        "ФРОНТЕНД: Используйте FormData без ручного указания Content-Type."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Fayl hajmi 2 MB dan oshsa: 413 File size exceeds maximum allowed 2 MB.",
+        "Ruxsatsiz foydalanuvchi chaqirsa: 403 Forbidden."
+      ],
+      "en": [
+        "File size > 2 MB: 413 File size exceeds maximum allowed 2 MB.",
+        "Non-admin/prokuror caller: 403 Forbidden."
+      ],
+      "ru": [
+        "Размер > 2 МБ: 413 File size exceeds maximum allowed 2 MB.",
+        "Запрос без прав: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "FormData (multipart/form-data)",
+    "payloadJson": "// JavaScript misoli:\nconst fd = new FormData();\nfd.append('icon', iconFileInput.files[0]);\n\nawait axios.post('/api/categories/1/icon', fd);",
+    "responseModel": "CategoryResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"icon_url\": \"/uploads/icons/2026/09/15/category_1.png\",\n  \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar nazorati\",\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\"\n  ],\n  \"default_frequency_days\": 15,\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:20:00\"\n}",
+    "bruno": "Categories/Upload Category Icon.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "categories-patch",
+    "cat": "categories",
+    "method": "patch",
+    "path": "/categories/{category_id}",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Toifa nomini, mas'ul rollarni, kelish davriyligini yoki faollik holatini tahrirlash.",
+      "en": "Edit category parameters, change assigned roles, default frequency, or toggle active status.",
+      "ru": "Редактирование категории: смена ответственных ролей, периодичности проверок или отключение."
+    },
+    "fields": {
+      "uz": [
+        "name, description, default_frequency_days: Ixtiyoriy yangilanadigan parametrlar.",
+        "assigned_roles: Yangi mas'ul rollar ro'yxati.",
+        "is_active: Toifani nofaol qilish uchun false beriladi."
+      ],
+      "en": [
+        "name, description, default_frequency_days: Optional update values.",
+        "assigned_roles: Updated list of responsible staff roles.",
+        "is_active: Boolean toggle for active status."
+      ],
+      "ru": [
+        "name, description, default_frequency_days: Обновляемые поля.",
+        "assigned_roles: Новый список ответственных ролей.",
+        "is_active: Отключение категории (false)."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Faqat Prokuror yoki Admin o'zgartira oladi, qolganlar uchun 403 Forbidden."
+      ],
+      "en": [
+        "Only Prokuror or Admin allowed; others receive 403 Forbidden."
+      ],
+      "ru": [
+        "Только Прокурор или Админ; для остальных 403 Forbidden."
+      ]
+    },
+    "payloadModel": "CategoryUpdateSchema",
+    "payloadJson": "{\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\",\n    \"profilaktika_inspektori\"\n  ],\n  \"default_frequency_days\": 10\n}",
+    "responseModel": "CategoryResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"icon_url\": \"/uploads/icons/2026/09/15/category_1.png\",\n  \"description\": \"Ijtimoiy himoyaga muhtoj, yolg'iz yashovchi ayollar nazorati\",\n  \"assigned_roles\": [\n    \"xotin_qizlar_faoli\",\n    \"ijtimoiy_xodim\",\n    \"profilaktika_inspektori\"\n  ],\n  \"default_frequency_days\": 10,\n  \"is_active\": true,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:30:00\"\n}",
+    "bruno": "Categories/Update Category.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-create",
+    "cat": "persons",
+    "method": "post",
+    "path": "/persons",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Yangi fuqaroni tizimga kiritish. Mijoz talabiga binoan fuqaroni ro'yxatga olishda FAQAT 3 ta maydon kiritiladi: F.I.SH, tug'ilgan sana va mahalla ID.",
+      "en": "Register a new citizen in the system. Per exact requirement, strictly requires only 3 fields: full_name, birth_date, and mahalla_id.",
+      "ru": "Регистрация гражданина в системе. По строгому требованию содержит только 3 поля: ФИО, дата рождения и ID махалли."
+    },
+    "fields": {
+      "uz": [
+        "full_name: Fuqaroning to'liq F.I.SH.",
+        "birth_date: Tug'ilgan sana (YYYY-MM-DD formatida, masalan '1988-04-12').",
+        "mahalla_id: Qaysi mahallada istiqomat qilishi."
+      ],
+      "en": [
+        "full_name: Full legal name of the person.",
+        "birth_date: Date of birth (format YYYY-MM-DD, e.g. '1988-04-12').",
+        "mahalla_id: Assigned residential Mahalla ID."
+      ],
+      "ru": [
+        "full_name: Полное ФИО гражданина.",
+        "birth_date: Дата рождения (формат YYYY-MM-DD, например '1988-04-12').",
+        "mahalla_id: ID махалли проживания."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Faqat Prokuror yoki Admin yarata oladi (boshqalar uchun 403).",
+        "Mavjud bo'lmagan mahalla_id yuborilsa: 404 Not Found."
+      ],
+      "en": [
+        "Prokuror or Admin only (others get 403 Forbidden).",
+        "Non-existent mahalla_id: 404 Not Found."
+      ],
+      "ru": [
+        "Только Прокурор или Админ (остальным 403 Forbidden).",
+        "Несуществующий mahalla_id: 404 Not Found."
+      ]
+    },
+    "payloadModel": "PersonCreateSchema",
+    "payloadJson": "{\n  \"full_name\": \"Karimova Zilola Rustamovna\",\n  \"birth_date\": \"1988-04-12\",\n  \"mahalla_id\": 1\n}",
+    "responseModel": "PersonResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"full_name\": \"Karimova Zilola Rustamovna\",\n  \"birth_date\": \"1988-04-12\",\n  \"mahalla_id\": 1,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:00:00\",\n  \"assignments\": []\n}",
+    "bruno": "Persons/Create Person.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-list",
+    "cat": "persons",
+    "method": "get",
+    "path": "/persons",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Fuqarolar ro'yxatini olish va qidirish. Rais va 6 xodim faqat o'z mahallasidagi fuqarolarni ko'radi.",
+      "en": "List and search citizens. Mahalla officials are automatically restricted to their own Mahalla.",
+      "ru": "Список и поиск граждан. Сотрудники махалли автоматически видят только граждан своей махалли."
+    },
+    "fields": {
+      "uz": [
+        "page, page_size: Sahifalash.",
+        "search: Fuqaroning F.I.SH bo'yicha qidiruv.",
+        "mahalla_id: Mahalla bo'yicha filtr (Prokuror/Admin).",
+        "category_id: Biriktirilgan toifa bo'yicha filtr."
+      ],
+      "en": [
+        "page, page_size: Pagination.",
+        "search: Search substring for citizen full name.",
+        "mahalla_id: Mahalla ID filter (Prokuror/Admin).",
+        "category_id: Filter by attached risk category ID."
+      ],
+      "ru": [
+        "page, page_size: Пагинация.",
+        "search: Поиск по ФИО гражданина.",
+        "mahalla_id: Фильтр по махалле (Прокурор/Админ).",
+        "category_id: Фильтр по привязанной категории."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais yoki 6 xodim boshqa mahalla ID sini parametrda bersa ham faqat o'z mahallasi ma'lumotlari qaytadi."
+      ],
+      "en": [
+        "Staff/Rais passing foreign mahalla_id are strictly scoped to their own Mahalla."
+      ],
+      "ru": [
+        "Сотрудники при передаче чужого ID махалли все равно видят только свою."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /persons?page=1&page_size=10&search=Karimova&category_id=1",
+    "responseModel": "PaginatedPersonSchema",
+    "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"full_name\": \"Karimova Zilola Rustamovna\",\n      \"birth_date\": \"1988-04-12\",\n      \"mahalla_id\": 1,\n      \"created_at\": \"2026-09-15T11:00:00\",\n      \"assignments\": [\n        {\n          \"id\": 1,\n          \"category_id\": 1,\n          \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n          \"frequency_days\": 15,\n          \"next_check_in_due\": \"2026-09-30\",\n          \"days_remaining\": 15,\n          \"status\": \"active\"\n        }\n      ]\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
+    "bruno": "Persons/Get Persons.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-get-one",
+    "cat": "persons",
+    "method": "get",
+    "path": "/persons/{person_id}",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Fuqaro kartochkasini va unga biriktirilgan barcha toifalarni (qachon kelishi kerakligi va mas'ul rollar bilan) ko'rish.",
+      "en": "View citizen dossier and all active attached risk categories with check-in due dates.",
+      "ru": "Просмотр карточки гражданина и всех привязанных категорий со сроками проверок."
+    },
+    "fields": {
+      "uz": [
+        "person_id: Fuqaroning unikal ID raqami."
+      ],
+      "en": [
+        "person_id: Person integer ID."
+      ],
+      "ru": [
+        "person_id: ID гражданина."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Mahalla xodimi boshqa mahalladagi fuqaroni ko'rmoqchi bo'lsa: 403 Forbidden."
+      ],
+      "en": [
+        "Staff accessing citizen from another Mahalla: 403 Forbidden."
+      ],
+      "ru": [
+        "Сотрудник запрашивает гражданина из чужой махалли: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /persons/1",
+    "responseModel": "PersonResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"full_name\": \"Karimova Zilola Rustamovna\",\n  \"birth_date\": \"1988-04-12\",\n  \"mahalla_id\": 1,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:00:00\",\n  \"assignments\": [\n    {\n      \"id\": 1,\n      \"person_id\": 1,\n      \"category_id\": 1,\n      \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n      \"frequency_days\": 15,\n      \"assigned_roles\": [\n        \"xotin_qizlar_faoli\"\n      ],\n      \"next_check_in_due\": \"2026-09-30\",\n      \"days_remaining\": 15,\n      \"is_overdue\": false,\n      \"status\": \"active\"\n    }\n  ]\n}",
+    "bruno": "Persons/Get Person by ID.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-patch",
+    "cat": "persons",
+    "method": "patch",
+    "path": "/persons/{person_id}",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Fuqaroning F.I.SH, tug'ilgan sanasi yoki mahallasini tahrirlash.",
+      "en": "Update citizen legal name, birth date, or residential Mahalla.",
+      "ru": "Редактирование ФИО, даты рождения или махалли гражданина."
+    },
+    "fields": {
+      "uz": [
+        "full_name, birth_date, mahalla_id: Ixtiyoriy yangilanadigan maydonlar."
+      ],
+      "en": [
+        "full_name, birth_date, mahalla_id: Optional update fields."
+      ],
+      "ru": [
+        "full_name, birth_date, mahalla_id: Обновляемые поля."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Oddiy xodim yoki Rais o'zgartira olmaydi: 403 Forbidden."
+      ],
+      "en": [
+        "Mahalla staff or Rais caller: 403 Forbidden."
+      ],
+      "ru": [
+        "Сотрудник или Раис: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "PersonUpdateSchema",
+    "payloadJson": "{\n  \"full_name\": \"Karimova Zilola Rustamovna (Tahrirlangan)\"\n}",
+    "responseModel": "PersonResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"full_name\": \"Karimova Zilola Rustamovna (Tahrirlangan)\",\n  \"birth_date\": \"1988-04-12\",\n  \"mahalla_id\": 1,\n  \"created_at\": \"2026-09-15T11:00:00\",\n  \"updated_at\": \"2026-09-15T11:45:00\",\n  \"assignments\": []\n}",
+    "bruno": "Persons/Update Person.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-assign-category",
+    "cat": "persons",
+    "method": "post",
+    "path": "/persons/{person_id}/assign-category",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Prokuror yoki Admin",
+      "en": "Prokuror or Admin",
+      "ru": "Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Fuqaroga toifa (masalan, 'Prof hisob') biriktirish va qatnov davriyligini (frequency_days, masalan har 5 kunda) belgilash. Server avtomatik ravishda navbatdagi kelish kunini (next_check_in_due) hisoblaydi.",
+      "en": "Connect a person to a risk category with mandatory visit frequency (frequency_days, e.g. every 5 days) and assign responsible 7 staff roles. Automatically calculates next_check_in_due.",
+      "ru": "Привязка гражданина к категории риска с обязательной периодичностью (например каждые 5 дней) и назначением ответственных ролей. Сервер автоматически вычисляет дату следующей проверки."
+    },
+    "fields": {
+      "uz": [
+        "category_id: Biriktirilayotgan toifa ID raqami.",
+        "frequency_days: Tekshiruv yoki kelish davriyligi (kunlarda, masalan 5). Agar berilmasa toifaning standart davriyligi olinadi.",
+        "assigned_roles: Mas'ul xodim rollari (masalan, ['profilaktika_inspektori']). Agar berilmasa toifadan meros qilib olinadi.",
+        "start_date: Boshlanish sanasi (standart: bugungi sana).",
+        "notes: Prokurorning qo'shimcha topshiriq va ko'rsatmalari."
+      ],
+      "en": [
+        "category_id: Target risk category integer ID.",
+        "frequency_days: Check-in frequency in days (e.g. 5). Inherits category default if omitted.",
+        "assigned_roles: Responsible staff roles. Inherits category roles if omitted.",
+        "start_date: Effective start date (defaults to today).",
+        "notes: Special instructions or legal remarks from Prokuror."
+      ],
+      "ru": [
+        "category_id: ID привязываемой категории.",
+        "frequency_days: Периодичность проверок в днях (например 5). По умолчанию берется из категории.",
+        "assigned_roles: Ответственные роли из сотрудников махалли.",
+        "start_date: Дата начала надзора (по умолчанию сегодня).",
+        "notes: Примечания и указания Прокурора."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Fuqaroga ayni shu toifa allaqachon faol biriktirilgan bo'lsa: 409 Conflict.",
+        "Faqat Prokuror yoki Admin biriktira oladi (boshqalar uchun 403)."
+      ],
+      "en": [
+        "Person already actively assigned to this category: 409 Conflict.",
+        "Prokuror or Admin only (others get 403 Forbidden)."
+      ],
+      "ru": [
+        "Гражданин уже активно привязан к этой категории: 409 Conflict.",
+        "Только Прокурор или Админ (остальным 403 Forbidden)."
+      ]
+    },
+    "payloadModel": "AssignmentCreateSchema",
+    "payloadJson": "{\n  \"category_id\": 1,\n  \"frequency_days\": 5,\n  \"assigned_roles\": [\n    \"profilaktika_inspektori\",\n    \"mahalla_raisi\"\n  ],\n  \"start_date\": \"2026-09-15\",\n  \"notes\": \"Har 5 kunda xonadoniga borib holidan xabar olinsin\"\n}",
+    "responseModel": "AssignmentResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"mahalla_id\": 1,\n  \"frequency_days\": 5,\n  \"assigned_roles\": [\n    \"profilaktika_inspektori\",\n    \"mahalla_raisi\"\n  ],\n  \"start_date\": \"2026-09-15\",\n  \"next_check_in_due\": \"2026-09-20\",\n  \"days_remaining\": 5,\n  \"is_overdue\": false,\n  \"status\": \"active\",\n  \"notes\": \"Har 5 kunda xonadoniga borib holidan xabar olinsin\",\n  \"created_at\": \"2026-09-15T11:00:00\"\n}",
+    "bruno": "Persons/Assign Category to Person.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-assignments-list",
+    "cat": "persons",
+    "method": "get",
+    "path": "/persons/assignments",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Biriktirilgan fuqarolarning tekshiruv muddatlari va qolgan kunlarini filtrlash (masalan: 5 kun qolganlar, 4 kun qolganlar, muddati o'tib ketganlar).",
+      "en": "Fetch supervision assignments filtered flexibly by remaining days countdown (e.g. exactly 5 days left, 4 days left, overdue only).",
+      "ru": "Фильтрация надзоров по оставшимся дням (например: ровно 5 дней осталось, 4 дня осталось, просроченные)."
+    },
+    "fields": {
+      "uz": [
+        "days_remaining: Aniq qolgan kunlar soni (masalan 5 bersangiz aynan 5 kuni qolganlar, 4 bersangiz 4 kuni qolganlar, 0 bersangiz bugun kelishi kerak bo'lganlar chiqadi).",
+        "min_days_remaining, max_days_remaining: Oraliq filtr (masalan 1 dan 5 gacha qolganlar: min=1&max=5).",
+        "overdue_only: Faqat muddati o'tganlarni chiqarish (true/false).",
+        "status_filter: active, completed, removed.",
+        "category_id, mahalla_id: Qo'shimcha filtrlar."
+      ],
+      "en": [
+        "days_remaining: Exact remaining days integer (e.g. 5 for 5 days left, 4 for 4 days, 0 for today, -1 for overdue).",
+        "min_days_remaining, max_days_remaining: Range filter (e.g. min=1&max=5).",
+        "overdue_only: Boolean toggle for overdue check-ins.",
+        "status_filter: active, completed, or removed.",
+        "category_id, mahalla_id: Scoping filters."
+      ],
+      "ru": [
+        "days_remaining: Точное количество оставшихся дней (например 5 для 5 дней, 4 для 4 дней, 0 для сегодняшних).",
+        "min_days_remaining, max_days_remaining: Диапазон (например от 1 до 5 дней).",
+        "overdue_only: Только просроченные проверки (true/false).",
+        "status_filter: active, completed, removed.",
+        "category_id, mahalla_id: Дополнительные фильтры."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "days_remaining=-1 berilsa muddati o'tib ketgan barcha yozuvlar chiqadi."
+      ],
+      "en": [
+        "days_remaining=-1 matches all overdue assignments."
+      ],
+      "ru": [
+        "days_remaining=-1 возвращает все просроченные записи."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /persons/assignments?days_remaining=5&status_filter=active",
+    "responseModel": "List[AssignmentResponseSchema]",
+    "responseJson": "[\n  {\n    \"id\": 1,\n    \"person_id\": 1,\n    \"person_name\": \"Karimova Zilola Rustamovna\",\n    \"category_id\": 1,\n    \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n    \"mahalla_id\": 1,\n    \"frequency_days\": 5,\n    \"assigned_roles\": [\n      \"profilaktika_inspektori\"\n    ],\n    \"next_check_in_due\": \"2026-09-20\",\n    \"days_remaining\": 5,\n    \"is_overdue\": false,\n    \"status\": \"active\"\n  }\n]",
+    "bruno": "Persons/Get Assignments.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "persons-remaining-stats",
+    "cat": "persons",
+    "method": "get",
+    "path": "/persons/assignments/stats/remaining-days",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Mijozning maxsus talabi: So'rov hech qanday payload talab qilmaydi, 1 dan N kungacha har bir kun bo'yicha qancha tekshiruv qolganini (5 kunda 5 kun qolganlar soni, 4 kunda 4 kun qolganlar soni, muddati o'tganlar, bugungilar) tayyor hisoblab beradi. Istalgan max_days (masalan 5, 7, 10, 30) yozish mumkin.",
+      "en": "Special client feature: Zero-payload request returning day-by-day counts of remaining check-ins from 1 to N days (shows remain 5 days in 5, remain 4 days in 4, overdue, and today). Supports any custom max_days count.",
+      "ru": "Специальный запрос клиента: Без тела запроса вычисляет количество проверок по каждому оставшемуся дню от 1 до N (показывает 5 дней в 5, 4 дня в 4, просроченные и сегодняшние). Можно указать любой max_days."
+    },
+    "fields": {
+      "uz": [
+        "max_days: Qancha kelgusi kunlarni alohida-alohida hisoblash kerak (standart 5, lekin 7, 10, 30 kiritish mumkin).",
+        "mahalla_id: Mahalla filtri (Prokuror/Admin uchun).",
+        "Javob: total_active, overdue_count, due_today_count va days_breakdown ('1': soni, '2': soni...)."
+      ],
+      "en": [
+        "max_days: Number of future days to count day-by-day (default 5, configurable to any number e.g. 7, 10).",
+        "mahalla_id: Mahalla filter (Prokuror/Admin).",
+        "Returns: total_active, overdue_count, due_today_count, and days_breakdown dictionary."
+      ],
+      "ru": [
+        "max_days: Сколько будущих дней считать подневно (по умолчанию 5, можно любое число: 7, 10 и т.д.).",
+        "mahalla_id: Фильтр по махалле.",
+        "Возвращает: total_active, overdue_count, due_today_count и словарь days_breakdown."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "max_days 1 dan 365 gacha bo'lishi kerak. 0 yoki manfiy kiritilsa: 422 Validation Error."
+      ],
+      "en": [
+        "max_days must be between 1 and 365 (0 or negative returns 422)."
+      ],
+      "ru": [
+        "max_days должен быть от 1 до 365 (иначе 422)."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /persons/assignments/stats/remaining-days?max_days=5\n// Headers: Authorization: Bearer {{token}}",
+    "responseModel": "RemainingDaysStatsSchema",
+    "responseJson": "{\n  \"total_active\": 45,\n  \"overdue_count\": 3,\n  \"due_today_count\": 4,\n  \"days_breakdown\": {\n    \"1\": 5,\n    \"2\": 8,\n    \"3\": 12,\n    \"4\": 7,\n    \"5\": 6\n  }\n}",
+    "bruno": "Persons/Get Remaining Days Stats.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "documents-upload",
+    "cat": "documents",
+    "method": "post",
+    "path": "/documents",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Mas'ul Xodim, Rais, Prokuror",
+      "en": "Assigned Worker, Rais, Prokuror",
+      "ru": "Ответственный, Раис, Прокурор"
+    },
+    "why": {
+      "uz": "Mahalla xodimi yoki Raisi fuqaro huzuriga borib amalga oshirilgan profilaktik suhbat/ko'rik to'g'risida hisobot hujjatini yuklaydi. Surat (majburiy, max 5 MB) va PDF yuridik hujjat (ixtiyoriy, max 10 MB) biriktiriladi. Agar fuqaro tuzalgan bo'lsa va toifani olib tashlash kerak bo'lsa doc_type='removal_request' (oxirgi tekshiruv) tanlanadi.",
+      "en": "Mahalla official uploads visit report document with photo proof (mandatory, max 5 MB) and legal PDF document (optional, max 10 MB). Supports doc_type='regular' or doc_type='removal_request' (final check-in to dismiss category).",
+      "ru": "Сотрудник махалли или Раис загружает отчет о посещении гражданина с фото (обязательно, макс 5 МБ) и PDF документом (макс 10 МБ). Поддерживает 'regular' или 'removal_request' (последняя проверка для снятия с учета)."
+    },
+    "fields": {
+      "uz": [
+        "assignment_id: Biriktiruv ID raqami (qaysi toifa nazorati bo'yicha hisobot berilayotgani).",
+        "check_in_date: Tekshiruv sanasi (standart: bugungi sana).",
+        "doc_type: 'regular' (odatiy navbatdagi tekshiruv) yoki 'removal_request' (fuqaroni toifadan butunlay chiqarish bo'yicha so'nggi tekshiruv).",
+        "notes: Tekshiruv natijalari, xulosa va tavsiyalar.",
+        "photo: Surat (png, jpg, jpeg, webp, max 5 MB). Majburiy!",
+        "pdf: Yuridik asos hujjati PDF formati (max 10 MB). Ixtiyoriy.",
+        "FRONTEND: Multipart FormData orqali yuboriladi!"
+      ],
+      "en": [
+        "assignment_id: Assignment integer ID.",
+        "check_in_date: Visit date (default: today).",
+        "doc_type: 'regular' or 'removal_request'.",
+        "notes: Observations and remarks.",
+        "photo: Photo file (png/jpg/webp, max 5 MB). Mandatory!",
+        "pdf: PDF legal document (max 10 MB). Optional.",
+        "FRONTEND: Send via FormData multipart/form-data!"
+      ],
+      "ru": [
+        "assignment_id: ID привязки надзора.",
+        "check_in_date: Дата визита (по умолчанию сегодня).",
+        "doc_type: 'regular' (обычная проверка) или 'removal_request' (запрос на снятие с учета).",
+        "notes: Примечания и заключение.",
+        "photo: Фотография (png/jpg/webp, макс 5 МБ). Обязательно!",
+        "pdf: PDF документ (макс 10 МБ). Опционально.",
+        "ФРОНТЕНД: Отправлять через FormData multipart/form-data!"
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rasm hajmi > 5 MB: 413 File size exceeds maximum allowed 5 MB.",
+        "PDF hajmi > 10 MB: 413 File size exceeds maximum allowed 10 MB.",
+        "Ushbu toifaga biriktirilmagan begonalar yuklamoqchi bo'lsa: 403 Forbidden.",
+        "Hujjat yuklangach holati dastlab 'pending' bo'ladi."
+      ],
+      "en": [
+        "Photo > 5 MB: 413 Photo size exceeds maximum allowed 5 MB.",
+        "PDF > 10 MB: 413 PDF size exceeds maximum allowed 10 MB.",
+        "Unassigned official attempting to upload: 403 Forbidden.",
+        "Initial document status is set to 'pending'."
+      ],
+      "ru": [
+        "Фото > 5 МБ: 413 Photo size exceeds maximum allowed 5 MB.",
+        "PDF > 10 МБ: 413 PDF size exceeds maximum allowed 10 MB.",
+        "Посторонний сотрудник: 403 Forbidden.",
+        "Начальный статус документа: 'pending'."
+      ]
+    },
+    "payloadModel": "FormData (multipart/form-data)",
+    "payloadJson": "// JavaScript misoli:\nconst fd = new FormData();\nfd.append('assignment_id', 1);\nfd.append('check_in_date', '2026-09-15');\nfd.append('doc_type', 'regular'); // yoki 'removal_request'\nfd.append('notes', 'Xonadonga borildi, suhbat o\\'tkazildi');\nfd.append('photo', photoFile);\nif (pdfFile) fd.append('pdf', pdfFile);\n\nawait axios.post('/api/documents', fd);",
+    "responseModel": "DocumentResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"check_in_date\": \"2026-09-15\",\n  \"photo_url\": \"/uploads/photos/2026/09/15/report_photo.jpg\",\n  \"pdf_url\": \"/uploads/documents/2026/09/15/legal_doc.pdf\",\n  \"notes\": \"Xonadonga borildi, suhbat o'tkazildi\",\n  \"doc_type\": \"regular\",\n  \"status\": \"pending\",\n  \"rejection_reason\": null,\n  \"uploaded_by_id\": 3,\n  \"uploader_name\": \"Anvar Aliyev\",\n  \"reviewed_by_id\": null,\n  \"reviewer_name\": null,\n  \"reviewed_at\": null,\n  \"created_at\": \"2026-09-15T12:00:00\"\n}",
+    "bruno": "Documents/Upload Check-In Document.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "documents-review",
+    "cat": "documents",
+    "method": "patch",
+    "path": "/documents/{document_id}/review",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Faqat Prokuror yoki Admin",
+      "en": "Prokuror or Admin Only",
+      "ru": "Только Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Prokuror yuklangan hisobot hujjatini tekshiradi va tasdiqlaydi ('approved') yoki rad etadi ('rejected'). Agar rad etilsa, rad etish sababi (rejection_reason) MAJBURIY kiritilishi shart. Agar 'removal_request' tasdiqlansa, fuqaro toifadan BUTUNLAY chiqariladi (status='removed').",
+      "en": "Prokuror reviews the submitted document and either approves ('approved') or rejects ('rejected') it. If rejected, rejection_reason is MANDATORY. If approved and doc_type='removal_request', the category is permanently dismissed from the person (status='removed').",
+      "ru": "Прокурор проверяет документ и подтверждает ('approved') или отклоняет ('rejected'). При отклонении причина (rejection_reason) ОБЯЗАТЕЛЬНА. Если подтвержден 'removal_request', гражданин полностью снимается с учета (status='removed')."
+    },
+    "fields": {
+      "uz": [
+        "status: 'approved' yoki 'rejected' (3 ta holat: pending, approved, rejected).",
+        "rejection_reason: Agar status='rejected' bo'lsa MAJBURIY matn! Agar status='approved' bo'lsa null bo'lishi mumkin."
+      ],
+      "en": [
+        "status: 'approved' or 'rejected'.",
+        "rejection_reason: MANDATORY text if status is 'rejected'; optional/null if approved."
+      ],
+      "ru": [
+        "status: 'approved' или 'rejected'.",
+        "rejection_reason: ОБЯЗАТЕЛЬНО при статусе 'rejected'; null если approved."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rad etilganda rejection_reason bo'sh bo'lsa: 422 Unprocessable Entity ('rejection_reason is mandatory when rejecting document').",
+        "Oddiy xodim yoki Rais tasdiqlamoqchi bo'lsa: 403 Forbidden.",
+        "Muntazam tekshiruv ('regular') tasdiqlanganda navbatdagi kelish sanasi avtomatik keyingi davrga suriladi."
+      ],
+      "en": [
+        "Rejecting without rejection_reason returns 422 Unprocessable Entity.",
+        "Non-prokuror/admin caller returns 403 Forbidden.",
+        "Approving regular check-in automatically advances next_check_in_due by frequency_days."
+      ],
+      "ru": [
+        "Отклонение без причины возвращает 422 Unprocessable Entity.",
+        "Попытка подтверждения сотрудником возвращает 403 Forbidden.",
+        "Подтверждение регулярной проверки автоматически сдвигает next_check_in_due на frequency_days."
+      ]
+    },
+    "payloadModel": "DocumentReviewSchema",
+    "payloadJson": "{\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Surat noaniq olingan, fuqaroning shaxsi va xonadon holatini aniqlab bo'lmadi\"\n}",
+    "responseModel": "DocumentResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Surat noaniq olingan, fuqaroning shaxsi va xonadon holatini aniqlab bo'lmadi\",\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:15:00\"\n}",
+    "bruno": "Documents/Review Document.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "documents-list",
+    "cat": "documents",
+    "method": "get",
+    "path": "/documents",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Tekshiruv hujjatlarining to'liq audit jurnali va tarixini ko'rish. Prokuror kutayotgan ('pending') arizalarni filtrlashda foydalanadi.",
+      "en": "Audit history and document registry. Prokuror uses this to filter incoming 'pending' reviews.",
+      "ru": "Журнал аудита документов. Прокурор использует его для фильтрации ожидающих ('pending') отчетов."
+    },
+    "fields": {
+      "uz": [
+        "page, page_size: Sahifalash.",
+        "status: pending, approved, rejected bo'yicha filtr.",
+        "doc_type: regular yoki removal_request bo'yicha filtr.",
+        "category_id, person_id, assignment_id, mahalla_id: To'liq filtrlar."
+      ],
+      "en": [
+        "page, page_size: Pagination.",
+        "status: Filter by pending, approved, rejected.",
+        "doc_type: Filter by regular or removal_request.",
+        "category_id, person_id, assignment_id, mahalla_id: Scoping filters."
+      ],
+      "ru": [
+        "page, page_size: Пагинация.",
+        "status: Фильтр по pending, approved, rejected.",
+        "doc_type: Фильтр по regular или removal_request.",
+        "category_id, person_id, assignment_id, mahalla_id: Фильтры выборки."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais va xodimlar faqat o'z mahallalariga tegishli hujjatlarni ko'radi."
+      ],
+      "en": [
+        "Rais and officials can only see documents belonging to their Mahalla."
+      ],
+      "ru": [
+        "Раис и сотрудники видят только документы своей махалли."
+      ]
+    },
+    "payloadModel": "None (Query Params)",
+    "payloadJson": "// GET /documents?status=pending&doc_type=removal_request&page=1&page_size=10",
+    "responseModel": "PaginatedDocumentSchema",
+    "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"assignment_id\": 1,\n      \"person_name\": \"Karimova Zilola Rustamovna\",\n      \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n      \"check_in_date\": \"2026-09-15\",\n      \"doc_type\": \"removal_request\",\n      \"status\": \"pending\",\n      \"photo_url\": \"/uploads/photos/2026/09/15/photo.jpg\",\n      \"pdf_url\": \"/uploads/documents/2026/09/15/legal.pdf\",\n      \"uploader_name\": \"Anvar Aliyev\"\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
+    "bruno": "Documents/Get Documents History.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "documents-get-one",
+    "cat": "documents",
+    "method": "get",
+    "path": "/documents/{document_id}",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Barcha Xodimlar",
+      "en": "All Staff",
+      "ru": "Все сотрудники"
+    },
+    "why": {
+      "uz": "Alohida hujjat va uning fotosurati, PDF fayli, tasdiqlash holati va rad etish sababini batafsil ko'rish.",
+      "en": "Inspect full details of a check-in document, photo proof, PDF attachment, review status, and rejection rationale.",
+      "ru": "Детальный просмотр отчета о проверке: фото, PDF, статус рассмотрения и причина отказа."
+    },
+    "fields": {
+      "uz": [
+        "document_id: Hujjat unikal ID raqami."
+      ],
+      "en": [
+        "document_id: Document integer ID."
+      ],
+      "ru": [
+        "document_id: ID документа."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Boshqa mahallaning hujjatiga kirishga urinish: 403 Forbidden."
+      ],
+      "en": [
+        "Accessing document of another Mahalla: 403 Forbidden."
+      ],
+      "ru": [
+        "Попытка доступа к документу чужой махалли: 403 Forbidden."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /documents/1",
+    "responseModel": "DocumentResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"check_in_date\": \"2026-09-15\",\n  \"photo_url\": \"/uploads/photos/2026/09/15/report_photo.jpg\",\n  \"pdf_url\": \"/uploads/documents/2026/09/15/legal_doc.pdf\",\n  \"notes\": \"Xonadonga borildi, suhbat o'tkazildi\",\n  \"doc_type\": \"removal_request\",\n  \"status\": \"approved\",\n  \"rejection_reason\": null,\n  \"uploaded_by_id\": 3,\n  \"uploader_name\": \"Anvar Aliyev\",\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:30:00\",\n  \"created_at\": \"2026-09-15T12:00:00\"\n}",
+    "bruno": "Documents/Get Document by ID.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "mahallas-stats-get",
+    "cat": "stats",
+    "method": "get",
+    "path": "/mahallas/{mahalla_id}/stats",
+    "role": "staff",
+    "roleLabel": {
+      "uz": "Admin, Prokuror, Mahalla Xodimlari",
+      "en": "Admin, Prokuror, Mahalla Staff",
+      "ru": "Админ, Прокурор, Сотрудники"
+    },
+    "why": {
+      "uz": "3-rasmdagi Mahalla pasportining barcha 18+ infratuzilma va demografik ko'rsatkichlarini olish.",
+      "en": "Fetch all 18+ demographic and infrastructure indicators for the Mahalla Passport screen (as shown in screenshot 3).",
+      "ru": "Получение всех 18+ показателей паспорта махалли (инфраструктура, демография, миграция, как на 3-м скриншоте)."
+    },
+    "fields": {
+      "uz": [
+        "mahalla_id: Mahalla ID raqami.",
+        "Qaytadigan maydonlar: maydoni_ga, xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni, aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni, ijarada_turuvchilar_soni, chetga_ketganlar_soni, toifa, aholi_oqimi, murojaatlar_soni, extra_data."
+      ],
+      "en": [
+        "mahalla_id: Mahalla ID.",
+        "Returned fields: maydoni_ga, xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni, aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni, ijarada_turuvchilar_soni, chetga_ketganlar_soni, toifa, aholi_oqimi, murojaatlar_soni, extra_data."
+      ],
+      "ru": [
+        "mahalla_id: ID махалли.",
+        "Возвращаемые поля: maydoni_ga, xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni, aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni, ijarada_turuvchilar_soni, chetga_ketganlar_soni, toifa, aholi_oqimi, murojaatlar_soni, extra_data."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Agar mahalla uchun statistika hali kiritilmagan bo'lsa ham bo'sh nol qiymatlar bilan xatosiz qaytadi."
+      ],
+      "en": [
+        "If stats are not yet populated, returns safe default/zero values."
+      ],
+      "ru": [
+        "Если статистика еще не внесена, возвращаются нулевые значения без ошибок."
+      ]
+    },
+    "payloadModel": "None",
+    "payloadJson": "// GET /mahallas/1/stats\n// Headers: Authorization: Bearer {{token}}",
+    "responseModel": "MahallaStatsResponseSchema",
+    "responseJson": "{\n  \"mahalla_id\": 1,\n  \"mahalla_name\": \"Oqtepa MFY\",\n  \"maydoni_ga\": 142.5,\n  \"xonadonlar_soni\": 1250,\n  \"savdo_dokonlari_soni\": 34,\n  \"maktablar_soni\": 2,\n  \"mtm_soni\": 3,\n  \"kochalar_soni\": 18,\n  \"aholi_soni\": 5420,\n  \"erkaklar_soni\": 2680,\n  \"ayollar_soni\": 2740,\n  \"yoshlar_soni\": 1850,\n  \"voyaga_yetmaganlar_soni\": 1320,\n  \"oilalar_soni\": 1100,\n  \"ijarada_turuvchilar_soni\": 95,\n  \"chetga_ketganlar_soni\": 140,\n  \"toifa\": \"Qoniqarli\",\n  \"aholi_oqimi\": \"O'rtacha\",\n  \"murojaatlar_soni\": 45,\n  \"extra_data\": {\n    \"kamera_soni\": 28,\n    \"chiroq_ustunlari\": 112\n  },\n  \"updated_at\": \"2026-09-15T12:00:00\"\n}",
+    "bruno": "Mahallas/Get Mahalla Stats.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "mahallas-stats-put",
+    "cat": "stats",
+    "method": "put",
+    "path": "/mahallas/{mahalla_id}/stats",
+    "role": "rais",
+    "roleLabel": {
+      "uz": "Admin, Prokuror, O'z Raisi",
+      "en": "Admin, Prokuror, Own Rais",
+      "ru": "Админ, Прокурор, Свой Раис"
+    },
+    "why": {
+      "uz": "Mijoz talabi: 'add stats for all it is written by hand you just need to provide fields and save them in backend'. 3-rasmdagi barcha 18+ infratuzilma va demografik ma'lumotlarni qo'lda kiritish yoki tahrirlash.",
+      "en": "Per user request: 'add stats for all it is written by hand you just need to provide fields and save them in backend'. Full manual upsert of all 18+ Mahalla indicators.",
+      "ru": "По требованию заказчика: Ручной ввод и сохранение всех 18+ параметров паспорта махалли (инфраструктура, население, магазины, школы, миграция)."
+    },
+    "fields": {
+      "uz": [
+        "maydoni_ga: Mahalla maydoni (gektar, float).",
+        "xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni: Infratuzilma sonlari.",
+        "aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni: Demografiya.",
+        "ijarada_turuvchilar_soni, chetga_ketganlar_soni: Migratsiya ko'rsatkichlari.",
+        "toifa, aholi_oqimi: Mahalla tavsifi (matn).",
+        "murojaatlar_soni: Aholi murojaatlari soni.",
+        "extra_data: Istalgan qo'shimcha parametrlarni saqlash uchun dinamik JSON obyekti (masalan kameralar soni)."
+      ],
+      "en": [
+        "maydoni_ga: Land area in hectares (float).",
+        "xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni: Infrastructure counts.",
+        "aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni: Demographics.",
+        "ijarada_turuvchilar_soni, chetga_ketganlar_soni: Migration counts.",
+        "toifa, aholi_oqimi: Category and population flow status.",
+        "murojaatlar_soni: Registered complaints count.",
+        "extra_data: Dynamic JSON object for future-proof custom fields."
+      ],
+      "ru": [
+        "maydoni_ga: Площадь в гектарах (float).",
+        "xonadonlar_soni, savdo_dokonlari_soni, maktablar_soni, mtm_soni, kochalar_soni: Инфраструктура.",
+        "aholi_soni, erkaklar_soni, ayollar_soni, yoshlar_soni, voyaga_yetmaganlar_soni, oilalar_soni: Демография.",
+        "ijarada_turuvchilar_soni, chetga_ketganlar_soni: Миграция и аренда.",
+        "toifa, aholi_oqimi: Категория и поток населения.",
+        "murojaatlar_soni: Количество обращений.",
+        "extra_data: Динамический JSON объект для любых дополнительных полей."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Rais boshqa mahallaning statistikasini o'zgartirmoqchi bo'lsa: 403 Forbidden.",
+        "Qolgan 6 xodim chaqirsa: 403 Forbidden (faqat Rais, Prokuror, Admin o'zgartira oladi)."
+      ],
+      "en": [
+        "Rais attempting to modify another Mahalla: 403 Forbidden.",
+        "Other 6 officials calling: 403 Forbidden (only Rais, Prokuror, Admin can edit)."
+      ],
+      "ru": [
+        "Раис пытается изменить чужую махаллю: 403 Forbidden.",
+        "Остальные 6 сотрудников: 403 Forbidden (только Раис, Прокурор, Админ)."
+      ]
+    },
+    "payloadModel": "MahallaStatsCreateOrUpdateSchema",
+    "payloadJson": "{\n  \"maydoni_ga\": 142.5,\n  \"xonadonlar_soni\": 1250,\n  \"savdo_dokonlari_soni\": 34,\n  \"maktablar_soni\": 2,\n  \"mtm_soni\": 3,\n  \"kochalar_soni\": 18,\n  \"aholi_soni\": 5420,\n  \"erkaklar_soni\": 2680,\n  \"ayollar_soni\": 2740,\n  \"yoshlar_soni\": 1850,\n  \"voyaga_yetmaganlar_soni\": 1320,\n  \"oilalar_soni\": 1100,\n  \"ijarada_turuvchilar_soni\": 95,\n  \"chetga_ketganlar_soni\": 140,\n  \"toifa\": \"Qoniqarli\",\n  \"aholi_oqimi\": \"O'rtacha\",\n  \"murojaatlar_soni\": 45,\n  \"extra_data\": {\n    \"kamera_soni\": 28\n  }\n}",
+    "responseModel": "MahallaStatsResponseSchema",
+    "responseJson": "{\n  \"mahalla_id\": 1,\n  \"mahalla_name\": \"Oqtepa MFY\",\n  \"maydoni_ga\": 142.5,\n  \"xonadonlar_soni\": 1250,\n  \"savdo_dokonlari_soni\": 34,\n  \"maktablar_soni\": 2,\n  \"mtm_soni\": 3,\n  \"kochalar_soni\": 18,\n  \"aholi_soni\": 5420,\n  \"erkaklar_soni\": 2680,\n  \"ayollar_soni\": 2740,\n  \"yoshlar_soni\": 1850,\n  \"voyaga_yetmaganlar_soni\": 1320,\n  \"oilalar_soni\": 1100,\n  \"ijarada_turuvchilar_soni\": 95,\n  \"chetga_ketganlar_soni\": 140,\n  \"toifa\": \"Qoniqarli\",\n  \"aholi_oqimi\": \"O'rtacha\",\n  \"murojaatlar_soni\": 45,\n  \"extra_data\": {\n    \"kamera_soni\": 28\n  },\n  \"updated_at\": \"2026-09-15T12:45:00\"\n}",
+    "bruno": "Mahallas/Update Mahalla Stats.bru",
+    "authHeader": "Bearer {{token}}"
+  }
+];
 
     let currentLang = "uz";
     let currentCat = "all";
@@ -1322,22 +2359,26 @@
     const uiTexts = {
       uz: {
         tag: "🇺🇿 O'zbekiston Respublikasi Prokuraturasi",
-        h1: "Backend API & Bruno So'rovlar Ma'lumotnomasi",
-        p: "Frontend dasturchilar uchun mukammal texnik qo'llanma. Har bir so'rovning zarurati, talab qilinadigan maydonlar, maxsus holatlar (edge cases) va Bruno fayllari to'liq keltirilgan.",
+        h1: "Backend API & Bruno So'rovlar Ma'lumotnomasi (1 & 2-bosqich)",
+        p: "Frontend dasturchilar uchun to'liq interaktiv qo'llanma: 7 xodim profillari va rasmlari, maxsus toifalar (risk cards), fuqarolar nazorati va qolgan kunlar hisobi, tekshiruv hujjatlari (foto va PDF) tasdiqlash jarayoni hamda mahalla pasporti statistikasi to'liq yoritilgan.",
         lblApi: "API Server Manzili",
         lblDocker: "Docker Port",
         lblSwagger: "Interaktiv Hujjatlar",
         lblBruno: "Bruno To'plami",
         matrixTitle: "🏛️ Tizim Ierarxiyasi va Huquqlar Matritsasi",
-        mAdmin: "ADMIN: Mahallalar va Prokurorni qo'shadi (To'liq nazorat)",
-        mProkuror: "PROKUROR: Yagona tuman rahbari; 7 nafar xodimni tayinlaydi; Mahallani o'zi yaratmaydi",
-        mRais: "MAHALLA_RAISI: Faqat o'z mahallasidagi xodimlarni ko'radi; ularni o'zgartira olmaydi",
-        mMembers: "QOLGAN 6 XODIM: Faqat o'z profilini ko'radi; boshqalarni ko'ra olmaydi",
-        btnAll: "Barchasi (12)",
+        mAdmin: "ADMIN: Mahallalar va Prokurorni boshqaradi (Tizim bo'yicha to'liq nazorat).",
+        mProkuror: "PROKUROR: Tuman bo'yicha yagona rahbar; Mahallaning 7 nafar xodimini tayinlaydi; Maxsus toifalar (kategoriyalar) va fuqarolarni kiritadi; Qatnov davriyligini belgilaydi; Hujjatlarni tasdiqlaydi/rad etadi.",
+        mRais: "MAHALLA RAISI: Mahalla rahbari; Faqat o'z mahallasidagi fuqarolar va xodimlarni ko'radi; Hujjat yuklay oladi; Toifadan chiqarish so'rovini yuboradi; Pasport statistikasini to'ldiradi.",
+        mMembers: "7 NAFAR XODIM: Biriktirilgan toifadagi fuqarolar huzuriga borib foto va PDF hisobot yuklaydi; Muddati yaqinlashgan (1-5 kun) tekshiruvlarni kuzatib boradi.",
+        btnAll: "Barchasi (32)",
         btnAuth: "Auth (4)",
+        btnUsers: "Xodimlar (5)",
         btnMahallas: "Mahalla (4)",
-        btnUsers: "Xodimlar (4)",
-        searchPlaceholder: "So'rov yoki maydonni qidiring...",
+        btnCategories: "Kategoriyalar (6)",
+        btnPersons: "Fuqarolar (7)",
+        btnDocuments: "Hujjatlar (4)",
+        btnStats: "Statistika (2)",
+        searchPlaceholder: "So'rov, yo'l yoki maydonni qidiring...",
         sWhy: "💡 Bu so'rov nima uchun kerak?",
         sFields: "📋 Maydonlarning vazifasi",
         sEdge: "⚠️ Maxsus holatlar va cheklovlar (Edge cases)",
@@ -1348,22 +2389,26 @@
       },
       en: {
         tag: "🇺🇿 General Prosecutor's Office of Uzbekistan",
-        h1: "Backend API & Bruno Requests Reference",
-        p: "Complete reference for frontend developers. Explains endpoint rationale, required fields, edge-case behavior, and Bruno requests.",
+        h1: "Backend API & Bruno Requests Reference (Phase 1 & Phase 2)",
+        p: "Complete technical guide for frontend developers: 7 officials profiles & photos, special risk categories (cards), citizen supervision with remaining-days countdown, check-in documents (photos & PDF legal docs) approval flow, and Mahalla passport demographics & infrastructure.",
         lblApi: "Base API URL",
         lblDocker: "Docker Port",
         lblSwagger: "Interactive Docs",
         lblBruno: "Bruno Collection",
         matrixTitle: "🏛️ Role Access Matrix & Hierarchy Rules",
-        mAdmin: "ADMIN: Manages Mahallas & Prokuror (Full Access)",
-        mProkuror: "PROKUROR: Exactly 1 system boss; creates the 7 Mahalla officials; cannot CRUD Mahallas",
-        mRais: "MAHALLA_RAISI: Head of Mahalla; views only their own Mahalla's members; cannot edit them",
-        mMembers: "6 OTHER MEMBERS: View only their own profile; cannot view other officials",
-        btnAll: "All (12)",
+        mAdmin: "ADMIN: Manages Mahallas & Prokuror (Full Control).",
+        mProkuror: "PROKUROR: Exactly 1 district leader; manages 7 officials; creates risk categories & citizens; sets check-in frequency; reviews visit docs (Approve/Reject with mandatory reason).",
+        mRais: "MAHALLA RAISI: Head of Mahalla; views only own citizens & staff; submits check-ins; sends removal requests; manages 18+ passport metrics.",
+        mMembers: "7 OFFICIALS: Visit citizens in assigned categories; upload photo proof (max 5MB) & PDF legal doc (max 10MB); monitor remaining days countdown.",
+        btnAll: "All (32)",
         btnAuth: "Auth (4)",
+        btnUsers: "Users (5)",
         btnMahallas: "Mahallas (4)",
-        btnUsers: "Users (4)",
-        searchPlaceholder: "Search path or field...",
+        btnCategories: "Categories (6)",
+        btnPersons: "Persons (7)",
+        btnDocuments: "Documents (4)",
+        btnStats: "Mahalla Stats (2)",
+        searchPlaceholder: "Search path, description or field...",
         sWhy: "💡 Why this request is needed",
         sFields: "📋 Field-by-field breakdown",
         sEdge: "⚠️ Edge cases & Failure handling",
@@ -1374,22 +2419,26 @@
       },
       ru: {
         tag: "🇺🇿 Генеральная Прокуратура Республики Узбекистан",
-        h1: "Справочник Backend API и Bruno",
-        p: "Полное руководство для фронтенд разработчиков. Обоснование каждого запроса, назначение полей, граничные случаи и Bruno файлы.",
+        h1: "Справочник Backend API и Bruno (Фаза 1 и Фаза 2)",
+        p: "Полное интерактивное руководство для фронтенд разработчиков: профили и фото 7 сотрудников, категории риска (карточки), надзор за гражданами со счетчиком оставшихся дней, проверка документов (фото и PDF) с подтверждением прокурора и паспорт махалли.",
         lblApi: "Базовый URL API",
         lblDocker: "Порт Docker",
         lblSwagger: "Интерактивная документация",
         lblBruno: "Коллекция Bruno",
         matrixTitle: "🏛️ Матрица Доступа и Иерархия Ролей",
-        mAdmin: "АДМИН: Управляет Махаллями и Прокурором (Полный доступ)",
-        mProkuror: "ПРОКУРОР: Единственный руководитель; назначает 7 сотрудников; не создает махалли",
-        mRais: "РАИС МАХАЛЛИ: Видит только сотрудников своей махалли; не может изменять их",
-        mMembers: "ОСТАЛЬНЫЕ 6 СОТРУДНИКОВ: Видят только свой профиль; не видят других",
-        btnAll: "Все (12)",
+        mAdmin: "АДМИН: Управляет Махаллями и Прокурором (Полный доступ).",
+        mProkuror: "ПРОКУРОР: Единственный руководитель района; назначает 7 сотрудников; создает категории и граждан; задает периодичность; проверяет отчеты (подтверждение/отказ с причиной).",
+        mRais: "РАИС МАХАЛЛИ: Руководитель махалли; видит только своих граждан и сотрудников; загружает отчеты; подает запрос на снятие с учета; заполняет паспорт махалли.",
+        mMembers: "7 СОТРУДНИКОВ: Выезжают к гражданам прикрепленных категорий; загружают фото (макс 5МБ) и PDF (макс 10МБ); отслеживают оставшиеся дни.",
+        btnAll: "Все (32)",
         btnAuth: "Авторизация (4)",
+        btnUsers: "Сотрудники (5)",
         btnMahallas: "Махалли (4)",
-        btnUsers: "Пользователи (4)",
-        searchPlaceholder: "Поиск по запросу или полю...",
+        btnCategories: "Категории (6)",
+        btnPersons: "Граждане (7)",
+        btnDocuments: "Документы (4)",
+        btnStats: "Статистика (2)",
+        searchPlaceholder: "Поиск по запросу, пути или полю...",
         sWhy: "💡 Зачем нужен этот запрос",
         sFields: "📋 Назначение каждого поля",
         sEdge: "⚠️ Граничные случаи и ошибки",
@@ -1492,7 +2541,7 @@
       });
 
       if (!html) {
-        html = `<div style="text-align: center; padding: 3rem; color: var(--text-dim);">Hech qanday so'rov topilmadi.</div>`;
+        html = `<div style="text-align: center; padding: 4rem; color: var(--text-dim); font-size: 1.1rem;">Hech qanday so'rov topilmadi.</div>`;
       }
 
       container.innerHTML = html;
@@ -1512,14 +2561,20 @@
       document.getElementById('lbl-swagger').innerText = t.lblSwagger;
       document.getElementById('lbl-bruno').innerText = t.lblBruno;
       document.getElementById('txt-matrix-title').innerText = t.matrixTitle;
-      document.getElementById('badge-info-admin').innerText = t.mAdmin;
-      document.getElementById('badge-info-prokuror').innerText = t.mProkuror;
-      document.getElementById('badge-info-rais').innerText = t.mRais;
-      document.getElementById('badge-info-members').innerText = t.mMembers;
+      document.getElementById('badge-info-admin').innerHTML = "<strong>ADMIN:</strong> " + t.mAdmin.replace(/^ADMIN:\s*/, '');
+      document.getElementById('badge-info-prokuror').innerHTML = "<strong>PROKUROR:</strong> " + t.mProkuror.replace(/^PROKUROR:\s*/, '');
+      document.getElementById('badge-info-rais').innerHTML = "<strong>MAHALLA RAISI:</strong> " + t.mRais.replace(/^MAHALLA RAISI:\s*/, '');
+      document.getElementById('badge-info-members').innerHTML = "<strong>7 NAFAR XODIM:</strong> " + t.mMembers.replace(/^7 NAFAR XODIM:\s*/, '');
+      
       document.getElementById('cbtn-all').innerText = t.btnAll;
       document.getElementById('cbtn-auth').innerText = t.btnAuth;
-      document.getElementById('cbtn-mahallas').innerText = t.btnMahallas;
       document.getElementById('cbtn-users').innerText = t.btnUsers;
+      document.getElementById('cbtn-mahallas').innerText = t.btnMahallas;
+      document.getElementById('cbtn-categories').innerText = t.btnCategories;
+      document.getElementById('cbtn-persons').innerText = t.btnPersons;
+      document.getElementById('cbtn-documents').innerText = t.btnDocuments;
+      document.getElementById('cbtn-stats').innerText = t.btnStats;
+      
       document.getElementById('filterQuery').placeholder = t.searchPlaceholder;
 
       renderEndpoints();

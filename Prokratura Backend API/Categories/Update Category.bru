@@ -1,0 +1,30 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/categories/1
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Проф ҳисоб рўйхати (Янгиланган)",
+    "description": "Profilaktik hisobda turuvchi fuqarolar monitoringi",
+    "assigned_roles": ["profilaktika_inspektori", "mahalla_raisi"],
+    "default_frequency_days": 7,
+    "is_active": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

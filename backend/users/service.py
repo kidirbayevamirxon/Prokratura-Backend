@@ -1,7 +1,9 @@
 from typing import Optional
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.common.storage import save_uploaded_photo
 
 from backend.auth.service import AuthServices
 from backend.users.schemas.create import UserCreateSchema
@@ -109,6 +111,11 @@ class UserService:
             password=hashed_password,
             role=data.role,
             mahalla_id=data.mahalla_id,
+            photo_url=data.photo_url,
+            birth_date_text=data.birth_date_text,
+            appointed_date_text=data.appointed_date_text,
+            specialization=data.specialization,
+            previous_workplace=data.previous_workplace,
             is_active=data.is_active,
         )
         db.add(new_user)
@@ -321,6 +328,17 @@ class UserService:
                 user.mahalla_id = None
             user.role = data.role
 
+        if data.photo_url is not None:
+            user.photo_url = data.photo_url
+        if data.birth_date_text is not None:
+            user.birth_date_text = data.birth_date_text
+        if data.appointed_date_text is not None:
+            user.appointed_date_text = data.appointed_date_text
+        if data.specialization is not None:
+            user.specialization = data.specialization
+        if data.previous_workplace is not None:
+            user.previous_workplace = data.previous_workplace
+
         # If user has a mahalla member role, enforce 1 person per role
         if user.mahalla_id and user.role in MAHALLA_SEVEN_ROLES and user.is_active:
             existing_holder = await db.execute(
@@ -336,6 +354,46 @@ class UserService:
                 prev_holder.mahalla_id = None
                 prev_holder.is_active = False
 
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    @staticmethod
+    async def upload_photo(
+        user_id: int,
+        photo_file: UploadFile,
+        caller_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> User:
+        user = await db.get(User, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        # RBAC Check:
+        # Admin / Prokuror can upload for anyone
+        # A user can upload their own photo
+        # Mahalla Raisi can upload for members of their own mahalla
+        if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if caller_id != user_id:
+                if caller_role == UserRole.MAHALLA_RAISI:
+                    if user.mahalla_id != caller_mahalla_id:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Rais can only upload photos for members of their own Mahalla",
+                        )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Cannot upload photo for another user",
+                    )
+
+        photo_url = await save_uploaded_photo(photo_file)
+        user.photo_url = photo_url
         await db.commit()
         await db.refresh(user)
         return user

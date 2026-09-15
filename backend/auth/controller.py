@@ -76,5 +76,10 @@ async def get_me(
         login=user.login,
         role=user.role,
         mahalla_id=user.mahalla_id,
+        photo_url=user.photo_url,
+        birth_date_text=user.birth_date_text,
+        appointed_date_text=user.appointed_date_text,
+        specialization=user.specialization,
+        previous_workplace=user.previous_workplace,
         is_active=user.is_active,
     )

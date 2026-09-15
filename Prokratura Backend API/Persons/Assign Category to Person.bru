@@ -1,0 +1,27 @@
+meta {
+  name: Assign Category to Person
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/persons/1/assign-category
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "category_id": 1,
+    "frequency_days": 5
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+

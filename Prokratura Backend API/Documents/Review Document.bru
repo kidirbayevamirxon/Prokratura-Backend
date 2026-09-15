@@ -1,0 +1,27 @@
+meta {
+  name: Review Document
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/documents/1/review
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "status": "approved",
+    "rejection_reason": null
+  }
+}
+
+settings {
+  encodeUrl: true
+}
+
