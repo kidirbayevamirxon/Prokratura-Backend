@@ -21,9 +21,6 @@ class PersonUpdateSchema(BaseModel):
 class AssignmentCreateSchema(BaseModel):
     category_id: int = Field(..., description="Category / Docs type ID to assign")
     frequency_days: int = Field(..., ge=1, le=365, description="Frequency of check-in in days")
-    assigned_roles: Optional[List[UserRole]] = Field(
-        None, description="Optional override of responsible roles (defaults to category roles)"
-    )
 
 
 class AssignmentResponseSchema(BaseModel):
@@ -44,8 +41,28 @@ class AssignmentResponseSchema(BaseModel):
 
 
 class RemainingDaysStatsSchema(BaseModel):
+    # Top KPI Cards (Hujjatlar monitoringi - Image red circle)
+    jami_hujjatlar: int = Field(0, description="Jami hujjatlar (Total documents)")
+    kiruvchi_hujjatlar: int = Field(0, description="Kiruvchi hujjatlar (Incoming / in execution check-ins)")
+    bajarilgan_hujjatlar: int = Field(0, description="Bajarilgan hujjatlar (Completed / approved check-ins)")
+    muddati_buzilib_bajarilgan: int = Field(0, description="Muddati buzilib bajarilgan (Completed after deadline)")
+    kech_qabul_qilingan: int = Field(0, description="Kech qabul qilingan (Submitted or accepted late)")
+    muddati_buzilgan_hujjatlar: int = Field(0, description="Muddati buzilgan hujjatlar (Deadline violated / overdue)")
+
+    # English aliases for developer convenience
+    total_documents: int = Field(0, description="Alias for jami_hujjatlar")
+    pending_documents: int = Field(0, description="Alias for kiruvchi_hujjatlar")
+    completed_documents: int = Field(0, description="Alias for bajarilgan_hujjatlar")
+    completed_overdue: int = Field(0, description="Alias for muddati_buzilib_bajarilgan")
+    late_accepted: int = Field(0, description="Alias for kech_qabul_qilingan")
+    overdue_documents: int = Field(0, description="Alias for muddati_buzilgan_hujjatlar")
+
+    # Muddat / Days remaining breakdown
     overdue: int = Field(..., description="Count of check-ins where deadline passed (<0 days)")
     today: int = Field(..., description="Count of check-ins due today (0 days left)")
+    bugun: int = Field(0, description="Bugun (Alias for today)")
+    ertaga: int = Field(0, description="Ertaga (Due tomorrow, 1 day left)")
+    indinga: int = Field(0, description="Indinga (Due day after tomorrow, 2 days left)")
     by_day: dict[int, int] = Field(
         ..., description="Count of check-ins broken down by remaining days (e.g. 1: count, 2: count, 3: count, 4: count, 5: count)"
     )

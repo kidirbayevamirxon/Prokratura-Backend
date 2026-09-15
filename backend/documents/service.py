@@ -47,6 +47,7 @@ class DocumentService:
             pdf_url=doc.pdf_url,
             notes=doc.notes,
             check_in_date=doc.check_in_date,
+            due_date=doc.due_date,
             status=doc.status,
             rejection_reason=doc.rejection_reason,
             reviewed_by_id=doc.reviewed_by_id,
@@ -128,6 +129,7 @@ class DocumentService:
             pdf_url=pdf_url,
             notes=notes,
             check_in_date=check_in_date,
+            due_date=assignment.next_check_in_due,
             status=CheckInDocStatus.PENDING,
         )
         db.add(doc)

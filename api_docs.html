@@ -1863,24 +1863,15 @@
     "fields": {
       "uz": [
         "category_id: Biriktirilayotgan toifa ID raqami.",
-        "frequency_days: Tekshiruv yoki kelish davriyligi (kunlarda, masalan 5). Agar berilmasa toifaning standart davriyligi olinadi.",
-        "assigned_roles: Mas'ul xodim rollari (masalan, ['profilaktika_inspektori']). Agar berilmasa toifadan meros qilib olinadi.",
-        "start_date: Boshlanish sanasi (standart: bugungi sana).",
-        "notes: Prokurorning qo'shimcha topshiriq va ko'rsatmalari."
+        "frequency_days: Tekshiruv yoki kelish davriyligi (kunlarda, masalan 5). Mas'ul xodim rollari toifadan avtomatik olinadi."
       ],
       "en": [
         "category_id: Target risk category integer ID.",
-        "frequency_days: Check-in frequency in days (e.g. 5). Inherits category default if omitted.",
-        "assigned_roles: Responsible staff roles. Inherits category roles if omitted.",
-        "start_date: Effective start date (defaults to today).",
-        "notes: Special instructions or legal remarks from Prokuror."
+        "frequency_days: Check-in frequency in days (e.g. 5). Responsible staff roles automatically inherited from category."
       ],
       "ru": [
         "category_id: ID привязываемой категории.",
-        "frequency_days: Периодичность проверок в днях (например 5). По умолчанию берется из категории.",
-        "assigned_roles: Ответственные роли из сотрудников махалли.",
-        "start_date: Дата начала надзора (по умолчанию сегодня).",
-        "notes: Примечания и указания Прокурора."
+        "frequency_days: Периодичность проверок в днях (например 5). Ответственные роли автоматически берутся из категории."
       ]
     },
     "edge": {
@@ -1898,7 +1889,7 @@
       ]
     },
     "payloadModel": "AssignmentCreateSchema",
-    "payloadJson": "{\n  \"category_id\": 1,\n  \"frequency_days\": 5,\n  \"assigned_roles\": [\n    \"profilaktika_inspektori\",\n    \"mahalla_raisi\"\n  ],\n  \"start_date\": \"2026-09-15\",\n  \"notes\": \"Har 5 kunda xonadoniga borib holidan xabar olinsin\"\n}",
+    "payloadJson": "{\n  \"category_id\": 1,\n  \"frequency_days\": 5\n}",
     "responseModel": "AssignmentResponseSchema",
     "responseJson": "{\n  \"id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"mahalla_id\": 1,\n  \"frequency_days\": 5,\n  \"assigned_roles\": [\n    \"profilaktika_inspektori\",\n    \"mahalla_raisi\"\n  ],\n  \"start_date\": \"2026-09-15\",\n  \"next_check_in_due\": \"2026-09-20\",\n  \"days_remaining\": 5,\n  \"is_overdue\": false,\n  \"status\": \"active\",\n  \"notes\": \"Har 5 kunda xonadoniga borib holidan xabar olinsin\",\n  \"created_at\": \"2026-09-15T11:00:00\"\n}",
     "bruno": "Persons/Assign Category to Person.bru",
@@ -1973,25 +1964,25 @@
       "ru": "Все сотрудники"
     },
     "why": {
-      "uz": "Mijozning maxsus talabi: So'rov hech qanday payload talab qilmaydi, 1 dan N kungacha har bir kun bo'yicha qancha tekshiruv qolganini (5 kunda 5 kun qolganlar soni, 4 kunda 4 kun qolganlar soni, muddati o'tganlar, bugungilar) tayyor hisoblab beradi. Istalgan max_days (masalan 5, 7, 10, 30) yozish mumkin.",
-      "en": "Special client feature: Zero-payload request returning day-by-day counts of remaining check-ins from 1 to N days (shows remain 5 days in 5, remain 4 days in 4, overdue, and today). Supports any custom max_days count.",
-      "ru": "Специальный запрос клиента: Без тела запроса вычисляет количество проверок по каждому оставшемуся дню от 1 до N (показывает 5 дней в 5, 4 дня в 4, просроченные и сегодняшние). Можно указать любой max_days."
+      "uz": "Dashboard uchun to'liq monitoring: So'rov hech qanday payload talab qilmaydi. Tepada qizil bilan belgilangan 6 ta asosiy KPI kartalari (Jami hujjatlar, Kiruvchi hujjatlar, Bajarilgan hujjatlar, Muddati buzilib bajarilgan, Kech qabul qilingan, Muddati buzilgan hujjatlar) hamda 1 dan N kungacha har bir kun bo'yicha qancha tekshiruv qolganini (Bugun, Ertaga, Indinga, 3 kun, 4 kun...) tayyor hisoblab beradi.",
+      "en": "Full dashboard monitoring request: Zero-payload request returning both the 6 top KPI summary cards (Total documents, Incoming/pending, Completed, Completed overdue, Late accepted, Deadline violated) and day-by-day remaining countdowns (Today, Tomorrow, 1 to N days).",
+      "ru": "Полный мониторинг для дашборда: Запрос без тела возвращает как 6 верхних карточек KPI (Все документы, Входящие/на исполнении, Выполненные, Выполненные с нарушением срока, Принятые с опозданием, Просроченные), так и подневный счетчик оставшихся дней (Сегодня, Завтра, 1-N дней)."
     },
     "fields": {
       "uz": [
         "max_days: Qancha kelgusi kunlarni alohida-alohida hisoblash kerak (standart 5, lekin 7, 10, 30 kiritish mumkin).",
         "mahalla_id: Mahalla filtri (Prokuror/Admin uchun).",
-        "Javob: total_active, overdue_count, due_today_count va days_breakdown ('1': soni, '2': soni...)."
+        "Javob: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, muddati_buzilib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, bugun, ertaga, indinga, overdue, today, by_day va total_active."
       ],
       "en": [
-        "max_days: Number of future days to count day-by-day (default 5, configurable to any number e.g. 7, 10).",
+        "max_days: Number of future days to count day-by-day (default 5, configurable).",
         "mahalla_id: Mahalla filter (Prokuror/Admin).",
-        "Returns: total_active, overdue_count, due_today_count, and days_breakdown dictionary."
+        "Returns: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, muddati_buzilib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, total_active, overdue, today, bugun, ertaga, indinga, and by_day dictionary."
       ],
       "ru": [
-        "max_days: Сколько будущих дней считать подневно (по умолчанию 5, можно любое число: 7, 10 и т.д.).",
+        "max_days: Сколько будущих дней считать подневно (по умолчанию 5).",
         "mahalla_id: Фильтр по махалле.",
-        "Возвращает: total_active, overdue_count, due_today_count и словарь days_breakdown."
+        "Возвращает: 6 карточек документов (jami_hujjatlar, kiruvchi_hujjatlar...), счетчики дней (bugun, ertaga...) и словарь by_day."
       ]
     },
     "edge": {
@@ -2008,7 +1999,7 @@
     "payloadModel": "None (Query Params)",
     "payloadJson": "// GET /persons/assignments/stats/remaining-days?max_days=5\n// Headers: Authorization: Bearer {{token}}",
     "responseModel": "RemainingDaysStatsSchema",
-    "responseJson": "{\n  \"total_active\": 45,\n  \"overdue_count\": 3,\n  \"due_today_count\": 4,\n  \"days_breakdown\": {\n    \"1\": 5,\n    \"2\": 8,\n    \"3\": 12,\n    \"4\": 7,\n    \"5\": 6\n  }\n}",
+    "responseJson": "{\n  \"jami_hujjatlar\": 5093,\n  \"kiruvchi_hujjatlar\": 156,\n  \"bajarilgan_hujjatlar\": 4937,\n  \"muddati_buzilib_bajarilgan\": 2,\n  \"kech_qabul_qilingan\": 2,\n  \"muddati_buzilgan_hujjatlar\": 0,\n  \"total_documents\": 5093,\n  \"pending_documents\": 156,\n  \"completed_documents\": 4937,\n  \"completed_overdue\": 2,\n  \"late_accepted\": 2,\n  \"overdue_documents\": 0,\n  \"overdue\": 0,\n  \"today\": 13,\n  \"bugun\": 13,\n  \"ertaga\": 10,\n  \"indinga\": 0,\n  \"by_day\": {\n    \"1\": 10,\n    \"2\": 0,\n    \"3\": 3,\n    \"4\": 9,\n    \"5\": 1\n  },\n  \"total_active\": 156\n}",
     "bruno": "Persons/Get Remaining Days Stats.bru",
     "authHeader": "Bearer {{token}}"
   },

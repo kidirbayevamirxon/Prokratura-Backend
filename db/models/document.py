@@ -69,6 +69,7 @@ class CheckInDocument(Base):
     pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     check_in_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    due_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
 
     status: Mapped[CheckInDocStatus] = mapped_column(
         SQLEnum(CheckInDocStatus, name="checkin_doc_status", native_enum=False),

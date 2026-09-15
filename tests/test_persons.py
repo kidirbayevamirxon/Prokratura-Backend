@@ -73,6 +73,7 @@ async def test_assign_multiple_categories_with_different_frequencies(
     )
     assert res1.status_code == 201
     assert res1.json()["frequency_days"] == 5
+    assert res1.json()["assigned_roles"] == sample_category.assigned_roles
 
     # Assign to second category with 10 days
     res2 = await client.post(

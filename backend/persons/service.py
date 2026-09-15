@@ -19,6 +19,7 @@ from db.models.person import Person
 from db.models.category import Category
 from db.models.mahalla import Mahalla
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
+from db.models.document import CheckInDocument, CheckInDocStatus
 from db.models.user import UserRole, MAHALLA_SEVEN_ROLES
 
 
@@ -136,14 +137,8 @@ class PersonService:
                 detail=f"Person is already actively assigned to category '{category.name}'",
             )
 
-        # Resolve assigned roles
-        assigned_roles = None
-        if data.assigned_roles is not None:
-            assigned_roles = [
-                r.value if hasattr(r, "value") else str(r) for r in data.assigned_roles
-            ]
-        else:
-            assigned_roles = category.assigned_roles or []
+        # Inherit assigned roles directly from category
+        assigned_roles = category.assigned_roles or []
 
         next_due = date.today() + timedelta(days=data.frequency_days)
 
@@ -430,9 +425,74 @@ class PersonService:
             elif 1 <= diff <= max_days:
                 by_day[diff] += 1
 
+        # 2. Query CheckInDocument for the 6 top KPI cards (Image red circle)
+        doc_query = select(CheckInDocument).options(
+            selectinload(CheckInDocument.assignment).selectinload(PersonCategoryAssignment.category)
+        )
+        if caller_role in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if mahalla_id is not None:
+                doc_query = doc_query.where(CheckInDocument.mahalla_id == mahalla_id)
+        elif caller_role == UserRole.MAHALLA_RAISI:
+            doc_query = doc_query.where(CheckInDocument.mahalla_id == caller_mahalla_id)
+        elif caller_role in MAHALLA_SEVEN_ROLES:
+            doc_query = doc_query.where(CheckInDocument.mahalla_id == caller_mahalla_id)
+
+        docs = (await db.execute(doc_query)).scalars().all()
+
+        if caller_role in MAHALLA_SEVEN_ROLES and caller_role != UserRole.MAHALLA_RAISI:
+            role_val = caller_role.value
+            docs = [
+                d for d in docs
+                if d.assignment and role_val in (
+                    d.assignment.assigned_roles or (d.assignment.category.assigned_roles if d.assignment.category else [])
+                )
+            ]
+
+        jami_hujjatlar = len(docs)
+        kiruvchi_hujjatlar = len([d for d in docs if d.status == CheckInDocStatus.PENDING])
+        bajarilgan_hujjatlar = len([d for d in docs if d.status == CheckInDocStatus.APPROVED])
+
+        # Muddati buzilib bajarilgan: approved check-ins completed after the deadline
+        muddati_buzilib_bajarilgan = len([
+            d for d in docs
+            if d.status == CheckInDocStatus.APPROVED and (
+                (d.due_date and d.check_in_date > d.due_date)
+                or (d.due_date and d.reviewed_at and d.reviewed_at.date() > d.due_date)
+            )
+        ])
+
+        # Kech qabul qilingan: documents submitted or accepted after deadline
+        kech_qabul_qilingan = len([
+            d for d in docs
+            if (d.due_date and d.check_in_date > d.due_date)
+            or (d.due_date and d.created_at and d.created_at.date() > d.due_date)
+        ])
+
+        # Muddati buzilgan hujjatlar: overdue active assignments / overdue pending check-ins
+        pending_overdue_docs = len([
+            d for d in docs
+            if d.status == CheckInDocStatus.PENDING and d.due_date and d.due_date < today
+        ])
+        muddati_buzilgan_hujjatlar = max(overdue_count, pending_overdue_docs)
+
         return RemainingDaysStatsSchema(
+            jami_hujjatlar=jami_hujjatlar,
+            kiruvchi_hujjatlar=kiruvchi_hujjatlar,
+            bajarilgan_hujjatlar=bajarilgan_hujjatlar,
+            muddati_buzilib_bajarilgan=muddati_buzilib_bajarilgan,
+            kech_qabul_qilingan=kech_qabul_qilingan,
+            muddati_buzilgan_hujjatlar=muddati_buzilgan_hujjatlar,
+            total_documents=jami_hujjatlar,
+            pending_documents=kiruvchi_hujjatlar,
+            completed_documents=bajarilgan_hujjatlar,
+            completed_overdue=muddati_buzilib_bajarilgan,
+            late_accepted=kech_qabul_qilingan,
+            overdue_documents=muddati_buzilgan_hujjatlar,
             overdue=overdue_count,
             today=today_count,
+            bugun=today_count,
+            ertaga=by_day.get(1, 0),
+            indinga=by_day.get(2, 0),
             by_day=by_day,
             total_active=len(assignments),
         )

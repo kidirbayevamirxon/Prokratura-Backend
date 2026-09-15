@@ -38,6 +38,7 @@ class DocumentResponseSchema(BaseModel):
     pdf_url: Optional[str] = None
     notes: Optional[str] = None
     check_in_date: date
+    due_date: Optional[date] = None
     status: CheckInDocStatus
     rejection_reason: Optional[str] = None
     reviewed_by_id: Optional[int] = None

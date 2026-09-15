@@ -142,6 +142,19 @@ async def test_remaining_days_stats_and_separate_fetching(
     # 4 days has 1
     assert stats["by_day"]["4"] >= 1
 
+    # Check top KPI cards (Image red circle)
+    assert "jami_hujjatlar" in stats
+    assert "kiruvchi_hujjatlar" in stats
+    assert "bajarilgan_hujjatlar" in stats
+    assert "muddati_buzilib_bajarilgan" in stats
+    assert "kech_qabul_qilingan" in stats
+    assert "muddati_buzilgan_hujjatlar" in stats
+    assert "total_documents" in stats
+    assert "pending_documents" in stats
+    assert "bugun" in stats
+    assert "ertaga" in stats
+    assert "indinga" in stats
+
     # 2. Separate fetching: fetch items with exactly 5 days remaining
     fetch_5 = await client.get(
         "/persons/assignments?days_remaining=5",
