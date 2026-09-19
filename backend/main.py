@@ -11,14 +11,13 @@ except Exception as e:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.staticfiles import StaticFiles
-
 from backend.auth.controller import router as auth_router
 from backend.users.controller import router as users_router
 from backend.mahallas.controller import router as mahallas_router
 from backend.categories.controller import router as categories_router
 from backend.persons.controller import router as persons_router
 from backend.documents.controller import router as documents_router
+from backend.files.controller import router as files_router
 
 app = FastAPI(
     title="Prokratura Uzbekistan API",
@@ -29,16 +28,13 @@ app = FastAPI(
     root_path="/api",
 )
 
-# Static file serving for photos and PDF documents
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(mahallas_router)
 app.include_router(categories_router)
 app.include_router(persons_router)
 app.include_router(documents_router)
+app.include_router(files_router)
 
 app.add_middleware(
     CORSMiddleware,

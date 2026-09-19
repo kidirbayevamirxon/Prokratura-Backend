@@ -26,7 +26,7 @@ async def test_employee_photo_upload_and_career_details(
         files=files,
     )
     assert photo_res.status_code == 200
-    assert "/uploads/photos/" in photo_res.json()["photo_url"]
+    assert "/files/photos/" in photo_res.json()["photo_url"]
 
     # Update career details (birth_date_text, appointed_date_text, specialization, previous_workplace)
     patch_res = await client.patch(
@@ -66,7 +66,7 @@ async def test_category_icon_upload_and_live_stats(
         files=files,
     )
     assert icon_res.status_code == 200
-    assert "/uploads/icons/" in icon_res.json()["icon_url"]
+    assert "/files/icons/" in icon_res.json()["icon_url"]
 
     # Assign sample_person to sample_category
     await client.post(
@@ -85,7 +85,7 @@ async def test_category_icon_upload_and_live_stats(
     cat_stat = [c for c in items if c["id"] == sample_category.id][0]
     assert cat_stat["persons_count"] == 1
     assert cat_stat["active_assignments_count"] == 1
-    assert "/uploads/icons/" in cat_stat["icon_url"]
+    assert "/files/icons/" in cat_stat["icon_url"]
 
 
 @pytest.mark.asyncio

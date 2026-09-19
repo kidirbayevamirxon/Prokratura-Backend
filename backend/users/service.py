@@ -3,7 +3,7 @@ from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.common.storage import save_uploaded_photo
+from backend.files.service import FileService
 
 from backend.auth.service import AuthServices
 from backend.users.schemas.create import UserCreateSchema
@@ -329,6 +329,8 @@ class UserService:
             user.role = data.role
 
         if data.photo_url is not None:
+            if user.photo_url and user.photo_url != data.photo_url:
+                FileService.delete_file_by_url_or_path(user.photo_url)
             user.photo_url = data.photo_url
         if data.birth_date_text is not None:
             user.birth_date_text = data.birth_date_text
@@ -392,8 +394,34 @@ class UserService:
                         detail="Cannot upload photo for another user",
                     )
 
-        photo_url = await save_uploaded_photo(photo_file)
+        old_photo_url = user.photo_url
+        photo_url = await FileService.save_uploaded_photo(photo_file)
         user.photo_url = photo_url
         await db.commit()
         await db.refresh(user)
+
+        if old_photo_url and old_photo_url != photo_url:
+            FileService.delete_file_by_url_or_path(old_photo_url)
+
         return user
+
+    @staticmethod
+    async def delete_user(
+        user_id: int,
+        caller_role: UserRole,
+        db: AsyncSession,
+    ) -> bool:
+        if caller_role != UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admin can delete users",
+            )
+        user = await db.get(User, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+        await db.delete(user)
+        await db.commit()
+        return True

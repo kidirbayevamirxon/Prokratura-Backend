@@ -5,6 +5,7 @@ from db.models.person import Person
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
 from db.models.document import CheckInDocument, CheckInDocType, CheckInDocStatus
 from db.models.mahalla_stats import MahallaStats
+import db.events  # Register automatic file deletion listeners
 
 __all__ = [
     "Mahalla",

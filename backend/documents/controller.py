@@ -122,3 +122,22 @@ async def get_document_by_id(
         db=db,
     )
 
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete check-in document and remove physical files (Admin, Prokuror, or Mahalla Raisi)",
+)
+async def delete_document(
+    document_id: int,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    await DocumentService.delete_document(
+        document_id=document_id,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+    return {"detail": "Check-in document and associated files deleted successfully"}
+

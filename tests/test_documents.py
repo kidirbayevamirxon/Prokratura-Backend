@@ -39,8 +39,8 @@ async def test_upload_document_success(
     res_data = response.json()
     assert res_data["status"] == "pending"
     assert res_data["assignment_id"] == sample_assignment.id
-    assert "/uploads/photos/" in res_data["photo_url"]
-    assert "/uploads/documents/" in res_data["pdf_url"]
+    assert "/files/photos/" in res_data["photo_url"]
+    assert "/files/documents/" in res_data["pdf_url"]
     assert res_data["notes"] == "Fuqaro bilan profilaktik suhbat o'tkazildi"
 
 

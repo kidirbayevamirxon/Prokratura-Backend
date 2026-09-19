@@ -12,7 +12,7 @@ from backend.categories.schemas import (
     CategoryStatsSchema,
     PaginatedCategorySchema,
 )
-from backend.common.storage import save_uploaded_icon
+from backend.files.service import FileService
 from db.models.category import Category
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
 from db.models.user import UserRole, MAHALLA_SEVEN_ROLES
@@ -152,11 +152,25 @@ class CategoryService:
         cls, category_id: int, file: UploadFile, db: AsyncSession
     ) -> Category:
         category = await cls.get_category_by_id(category_id, db)
-        icon_url = await save_uploaded_icon(file)
+        old_icon_url = category.icon_url
+        icon_url = await FileService.save_uploaded_icon(file)
         category.icon_url = icon_url
         await db.commit()
         await db.refresh(category)
+
+        if old_icon_url and old_icon_url != icon_url:
+            FileService.delete_file_by_url_or_path(old_icon_url)
+
         return category
+
+    @classmethod
+    async def delete_category(
+        cls, category_id: int, db: AsyncSession
+    ) -> bool:
+        category = await cls.get_category_by_id(category_id, db)
+        await db.delete(category)
+        await db.commit()
+        return True
 
     @classmethod
     async def get_category_stats(

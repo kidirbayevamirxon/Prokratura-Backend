@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ from backend.mahallas.schemas.stats import (
 )
 from db.models.mahalla import Mahalla
 from db.models.mahalla_stats import MahallaStats
-from db.models.user import UserRole, MAHALLA_SEVEN_ROLES
+from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
 
 
 class MahallaService:
@@ -86,6 +86,41 @@ class MahallaService:
                 detail=f"Mahalla with id {mahalla_id} not found",
             )
         return mahalla
+
+    @staticmethod
+    async def get_mahalla_members(
+        mahalla_id: int,
+        db: AsyncSession,
+        role: Optional[UserRole] = None,
+        is_active: Optional[bool] = None,
+        caller_role: Optional[UserRole] = None,
+        caller_mahalla_id: Optional[int] = None,
+    ) -> List[User]:
+        # 1. Verify Mahalla exists
+        mahalla = await db.get(Mahalla, mahalla_id)
+        if not mahalla:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mahalla with id {mahalla_id} not found",
+            )
+
+        # 2. RBAC check: Rais can only see members in their own Mahalla
+        if caller_role == UserRole.MAHALLA_RAISI and caller_mahalla_id != mahalla_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Rais can only view members of their own Mahalla",
+            )
+
+        # 3. Query members
+        query = select(User).where(User.mahalla_id == mahalla_id)
+        if role is not None:
+            query = query.where(User.role == role)
+        if is_active is not None:
+            query = query.where(User.is_active == is_active)
+
+        query = query.order_by(User.id.asc())
+        result = await db.execute(query)
+        return list(result.scalars().all())
 
     @staticmethod
     async def update_mahalla(

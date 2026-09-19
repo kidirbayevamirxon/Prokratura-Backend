@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +9,7 @@ from backend.mahallas.schemas.get import (
     MahallaDetailSchema,
     PaginatedMahallaSchema,
 )
+from backend.users.schemas.get import UserResponseSchema
 from backend.mahallas.schemas.stats import (
     MahallaStatsCreateOrUpdateSchema,
     MahallaStatsResponseSchema,
@@ -78,6 +79,28 @@ async def get_mahalla(
         )
 
     return await MahallaService.get_mahalla_by_id(mahalla_id, db)
+
+
+@router.get(
+    "/{mahalla_id}/members",
+    response_model=List[UserResponseSchema],
+    summary="Get members/officials of a Mahalla (Admin, Prokuror, or own Rais)",
+)
+async def get_mahalla_members(
+    mahalla_id: int,
+    role: Optional[UserRole] = Query(None, description="Filter members by role"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    current_user: UserAuth = Depends(rais_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await MahallaService.get_mahalla_members(
+        mahalla_id=mahalla_id,
+        role=role,
+        is_active=is_active,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
 
 
 @router.patch(

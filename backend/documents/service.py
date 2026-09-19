@@ -6,7 +6,7 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from backend.common.storage import save_uploaded_photo, save_uploaded_pdf
+from backend.files.service import FileService
 from backend.documents.schemas import (
     DocumentReviewSchema,
     DocumentResponseSchema,
@@ -113,10 +113,10 @@ class DocumentService:
                     )
 
         # Upload files
-        photo_url = await save_uploaded_photo(photo_file)
+        photo_url = await FileService.save_uploaded_photo(photo_file)
         pdf_url = None
         if pdf_file and pdf_file.filename:
-            pdf_url = await save_uploaded_pdf(pdf_file)
+            pdf_url = await FileService.save_uploaded_pdf(pdf_file)
 
         doc = CheckInDocument(
             assignment_id=assignment.id,
@@ -321,4 +321,46 @@ class DocumentService:
                 )
 
         return cls._format_document(doc)
+
+    @classmethod
+    async def delete_document(
+        cls,
+        document_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> bool:
+        doc = await db.get(CheckInDocument, document_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Check-in document not found",
+            )
+
+        if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if caller_role == UserRole.MAHALLA_RAISI:
+                if doc.mahalla_id != caller_mahalla_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Rais can only delete documents in their own Mahalla",
+                    )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Insufficient permissions to delete document",
+                )
+
+        photo_url = doc.photo_url
+        pdf_url = doc.pdf_url
+
+        await db.delete(doc)
+        await db.commit()
+
+        # Fallback explicit deletion
+        if photo_url:
+            FileService.delete_file_by_url_or_path(photo_url)
+        if pdf_url:
+            FileService.delete_file_by_url_or_path(pdf_url)
+
+        return True
 

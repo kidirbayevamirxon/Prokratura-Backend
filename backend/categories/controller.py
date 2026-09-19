@@ -157,3 +157,17 @@ async def update_category(
         created_at=category.created_at,
         updated_at=category.updated_at,
     )
+
+
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete category and remove associated icon from disk (Prokuror or Admin only)",
+    dependencies=[Depends(prokuror_or_admin_guard)],
+)
+async def delete_category(
+    category_id: int,
+    db: AsyncSession = Depends(get_async_db),
+):
+    await CategoryService.delete_category(category_id, db)
+    return {"detail": "Category and associated icon deleted successfully"}
