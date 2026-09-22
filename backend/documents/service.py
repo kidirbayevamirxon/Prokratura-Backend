@@ -38,10 +38,11 @@ class DocumentService:
 
         today = date.today()
         days_remaining = None
-        if doc.due_date:
-            days_remaining = (doc.due_date - today).days
-        elif getattr(doc, "assignment", None) and doc.assignment and doc.assignment.next_check_in_due:
-            days_remaining = (doc.assignment.next_check_in_due - today).days
+        if doc.status == CheckInDocStatus.PENDING:
+            if doc.due_date:
+                days_remaining = (doc.due_date - today).days
+            elif getattr(doc, "assignment", None) and doc.assignment and doc.assignment.next_check_in_due:
+                days_remaining = (doc.assignment.next_check_in_due - today).days
 
         return DocumentResponseSchema(
             id=doc.id,
@@ -298,6 +299,9 @@ class DocumentService:
         if actual_remaining_days is not None:
             today = date.today()
             target_due = today + timedelta(days=actual_remaining_days)
+            if not status:
+                query = query.where(CheckInDocument.status == CheckInDocStatus.PENDING)
+                count_query = count_query.where(CheckInDocument.status == CheckInDocStatus.PENDING)
             query = query.outerjoin(
                 PersonCategoryAssignment,
                 CheckInDocument.assignment_id == PersonCategoryAssignment.id,
