@@ -440,6 +440,37 @@ async def test_get_documents_filter_by_remaining_days(
     assert res_all.status_code == 200
     assert res_all.json()["total"] == 2
 
+    # 6. If doc3 is approved, Jami tab (no status filter) still returns 1 item for this assignment,
+    # and status=approved returns 1, while status=pending returns 0
+    await client.patch(
+        f"/documents/{doc3_id}/review",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"status": "approved"},
+    )
+    res_approved_jami = await client.get(
+        "/documents?remaining_days=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_approved_jami.status_code == 200
+    assert res_approved_jami.json()["total"] == 1
+    assert res_approved_jami.json()["items"][0]["status"] == "approved"
+
+    res_approved_tab = await client.get(
+        "/documents?remaining_days=5&status=approved",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_approved_tab.status_code == 200
+    assert res_approved_tab.json()["total"] == 1
+
+    res_pending_tab = await client.get(
+        "/documents?remaining_days=5&status=pending",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_pending_tab.status_code == 200
+    # Because doc3 was approved, doc1 is now the latest pending document for this assignment
+    assert res_pending_tab.json()["total"] == 1
+    assert res_pending_tab.json()["items"][0]["id"] == doc1_id
+
 
 @pytest.mark.asyncio
 async def test_upload_document_requires_description(

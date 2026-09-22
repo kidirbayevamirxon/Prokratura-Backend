@@ -38,11 +38,10 @@ class DocumentService:
 
         today = date.today()
         days_remaining = None
-        if doc.status == CheckInDocStatus.PENDING:
-            if doc.due_date:
-                days_remaining = (doc.due_date - today).days
-            elif getattr(doc, "assignment", None) and doc.assignment and doc.assignment.next_check_in_due:
-                days_remaining = (doc.assignment.next_check_in_due - today).days
+        if doc.due_date:
+            days_remaining = (doc.due_date - today).days
+        elif getattr(doc, "assignment", None) and doc.assignment and doc.assignment.next_check_in_due:
+            days_remaining = (doc.assignment.next_check_in_due - today).days
 
         return DocumentResponseSchema(
             id=doc.id,
@@ -297,33 +296,45 @@ class DocumentService:
             count_query = count_query.where(CheckInDocument.assignment_id == assignment_id)
 
         actual_remaining_days = remaining_days if remaining_days is not None else days_remaining
+        target_due = None
         if actual_remaining_days is not None:
             today = date.today()
             target_due = today + timedelta(days=actual_remaining_days)
-            if not status:
-                query = query.where(CheckInDocument.status == CheckInDocStatus.PENDING)
-                count_query = count_query.where(CheckInDocument.status == CheckInDocStatus.PENDING)
             query = query.outerjoin(
                 PersonCategoryAssignment,
                 CheckInDocument.assignment_id == PersonCategoryAssignment.id,
             ).where(
-                func.coalesce(CheckInDocument.due_date, PersonCategoryAssignment.next_check_in_due) == target_due
+                or_(
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                    CheckInDocument.due_date == target_due,
+                )
             )
             count_query = count_query.outerjoin(
                 PersonCategoryAssignment,
                 CheckInDocument.assignment_id == PersonCategoryAssignment.id,
             ).where(
-                func.coalesce(CheckInDocument.due_date, PersonCategoryAssignment.next_check_in_due) == target_due
+                or_(
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                    CheckInDocument.due_date == target_due,
+                )
             )
 
         # When filtering by remaining_days, default to latest document per assignment to prevent duplicate person entries
         is_latest_only = latest_only if latest_only is not None else (actual_remaining_days is not None)
         if is_latest_only:
             latest_subq = select(func.max(CheckInDocument.id))
-            if not status and actual_remaining_days is not None:
-                latest_subq = latest_subq.where(CheckInDocument.status == CheckInDocStatus.PENDING)
-            elif status:
+            if status:
                 latest_subq = latest_subq.where(CheckInDocument.status == status)
+            if target_due is not None:
+                latest_subq = latest_subq.outerjoin(
+                    PersonCategoryAssignment,
+                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                ).where(
+                    or_(
+                        PersonCategoryAssignment.next_check_in_due == target_due,
+                        CheckInDocument.due_date == target_due,
+                    )
+                )
             latest_subq = latest_subq.group_by(CheckInDocument.assignment_id).scalar_subquery()
 
             query = query.where(CheckInDocument.id.in_(latest_subq))
