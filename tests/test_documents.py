@@ -410,6 +410,36 @@ async def test_get_documents_filter_by_remaining_days(
     assert res_alias.json()["total"] == 1
     assert res_alias.json()["items"][0]["id"] == doc1_id
 
+    # 5. Upload a second document for sample_assignment (same assignment, duplicate prevention)
+    fake_photo3 = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo3")
+    res_doc3 = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={"assignment_id": str(sample_assignment.id), "notes": "ikkinchi tekshiruv"},
+        files={"photo": ("doc3.jpg", fake_photo3, "image/jpeg")},
+    )
+    assert res_doc3.status_code == 201
+    doc3_id = res_doc3.json()["id"]
+
+    # When querying remaining_days = 5, it should deduplicate by assignment and return only 1 item (the latest doc3)
+    res_dedup = await client.get(
+        "/documents?remaining_days=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_dedup.status_code == 200
+    dedup_json = res_dedup.json()
+    assert dedup_json["total"] == 1
+    assert len(dedup_json["items"]) == 1
+    assert dedup_json["items"][0]["id"] == doc3_id
+
+    # If latest_only=false is passed, it returns all historical documents for that day
+    res_all = await client.get(
+        "/documents?remaining_days=5&latest_only=false",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_all.status_code == 200
+    assert res_all.json()["total"] == 2
+
 
 @pytest.mark.asyncio
 async def test_upload_document_requires_description(

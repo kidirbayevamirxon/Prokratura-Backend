@@ -243,6 +243,7 @@ class DocumentService:
         assignment_id: Optional[int] = None,
         remaining_days: Optional[int] = None,
         days_remaining: Optional[int] = None,
+        latest_only: Optional[bool] = None,
         caller_role: UserRole = UserRole.ADMIN,
         caller_mahalla_id: Optional[int] = None,
     ) -> PaginatedDocumentSchema:
@@ -314,6 +315,19 @@ class DocumentService:
             ).where(
                 func.coalesce(CheckInDocument.due_date, PersonCategoryAssignment.next_check_in_due) == target_due
             )
+
+        # When filtering by remaining_days, default to latest document per assignment to prevent duplicate person entries
+        is_latest_only = latest_only if latest_only is not None else (actual_remaining_days is not None)
+        if is_latest_only:
+            latest_subq = select(func.max(CheckInDocument.id))
+            if not status and actual_remaining_days is not None:
+                latest_subq = latest_subq.where(CheckInDocument.status == CheckInDocStatus.PENDING)
+            elif status:
+                latest_subq = latest_subq.where(CheckInDocument.status == status)
+            latest_subq = latest_subq.group_by(CheckInDocument.assignment_id).scalar_subquery()
+
+            query = query.where(CheckInDocument.id.in_(latest_subq))
+            count_query = count_query.where(CheckInDocument.id.in_(latest_subq))
 
         total = (await db.execute(count_query)).scalar_one()
 

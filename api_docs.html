@@ -2160,21 +2160,24 @@
         "status: pending, approved, rejected bo'yicha filtr.",
         "doc_type: regular yoki removal_request bo'yicha filtr.",
         "category_id, person_id, assignment_id, mahalla_id: To'liq filtrlar.",
-        "remaining_days (yoki days_remaining): Aniq qolgan kunlar bo'yicha filtr (masalan 5 bersangiz aynan 5 kuni qolgan hujjatlar chiqadi)."
+        "remaining_days (yoki days_remaining): Aniq qolgan kunlar bo'yicha filtr (masalan 5 bersangiz aynan 5 kuni qolgan hujjatlar chiqadi).",
+        "latest_only: Har bir vazifa (fuqaro) bo'yicha faqat eng so'nggi hujjatni qaytarish (remaining_days berilganda avtomatik true bo'ladi va fuqaroni bir necha bor takrorlanishini oldini oladi. Barcha eski sinov hujjatlarini ko'rish uchun false bering)."
       ],
       "en": [
         "page, page_size: Pagination.",
         "status: Filter by pending, approved, rejected.",
         "doc_type: Filter by regular or removal_request.",
         "category_id, person_id, assignment_id, mahalla_id: Scoping filters.",
-        "remaining_days (or days_remaining): Filter by exact remaining days (e.g. 5 for 5 days left)."
+        "remaining_days (or days_remaining): Filter by exact remaining days (e.g. 5 for 5 days left).",
+        "latest_only: Return only the latest document per assignment (defaults to true when remaining_days is set, preventing duplicate rows for the same person)."
       ],
       "ru": [
         "page, page_size: Пагинация.",
         "status: Фильтр по pending, approved, rejected.",
         "doc_type: Фильтр по regular или removal_request.",
         "category_id, person_id, assignment_id, mahalla_id: Фильтры выборки.",
-        "remaining_days (или days_remaining): Фильтр по точному количеству оставшихся дней (например: 5)."
+        "remaining_days (или days_remaining): Фильтр по точному количеству оставшихся дней (например: 5).",
+        "latest_only: Возвращать только последний документ по каждому надзору (по умолчанию true при фильтрации по remaining_days, предотвращает дублирование одного и того же человека)."
       ]
     },
     "edge": {

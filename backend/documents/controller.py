@@ -91,6 +91,7 @@ async def get_documents(
     assignment_id: Optional[int] = Query(None, description="Filter by Assignment ID"),
     remaining_days: Optional[int] = Query(None, description="Filter by exact remaining days (e.g. 5 for 5 days left, 0 for today, negative for overdue)"),
     days_remaining: Optional[int] = Query(None, description="Alias for remaining_days"),
+    latest_only: Optional[bool] = Query(None, description="Return only the latest document per assignment (default: True when remaining_days is given)"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -106,6 +107,7 @@ async def get_documents(
         assignment_id=assignment_id,
         remaining_days=remaining_days,
         days_remaining=days_remaining,
+        latest_only=latest_only,
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
     )
