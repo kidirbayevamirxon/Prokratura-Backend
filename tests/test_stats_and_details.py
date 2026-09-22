@@ -142,11 +142,14 @@ async def test_remaining_days_stats_and_separate_fetching(
     # 4 days has 1
     assert stats["by_day"]["4"] >= 1
 
-    # Check top KPI cards (Image red circle)
+    # Check top KPI cards and status reconciliation
     assert "jami_hujjatlar" in stats
     assert "kiruvchi_hujjatlar" in stats
     assert "bajarilgan_hujjatlar" in stats
+    assert "rad_etilgan_hujjatlar" in stats
+    assert "rejected_documents" in stats
     assert "muddati_buzilib_bajarilgan" in stats
+    assert "kechikib_bajarilgan" in stats
     assert "kech_qabul_qilingan" in stats
     assert "muddati_buzilgan_hujjatlar" in stats
     assert "total_documents" in stats
@@ -154,6 +157,30 @@ async def test_remaining_days_stats_and_separate_fetching(
     assert "bugun" in stats
     assert "ertaga" in stats
     assert "indinga" in stats
+    assert "after_max_days" in stats
+    assert "jami_vazifalar" in stats
+    assert "bajarilgan_vazifalar" in stats
+    assert "bugun_bajarilgan" in stats
+    assert "bugun_bajarilmagan" in stats
+
+    # Verify day 0 (today) is in by_day
+    assert "0" in stats["by_day"]
+    assert stats["by_day"]["0"] == stats["today"]
+    assert stats["by_day"]["1"] == stats["ertaga"]
+    assert stats["by_day"]["2"] == stats["indinga"]
+
+    # Verify document numbers add up
+    assert stats["jami_hujjatlar"] == (
+        stats["kiruvchi_hujjatlar"] + stats["bajarilgan_hujjatlar"] + stats["rad_etilgan_hujjatlar"]
+    )
+
+    # Verify active assignments add up
+    assert stats["total_active"] == (
+        stats["overdue"]
+        + stats["by_day"]["0"]
+        + sum(stats["by_day"][str(d)] for d in range(1, 6))
+        + stats["after_max_days"]
+    )
 
     # 2. Separate fetching: fetch items with exactly 5 days remaining
     fetch_5 = await client.get(

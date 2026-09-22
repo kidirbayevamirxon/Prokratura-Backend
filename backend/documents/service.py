@@ -30,6 +30,11 @@ class DocumentService:
             if doc.reviewed_by
             else None
         )
+        seen_by_name = (
+            f"{doc.seen_by.first_name} {doc.seen_by.last_name}"
+            if doc.seen_by
+            else None
+        )
 
         today = date.today()
         days_remaining = None
@@ -53,6 +58,7 @@ class DocumentService:
             photo_url=doc.photo_url,
             pdf_url=doc.pdf_url,
             notes=doc.notes,
+            description=doc.notes,
             check_in_date=doc.check_in_date,
             due_date=doc.due_date,
             days_remaining=days_remaining,
@@ -61,6 +67,10 @@ class DocumentService:
             reviewed_by_id=doc.reviewed_by_id,
             reviewed_by_name=reviewer_name,
             reviewed_at=doc.reviewed_at,
+            seen_at=doc.seen_at,
+            seen_by_id=doc.seen_by_id,
+            seen_by_name=seen_by_name,
+            is_seen=doc.seen_at is not None,
             created_at=doc.created_at,
         )
 
@@ -125,6 +135,12 @@ class DocumentService:
         pdf_url = None
         if pdf_file and pdf_file.filename:
             pdf_url = await FileService.save_uploaded_pdf(pdf_file)
+
+        if not notes or not notes.strip():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Description is required",
+            )
 
         doc = CheckInDocument(
             assignment_id=assignment.id,
@@ -236,6 +252,7 @@ class DocumentService:
             selectinload(CheckInDocument.mahalla),
             selectinload(CheckInDocument.submitted_by),
             selectinload(CheckInDocument.reviewed_by),
+            selectinload(CheckInDocument.seen_by),
         )
         count_query = select(func.count(CheckInDocument.id))
 
@@ -321,16 +338,19 @@ class DocumentService:
         caller_role: UserRole,
         caller_mahalla_id: Optional[int],
         db: AsyncSession,
+        caller_id: Optional[int] = None,
     ) -> DocumentResponseSchema:
         query = (
             select(CheckInDocument)
             .where(CheckInDocument.id == document_id)
             .options(
+                selectinload(CheckInDocument.assignment),
                 selectinload(CheckInDocument.person),
                 selectinload(CheckInDocument.category),
                 selectinload(CheckInDocument.mahalla),
                 selectinload(CheckInDocument.submitted_by),
                 selectinload(CheckInDocument.reviewed_by),
+                selectinload(CheckInDocument.seen_by),
             )
         )
         doc = (await db.execute(query)).scalar_one_or_none()
@@ -348,7 +368,56 @@ class DocumentService:
                     detail="Cannot view documents from another mahalla",
                 )
 
+        # If Mahalla official views document created by Prokuror / Admin:
+        # Mark seen_at and seen_by_id, and mark completed (approved)
+        if (
+            caller_role in [UserRole.MAHALLA_RAISI, *MAHALLA_SEVEN_ROLES]
+            and doc.mahalla_id == caller_mahalla_id
+            and doc.submitted_by
+            and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
+        ):
+            modified = False
+            seen_user = None
+            if doc.seen_at is None:
+                doc.seen_at = datetime.now()
+                doc.seen_by_id = caller_id
+                if caller_id:
+                    seen_user = await db.get(User, caller_id)
+                    doc.seen_by = seen_user
+                modified = True
+            if doc.status == CheckInDocStatus.PENDING:
+                doc.status = CheckInDocStatus.APPROVED
+                if doc.assignment:
+                    if doc.doc_type == CheckInDocType.REMOVAL_REQUEST:
+                        doc.assignment.status = AssignmentStatus.REMOVED
+                    else:
+                        doc.assignment.next_check_in_due = doc.check_in_date + timedelta(
+                            days=doc.assignment.frequency_days
+                        )
+                modified = True
+            if modified:
+                await db.commit()
+                if seen_user:
+                    doc.seen_by = seen_user
+
         return cls._format_document(doc)
+
+    @classmethod
+    async def mark_document_seen(
+        cls,
+        document_id: int,
+        caller_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> DocumentResponseSchema:
+        return await cls.get_document_by_id(
+            document_id=document_id,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+            db=db,
+            caller_id=caller_id,
+        )
 
     @classmethod
     async def delete_document(

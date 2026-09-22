@@ -57,6 +57,7 @@ async def test_photo_file_size_limit(
     }
     data = {
         "assignment_id": str(sample_assignment.id),
+        "description": "Test photo size limit",
     }
 
     response = await client.post(
@@ -82,6 +83,7 @@ async def test_pdf_file_size_limit(
     }
     data = {
         "assignment_id": str(sample_assignment.id),
+        "description": "Test pdf size limit",
     }
 
     response = await client.post(
@@ -167,7 +169,7 @@ async def test_prokuror_rejection_requires_reason(
     upload_res = await client.post(
         "/documents",
         headers={"Authorization": f"Bearer {inspector_token}"},
-        data={"assignment_id": str(sample_assignment.id)},
+        data={"assignment_id": str(sample_assignment.id), "notes": "Suhbat o'tkazildi"},
         files=files,
     )
     doc_id = upload_res.json()["id"]
@@ -210,6 +212,7 @@ async def test_prokuror_approval_advances_frequency(
         data={
             "assignment_id": str(sample_assignment.id),
             "check_in_date": str(today),
+            "notes": "Navbatdagi ko'rik",
         },
         files=files,
     )
@@ -290,7 +293,7 @@ async def test_history_and_visibility_for_rais_and_prokuror(
     await client.post(
         "/documents",
         headers={"Authorization": f"Bearer {inspector_token}"},
-        data={"assignment_id": str(sample_assignment.id)},
+        data={"assignment_id": str(sample_assignment.id), "notes": "Tekshiruv o'tkazildi"},
         files=files,
     )
 
@@ -328,7 +331,7 @@ async def test_get_documents_filter_by_remaining_days(
     res1 = await client.post(
         "/documents",
         headers={"Authorization": f"Bearer {inspector_token}"},
-        data={"assignment_id": str(sample_assignment.id)},
+        data={"assignment_id": str(sample_assignment.id), "notes": "5 kun qoldi"},
         files={"photo": ("doc1.jpg", fake_photo1, "image/jpeg")},
     )
     assert res1.status_code == 201
@@ -337,7 +340,7 @@ async def test_get_documents_filter_by_remaining_days(
     # Create another person and assignment with 4 days remaining
     from db.models.person import Person
     p2 = Person(
-        full_name="Тест Қолган Кунлар",
+        full_name="Тест Қолган Кунlar",
         birth_date=datetime.date(1995, 5, 20),
         mahalla_id=sample_mahalla.id,
     )
@@ -362,7 +365,7 @@ async def test_get_documents_filter_by_remaining_days(
     res2 = await client.post(
         "/documents",
         headers={"Authorization": f"Bearer {inspector_token}"},
-        data={"assignment_id": str(a2.id)},
+        data={"assignment_id": str(a2.id), "notes": "4 kun qoldi"},
         files={"photo": ("doc2.jpg", fake_photo2, "image/jpeg")},
     )
     assert res2.status_code == 201
@@ -406,5 +409,129 @@ async def test_get_documents_filter_by_remaining_days(
     assert res_alias.status_code == 200
     assert res_alias.json()["total"] == 1
     assert res_alias.json()["items"][0]["id"] == doc1_id
+
+
+@pytest.mark.asyncio
+async def test_upload_document_requires_description(
+    client: AsyncClient,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"dummy photo")
+
+    # 1. Missing description and notes -> 422
+    res_no_desc = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={"assignment_id": str(sample_assignment.id)},
+        files={"photo": ("visit.jpg", fake_photo, "image/jpeg")},
+    )
+    assert res_no_desc.status_code == 422
+    assert "Description is required" in res_no_desc.text
+
+    # 2. Whitespace-only description -> 422
+    fake_photo2 = io.BytesIO(b"\xff\xd8\xff\xe0" + b"dummy photo")
+    res_empty_desc = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={"assignment_id": str(sample_assignment.id), "description": "   "},
+        files={"photo": ("visit.jpg", fake_photo2, "image/jpeg")},
+    )
+    assert res_empty_desc.status_code == 422
+
+    # 3. Provided description -> 201
+    fake_photo3 = io.BytesIO(b"\xff\xd8\xff\xe0" + b"dummy photo")
+    res_valid = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "description": "Profilaktik ko'rik to'liq yakunlandi",
+        },
+        files={"photo": ("visit.jpg", fake_photo3, "image/jpeg")},
+    )
+    assert res_valid.status_code == 201
+    doc_data = res_valid.json()
+    assert doc_data["description"] == "Profilaktik ko'rik to'liq yakunlandi"
+    assert doc_data["notes"] == "Profilaktik ko'rik to'liq yakunlandi"
+
+
+@pytest.mark.asyncio
+async def test_prokuror_document_seen_and_completed_by_mahalla(
+    client: AsyncClient,
+    prokuror_token: str,
+    rais_token: str,
+    sample_assignment: PersonCategoryAssignment,
+    db_session,
+):
+    today = datetime.date.today()
+    sample_assignment.next_check_in_due = today + datetime.timedelta(days=5)
+    await db_session.commit()
+
+    # 1. Prokuror creates document and sends to Mahalla
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"prokuror photo proof")
+    prok_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(today),
+            "description": "Prokuror tomonidan fuqaro holatini o'rganish topshirig'i",
+        },
+        files={"photo": ("topshiriq.jpg", fake_photo, "image/jpeg")},
+    )
+    assert prok_res.status_code == 201
+    doc = prok_res.json()
+    doc_id = doc["id"]
+    assert doc["status"] == "pending"
+    assert doc["is_seen"] is False
+    assert doc["seen_at"] is None
+    assert doc["seen_by_id"] is None
+
+    # 2. Mahalla Raisi opens/views the document details (GET /documents/{doc_id})
+    rais_res = await client.get(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {rais_token}"},
+    )
+    assert rais_res.status_code == 200
+    seen_doc = rais_res.json()
+    # It must record when seen and who saw it
+    assert seen_doc["is_seen"] is True
+    assert seen_doc["seen_at"] is not None
+    assert seen_doc["seen_by_name"] is not None
+    # And document must now be completed ("approved")
+    assert seen_doc["status"] == "approved"
+
+    # 3. Prokuror checks the document -> prokuror sees when Mahalla people seen it and that it is completed
+    prok_view = await client.get(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert prok_view.status_code == 200
+    prok_doc = prok_view.json()
+    assert prok_doc["is_seen"] is True
+    assert prok_doc["seen_at"] is not None
+    assert prok_doc["seen_by_name"] == seen_doc["seen_by_name"]
+    assert prok_doc["status"] == "approved"
+
+    # 4. In documents list, prokuror sees the document with seen info
+    list_res = await client.get(
+        f"/documents?assignment_id={sample_assignment.id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert list_res.status_code == 200
+    items = list_res.json()["items"]
+    target_item = [item for item in items if item["id"] == doc_id][0]
+    assert target_item["is_seen"] is True
+    assert target_item["status"] == "approved"
+
+    # 5. Explicit mark-as-seen endpoint POST /documents/{doc_id}/seen also succeeds
+    seen_endpoint_res = await client.post(
+        f"/documents/{doc_id}/seen",
+        headers={"Authorization": f"Bearer {rais_token}"},
+    )
+    assert seen_endpoint_res.status_code == 200
+    assert seen_endpoint_res.json()["is_seen"] is True
+
 
 

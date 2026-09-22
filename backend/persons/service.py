@@ -432,7 +432,8 @@ class PersonService:
         today = date.today()
         overdue_count = 0
         today_count = 0
-        by_day = {d: 0 for d in range(1, max_days + 1)}
+        by_day = {d: 0 for d in range(0, max_days + 1)}
+        later_count = 0
 
         for a in assignments:
             diff = (a.next_check_in_due - today).days
@@ -440,8 +441,11 @@ class PersonService:
                 overdue_count += 1
             elif diff == 0:
                 today_count += 1
+                by_day[0] += 1
             elif 1 <= diff <= max_days:
                 by_day[diff] += 1
+            else:
+                later_count += 1
 
         # 2. Query CheckInDocument for the 6 top KPI cards (Image red circle)
         doc_query = select(CheckInDocument).options(
@@ -469,6 +473,7 @@ class PersonService:
         jami_hujjatlar = len(docs)
         kiruvchi_hujjatlar = len([d for d in docs if d.status == CheckInDocStatus.PENDING])
         bajarilgan_hujjatlar = len([d for d in docs if d.status == CheckInDocStatus.APPROVED])
+        rad_etilgan_hujjatlar = len([d for d in docs if d.status == CheckInDocStatus.REJECTED])
 
         # Muddati buzilib bajarilgan: approved check-ins completed after the deadline
         muddati_buzilib_bajarilgan = len([
@@ -493,16 +498,29 @@ class PersonService:
         ])
         muddati_buzilgan_hujjatlar = max(overdue_count, pending_overdue_docs)
 
+        # Today's task metrics
+        bugun_bajarilgan = len([
+            d for d in docs
+            if d.status == CheckInDocStatus.APPROVED and (
+                (d.reviewed_at and d.reviewed_at.date() == today)
+                or (d.check_in_date == today)
+            )
+        ])
+        bugun_bajarilmagan = today_count
+
         return RemainingDaysStatsSchema(
             jami_hujjatlar=jami_hujjatlar,
             kiruvchi_hujjatlar=kiruvchi_hujjatlar,
             bajarilgan_hujjatlar=bajarilgan_hujjatlar,
+            rad_etilgan_hujjatlar=rad_etilgan_hujjatlar,
             muddati_buzilib_bajarilgan=muddati_buzilib_bajarilgan,
+            kechikib_bajarilgan=muddati_buzilib_bajarilgan,
             kech_qabul_qilingan=kech_qabul_qilingan,
             muddati_buzilgan_hujjatlar=muddati_buzilgan_hujjatlar,
             total_documents=jami_hujjatlar,
             pending_documents=kiruvchi_hujjatlar,
             completed_documents=bajarilgan_hujjatlar,
+            rejected_documents=rad_etilgan_hujjatlar,
             completed_overdue=muddati_buzilib_bajarilgan,
             late_accepted=kech_qabul_qilingan,
             overdue_documents=muddati_buzilgan_hujjatlar,
@@ -513,5 +531,16 @@ class PersonService:
             indinga=by_day.get(2, 0),
             by_day=by_day,
             total_active=len(assignments),
+            after_max_days=later_count,
+            kelgusida=later_count,
+            later=later_count,
+            jami_vazifalar=len(assignments),
+            total_tasks=len(assignments),
+            bajarilgan_vazifalar=bajarilgan_hujjatlar,
+            completed_tasks=bajarilgan_hujjatlar,
+            bugun_bajarilgan=bugun_bajarilgan,
+            completed_today=bugun_bajarilgan,
+            bugun_bajarilmagan=bugun_bajarilmagan,
+            pending_today=bugun_bajarilmagan,
         )
 

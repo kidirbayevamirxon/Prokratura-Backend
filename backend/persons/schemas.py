@@ -45,7 +45,9 @@ class RemainingDaysStatsSchema(BaseModel):
     jami_hujjatlar: int = Field(0, description="Jami hujjatlar (Total documents)")
     kiruvchi_hujjatlar: int = Field(0, description="Kiruvchi hujjatlar (Incoming / in execution check-ins)")
     bajarilgan_hujjatlar: int = Field(0, description="Bajarilgan hujjatlar (Completed / approved check-ins)")
+    rad_etilgan_hujjatlar: int = Field(0, description="Rad etilgan hujjatlar (Rejected check-ins)")
     muddati_buzilib_bajarilgan: int = Field(0, description="Muddati buzilib bajarilgan (Completed after deadline)")
+    kechikib_bajarilgan: int = Field(0, description="Kechikib bajarilgan (Alias for muddati_buzilib_bajarilgan)")
     kech_qabul_qilingan: int = Field(0, description="Kech qabul qilingan (Submitted or accepted late)")
     muddati_buzilgan_hujjatlar: int = Field(0, description="Muddati buzilgan hujjatlar (Deadline violated / overdue)")
 
@@ -53,6 +55,7 @@ class RemainingDaysStatsSchema(BaseModel):
     total_documents: int = Field(0, description="Alias for jami_hujjatlar")
     pending_documents: int = Field(0, description="Alias for kiruvchi_hujjatlar")
     completed_documents: int = Field(0, description="Alias for bajarilgan_hujjatlar")
+    rejected_documents: int = Field(0, description="Alias for rad_etilgan_hujjatlar")
     completed_overdue: int = Field(0, description="Alias for muddati_buzilib_bajarilgan")
     late_accepted: int = Field(0, description="Alias for kech_qabul_qilingan")
     overdue_documents: int = Field(0, description="Alias for muddati_buzilgan_hujjatlar")
@@ -64,9 +67,22 @@ class RemainingDaysStatsSchema(BaseModel):
     ertaga: int = Field(0, description="Ertaga (Due tomorrow, 1 day left)")
     indinga: int = Field(0, description="Indinga (Due day after tomorrow, 2 days left)")
     by_day: dict[int, int] = Field(
-        ..., description="Count of check-ins broken down by remaining days (e.g. 1: count, 2: count, 3: count, 4: count, 5: count)"
+        ..., description="Count of check-ins broken down by remaining days (e.g. 0: today, 1: tomorrow, 2: day after tomorrow, 3: in 3 days...)"
     )
     total_active: int = Field(..., description="Total active assignments")
+    after_max_days: int = Field(0, description="Active assignments due after max_days (> max_days)")
+    kelgusida: int = Field(0, description="Kelgusida (Alias for after_max_days)")
+    later: int = Field(0, description="Alias for after_max_days")
+
+    # Task metrics for dashboard cards
+    jami_vazifalar: int = Field(0, description="Jami vazifalar (Total active tasks / assignments)")
+    total_tasks: int = Field(0, description="Alias for jami_vazifalar")
+    bajarilgan_vazifalar: int = Field(0, description="Bajarilgan vazifalar (Completed tasks)")
+    completed_tasks: int = Field(0, description="Alias for bajarilgan_vazifalar")
+    bugun_bajarilgan: int = Field(0, description="Bugun bajarilgan (Completed today)")
+    completed_today: int = Field(0, description="Alias for bugun_bajarilgan")
+    bugun_bajarilmagan: int = Field(0, description="Bugun bajarilmagan (Pending tasks due today)")
+    pending_today: int = Field(0, description="Alias for bugun_bajarilmagan")
 
 
 class PersonResponseSchema(BaseModel):

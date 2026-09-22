@@ -33,17 +33,19 @@ async def upload_document(
         CheckInDocType.REGULAR,
         description="regular or removal_request (last check-in to remove category)",
     ),
-    notes: Optional[str] = Form(None, description="Remarks / inspection notes"),
+    notes: Optional[str] = Form(None, description="Remarks / inspection notes (alias for description)"),
+    description: Optional[str] = Form(None, description="Description / remarks of the inspection (Required)"),
     photo: UploadFile = File(..., description="Photo proof (max 5 MB)"),
     pdf: Optional[UploadFile] = File(None, description="PDF legal document (max 10 MB)"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
+    doc_notes = (description or "").strip() or (notes or "").strip()
     return await DocumentService.create_document(
         assignment_id=assignment_id,
         check_in_date=check_in_date,
         doc_type=doc_type,
-        notes=notes,
+        notes=doc_notes,
         photo_file=photo,
         pdf_file=pdf,
         caller_id=current_user["id"],
@@ -121,6 +123,26 @@ async def get_document_by_id(
 ):
     return await DocumentService.get_document_by_id(
         document_id=document_id,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{document_id}/seen",
+    response_model=DocumentResponseSchema,
+    summary="Mark check-in document as seen by Mahalla official (Mahalla Raisi or Mahalla Yettiligi)",
+)
+async def mark_document_seen(
+    document_id: int,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.mark_document_seen(
+        document_id=document_id,
+        caller_id=current_user["id"],
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
         db=db,

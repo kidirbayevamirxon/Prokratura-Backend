@@ -37,6 +37,7 @@ class DocumentResponseSchema(BaseModel):
     photo_url: str
     pdf_url: Optional[str] = None
     notes: Optional[str] = None
+    description: Optional[str] = None
     check_in_date: date
     due_date: Optional[date] = None
     days_remaining: Optional[int] = None
@@ -45,6 +46,10 @@ class DocumentResponseSchema(BaseModel):
     reviewed_by_id: Optional[int] = None
     reviewed_by_name: Optional[str] = None
     reviewed_at: Optional[datetime] = None
+    seen_at: Optional[datetime] = None
+    seen_by_id: Optional[int] = None
+    seen_by_name: Optional[str] = None
+    is_seen: bool = False
     created_at: datetime
 
 

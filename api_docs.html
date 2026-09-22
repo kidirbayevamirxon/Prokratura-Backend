@@ -1972,34 +1972,43 @@
       "uz": [
         "max_days: Qancha kelgusi kunlarni alohida-alohida hisoblash kerak (standart 5, lekin 7, 10, 30 kiritish mumkin).",
         "mahalla_id: Mahalla filtri (Prokuror/Admin uchun).",
-        "Javob: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, muddati_buzilib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, bugun, ertaga, indinga, overdue, today, by_day va total_active."
+        "Javob: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, rad_etilgan_hujjatlar, muddati_buzilib_bajarilgan, kechikib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, bugun, ertaga, indinga, overdue, today, by_day (0 dan max_days gacha, 0 = bugun, 1 = ertaga), total_active, after_max_days (kelgusida), jami_vazifalar, bajarilgan_vazifalar, bugun_bajarilgan, bugun_bajarilmagan."
       ],
       "en": [
         "max_days: Number of future days to count day-by-day (default 5, configurable).",
         "mahalla_id: Mahalla filter (Prokuror/Admin).",
-        "Returns: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, muddati_buzilib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, total_active, overdue, today, bugun, ertaga, indinga, and by_day dictionary."
+        "Returns: jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, rad_etilgan_hujjatlar, muddati_buzilib_bajarilgan, kechikib_bajarilgan, kech_qabul_qilingan, muddati_buzilgan_hujjatlar, total_active, overdue, today, bugun, ertaga, indinga, by_day dictionary (0 to max_days, 0 = today, 1 = tomorrow), after_max_days, and task metrics."
       ],
       "ru": [
         "max_days: Сколько будущих дней считать подневно (по умолчанию 5).",
         "mahalla_id: Фильтр по махалле.",
-        "Возвращает: 6 карточек документов (jami_hujjatlar, kiruvchi_hujjatlar...), счетчики дней (bugun, ertaga...) и словарь by_day."
+        "Возвращает: карточки документов (jami_hujjatlar, kiruvchi_hujjatlar, bajarilgan_hujjatlar, rad_etilgan_hujjatlar...), счетчики дней (bugun, ertaga...), словарь by_day (0 до max_days, 0 = сегодня, 1 = завтра), after_max_days и метрики задач."
       ]
     },
     "edge": {
       "uz": [
-        "max_days 1 dan 365 gacha bo'lishi kerak. 0 yoki manfiy kiritilsa: 422 Validation Error."
+        "max_days 1 dan 365 gacha bo'lishi kerak. 0 yoki manfiy kiritilsa: 422 Validation Error.",
+        "by_day ichida '0' kaliti bugungi kunni (today/bugun), '1' ertangi kunni (ertaga), '2' indingi kunni bildiradi.",
+        "Hujjatlar yig'indisi aniq to'g'ri keladi: jami_hujjatlar = kiruvchi_hujjatlar + bajarilgan_hujjatlar + rad_etilgan_hujjatlar.",
+        "Faol biriktiruvlar yig'indisi to'liq to'g'ri keladi: total_active = overdue + by_day['0'] + sum(by_day[1..N]) + after_max_days."
       ],
       "en": [
-        "max_days must be between 1 and 365 (0 or negative returns 422)."
+        "max_days must be between 1 and 365 (0 or negative returns 422).",
+        "by_day key '0' represents today, '1' represents tomorrow, '2' day after tomorrow.",
+        "Document math reconciles: jami_hujjatlar = kiruvchi_hujjatlar + bajarilgan_hujjatlar + rad_etilgan_hujjatlar.",
+        "Active assignments math reconciles: total_active = overdue + by_day['0'] + sum(by_day[1..N]) + after_max_days."
       ],
       "ru": [
-        "max_days должен быть от 1 до 365 (иначе 422)."
+        "max_days должен быть от 1 до 365 (иначе 422).",
+        "Ключ '0' в by_day означает сегодня, '1' - завтра, '2' - послезавтра.",
+        "Сумма документов сходится: jami_hujjatlar = kiruvchi_hujjatlar + bajarilgan_hujjatlar + rad_etilgan_hujjatlar.",
+        "Сумма активных задач сходится: total_active = overdue + by_day['0'] + sum(by_day[1..N]) + after_max_days."
       ]
     },
     "payloadModel": "None (Query Params)",
     "payloadJson": "// GET /persons/assignments/stats/remaining-days?max_days=5\n// Headers: Authorization: Bearer {{token}}",
     "responseModel": "RemainingDaysStatsSchema",
-    "responseJson": "{\n  \"jami_hujjatlar\": 5093,\n  \"kiruvchi_hujjatlar\": 156,\n  \"bajarilgan_hujjatlar\": 4937,\n  \"muddati_buzilib_bajarilgan\": 2,\n  \"kech_qabul_qilingan\": 2,\n  \"muddati_buzilgan_hujjatlar\": 0,\n  \"total_documents\": 5093,\n  \"pending_documents\": 156,\n  \"completed_documents\": 4937,\n  \"completed_overdue\": 2,\n  \"late_accepted\": 2,\n  \"overdue_documents\": 0,\n  \"overdue\": 0,\n  \"today\": 13,\n  \"bugun\": 13,\n  \"ertaga\": 10,\n  \"indinga\": 0,\n  \"by_day\": {\n    \"1\": 10,\n    \"2\": 0,\n    \"3\": 3,\n    \"4\": 9,\n    \"5\": 1\n  },\n  \"total_active\": 156\n}",
+    "responseJson": "{\n  \"jami_hujjatlar\": 5094,\n  \"kiruvchi_hujjatlar\": 156,\n  \"bajarilgan_hujjatlar\": 4937,\n  \"rad_etilgan_hujjatlar\": 1,\n  \"muddati_buzilib_bajarilgan\": 2,\n  \"kechikib_bajarilgan\": 2,\n  \"kech_qabul_qilingan\": 2,\n  \"muddati_buzilgan_hujjatlar\": 0,\n  \"total_documents\": 5094,\n  \"pending_documents\": 156,\n  \"completed_documents\": 4937,\n  \"rejected_documents\": 1,\n  \"completed_overdue\": 2,\n  \"late_accepted\": 2,\n  \"overdue_documents\": 0,\n  \"overdue\": 0,\n  \"today\": 13,\n  \"bugun\": 13,\n  \"ertaga\": 10,\n  \"indinga\": 0,\n  \"by_day\": {\n    \"0\": 13,\n    \"1\": 10,\n    \"2\": 0,\n    \"3\": 3,\n    \"4\": 9,\n    \"5\": 1\n  },\n  \"total_active\": 156,\n  \"after_max_days\": 120,\n  \"kelgusida\": 120,\n  \"later\": 120,\n  \"jami_vazifalar\": 156,\n  \"total_tasks\": 156,\n  \"bajarilgan_vazifalar\": 4937,\n  \"completed_tasks\": 4937,\n  \"bugun_bajarilgan\": 13,\n  \"completed_today\": 13,\n  \"bugun_bajarilmagan\": 13,\n  \"pending_today\": 13\n}",
     "bruno": "Persons/Get Remaining Days Stats.bru",
     "authHeader": "Bearer {{token}}"
   },
@@ -2024,7 +2033,7 @@
         "assignment_id: Biriktiruv ID raqami (qaysi toifa nazorati bo'yicha hisobot berilayotgani).",
         "check_in_date: Tekshiruv sanasi (standart: bugungi sana).",
         "doc_type: 'regular' (odatiy navbatdagi tekshiruv) yoki 'removal_request' (fuqaroni toifadan butunlay chiqarish bo'yicha so'nggi tekshiruv).",
-        "notes: Tekshiruv natijalari, xulosa va tavsiyalar.",
+        "description (yoki notes): Tekshiruv natijalari, xulosa va tavsiyalar. Majburiy (Required)!",
         "photo: Surat (png, jpg, jpeg, webp, max 5 MB). Majburiy!",
         "pdf: Yuridik asos hujjati PDF formati (max 10 MB). Ixtiyoriy.",
         "FRONTEND: Multipart FormData orqali yuboriladi!"
@@ -2033,7 +2042,7 @@
         "assignment_id: Assignment integer ID.",
         "check_in_date: Visit date (default: today).",
         "doc_type: 'regular' or 'removal_request'.",
-        "notes: Observations and remarks.",
+        "description (or notes): Observations, remarks or instructions. Mandatory / Required!",
         "photo: Photo file (png/jpg/webp, max 5 MB). Mandatory!",
         "pdf: PDF legal document (max 10 MB). Optional.",
         "FRONTEND: Send via FormData multipart/form-data!"
@@ -2042,7 +2051,7 @@
         "assignment_id: ID привязки надзора.",
         "check_in_date: Дата визита (по умолчанию сегодня).",
         "doc_type: 'regular' (обычная проверка) или 'removal_request' (запрос на снятие с учета).",
-        "notes: Примечания и заключение.",
+        "description (или notes): Примечания и заключение. Обязательно (Required)!",
         "photo: Фотография (png/jpg/webp, макс 5 МБ). Обязательно!",
         "pdf: PDF документ (макс 10 МБ). Опционально.",
         "ФРОНТЕНД: Отправлять через FormData multipart/form-data!"
@@ -2198,9 +2207,9 @@
       "ru": "Все сотрудники"
     },
     "why": {
-      "uz": "Alohida hujjat va uning fotosurati, PDF fayli, tasdiqlash holati va rad etish sababini batafsil ko'rish.",
-      "en": "Inspect full details of a check-in document, photo proof, PDF attachment, review status, and rejection rationale.",
-      "ru": "Детальный просмотр отчета о проверке: фото, PDF, статус рассмотрения и причина отказа."
+      "uz": "Alohida hujjat va uning fotosurati, PDF fayli, ko'rilganlik holati (seen_at, seen_by) va tasdiqlash holatini batafsil ko'rish. Agar Prokuror hujjat jo'natgan bo'lsa, mahalla xodimi ko'rganda avtomatik 'seen_at' qayd etiladi va hujjat 'approved' (yakunlangan) holatiga o'tadi.",
+      "en": "Inspect full details of a check-in document: photo, PDF, seen status (seen_at, seen_by), and review status. When Mahalla official views a Prokuror-sent document, seen_at is automatically recorded and document status transitions to approved (completed).",
+      "ru": "Детальный просмотр отчета о проверке: фото, PDF, статус прочтения (seen_at, seen_by) и рассмотрения. При открытии сотрудником махалли документа прокурора автоматически фиксируется seen_at и статус меняется на approved (завершено)."
     },
     "fields": {
       "uz": [
@@ -2227,7 +2236,7 @@
     "payloadModel": "None",
     "payloadJson": "// GET /documents/1",
     "responseModel": "DocumentResponseSchema",
-    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"check_in_date\": \"2026-09-15\",\n  \"photo_url\": \"/uploads/photos/2026/09/15/report_photo.jpg\",\n  \"pdf_url\": \"/uploads/documents/2026/09/15/legal_doc.pdf\",\n  \"notes\": \"Xonadonga borildi, suhbat o'tkazildi\",\n  \"doc_type\": \"removal_request\",\n  \"status\": \"approved\",\n  \"rejection_reason\": null,\n  \"uploaded_by_id\": 3,\n  \"uploader_name\": \"Anvar Aliyev\",\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:30:00\",\n  \"created_at\": \"2026-09-15T12:00:00\"\n}",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"person_id\": 1,\n  \"person_name\": \"Karimova Zilola Rustamovna\",\n  \"category_id\": 1,\n  \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n  \"check_in_date\": \"2026-09-15\",\n  \"photo_url\": \"/uploads/photos/2026/09/15/report_photo.jpg\",\n  \"pdf_url\": \"/uploads/documents/2026/09/15/legal_doc.pdf\",\n  \"notes\": \"Xonadonga borildi, suhbat o'tkazildi\",\n  \"description\": \"Xonadonga borildi, suhbat o'tkazildi\",\n  \"doc_type\": \"removal_request\",\n  \"status\": \"approved\",\n  \"is_seen\": true,\n  \"seen_at\": \"2026-09-22T10:15:00\",\n  \"seen_by_id\": 2,\n  \"seen_by_name\": \"Mansur Oripov\",\n  \"rejection_reason\": null,\n  \"uploaded_by_id\": 3,\n  \"uploader_name\": \"Anvar Aliyev\",\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:30:00\",\n  \"created_at\": \"2026-09-15T12:00:00\"\n}",
     "bruno": "Documents/Get Document by ID.bru",
     "authHeader": "Bearer {{token}}"
   },

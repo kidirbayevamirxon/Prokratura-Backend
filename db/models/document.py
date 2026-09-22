@@ -84,6 +84,13 @@ class CheckInDocument(Base):
     )
     reviewed_at: Mapped[Optional[datetime.datetime]] = mapped_column(nullable=True)
 
+    seen_by_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    seen_at: Mapped[Optional[datetime.datetime]] = mapped_column(nullable=True)
+
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
 
     assignment: Mapped["PersonCategoryAssignment"] = relationship(
@@ -94,4 +101,5 @@ class CheckInDocument(Base):
     mahalla: Mapped["Mahalla"] = relationship("Mahalla", lazy="selectin")
     submitted_by: Mapped["User"] = relationship("User", foreign_keys=[submitted_by_id], lazy="selectin")
     reviewed_by: Mapped[Optional["User"]] = relationship("User", foreign_keys=[reviewed_by_id], lazy="selectin")
+    seen_by: Mapped[Optional["User"]] = relationship("User", foreign_keys=[seen_by_id], lazy="selectin")
 
