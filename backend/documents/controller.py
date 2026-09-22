@@ -87,6 +87,8 @@ async def get_documents(
     category_id: Optional[int] = Query(None, description="Filter by Category ID"),
     person_id: Optional[int] = Query(None, description="Filter by Person ID"),
     assignment_id: Optional[int] = Query(None, description="Filter by Assignment ID"),
+    remaining_days: Optional[int] = Query(None, description="Filter by exact remaining days (e.g. 5 for 5 days left, 0 for today, negative for overdue)"),
+    days_remaining: Optional[int] = Query(None, description="Alias for remaining_days"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -100,6 +102,8 @@ async def get_documents(
         category_id=category_id,
         person_id=person_id,
         assignment_id=assignment_id,
+        remaining_days=remaining_days,
+        days_remaining=days_remaining,
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
     )

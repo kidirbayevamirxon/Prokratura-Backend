@@ -168,6 +168,8 @@ class PersonService:
         search: Optional[str] = None,
         mahalla_id: Optional[int] = None,
         category_id: Optional[int] = None,
+        remaining_days: Optional[int] = None,
+        days_remaining: Optional[int] = None,
         caller_role: UserRole = UserRole.ADMIN,
         caller_mahalla_id: Optional[int] = None,
     ) -> PaginatedPersonSchema:
@@ -197,6 +199,22 @@ class PersonService:
             )
             count_query = count_query.join(Person.assignments).where(
                 PersonCategoryAssignment.category_id == category_id
+            )
+
+        actual_remaining_days = remaining_days if remaining_days is not None else days_remaining
+        if actual_remaining_days is not None:
+            today = date.today()
+            target_due = today + timedelta(days=actual_remaining_days)
+            if not category_id:
+                query = query.join(Person.assignments)
+                count_query = count_query.join(Person.assignments)
+            query = query.where(
+                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                PersonCategoryAssignment.next_check_in_due == target_due,
+            )
+            count_query = count_query.where(
+                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                PersonCategoryAssignment.next_check_in_due == target_due,
             )
 
         total = (await db.execute(count_query)).scalar_one()

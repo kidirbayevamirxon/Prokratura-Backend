@@ -308,3 +308,103 @@ async def test_history_and_visibility_for_rais_and_prokuror(
     assert r_docs.status_code == 200
     assert r_docs.json()["total"] >= 1
 
+
+@pytest.mark.asyncio
+async def test_get_documents_filter_by_remaining_days(
+    client: AsyncClient,
+    prokuror_token: str,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+    sample_category,
+    sample_mahalla,
+    db_session,
+):
+    today = datetime.date.today()
+    sample_assignment.next_check_in_due = today + datetime.timedelta(days=5)
+    await db_session.commit()
+
+    # Upload document for sample_assignment (has 5 days remaining)
+    fake_photo1 = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo1")
+    res1 = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={"assignment_id": str(sample_assignment.id)},
+        files={"photo": ("doc1.jpg", fake_photo1, "image/jpeg")},
+    )
+    assert res1.status_code == 201
+    doc1_id = res1.json()["id"]
+
+    # Create another person and assignment with 4 days remaining
+    from db.models.person import Person
+    p2 = Person(
+        full_name="Тест Қолган Кунлар",
+        birth_date=datetime.date(1995, 5, 20),
+        mahalla_id=sample_mahalla.id,
+    )
+    db_session.add(p2)
+    await db_session.commit()
+    await db_session.refresh(p2)
+
+    a2 = PersonCategoryAssignment(
+        person_id=p2.id,
+        category_id=sample_category.id,
+        mahalla_id=sample_mahalla.id,
+        frequency_days=4,
+        next_check_in_due=today + datetime.timedelta(days=4),
+        status=AssignmentStatus.ACTIVE,
+    )
+    db_session.add(a2)
+    await db_session.commit()
+    await db_session.refresh(a2)
+
+    # Upload document for a2 (has 4 days remaining)
+    fake_photo2 = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo2")
+    res2 = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={"assignment_id": str(a2.id)},
+        files={"photo": ("doc2.jpg", fake_photo2, "image/jpeg")},
+    )
+    assert res2.status_code == 201
+    doc2_id = res2.json()["id"]
+
+    # 1. Query with remaining_days = 5 -> should return ONLY doc1
+    res_5 = await client.get(
+        "/documents?remaining_days=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_5.status_code == 200
+    data_5 = res_5.json()
+    assert data_5["total"] == 1
+    assert data_5["items"][0]["id"] == doc1_id
+    assert data_5["items"][0]["days_remaining"] == 5
+
+    # 2. Query with remaining_days = 4 -> should return ONLY doc2
+    res_4 = await client.get(
+        "/documents?remaining_days=4",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_4.status_code == 200
+    data_4 = res_4.json()
+    assert data_4["total"] == 1
+    assert data_4["items"][0]["id"] == doc2_id
+    assert data_4["items"][0]["days_remaining"] == 4
+
+    # 3. Query with remaining_days = 3 -> none match
+    res_3 = await client.get(
+        "/documents?remaining_days=3",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_3.status_code == 200
+    assert res_3.json()["total"] == 0
+
+    # 4. Query with alias days_remaining = 5 -> works identically
+    res_alias = await client.get(
+        "/documents?days_remaining=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert res_alias.status_code == 200
+    assert res_alias.json()["total"] == 1
+    assert res_alias.json()["items"][0]["id"] == doc1_id
+
+

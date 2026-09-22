@@ -39,6 +39,7 @@ class DocumentResponseSchema(BaseModel):
     notes: Optional[str] = None
     check_in_date: date
     due_date: Optional[date] = None
+    days_remaining: Optional[int] = None
     status: CheckInDocStatus
     rejection_reason: Optional[str] = None
     reviewed_by_id: Optional[int] = None

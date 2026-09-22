@@ -175,6 +175,26 @@ async def test_remaining_days_stats_and_separate_fetching(
     assert len(items_4) >= 1
     assert all(item["days_remaining"] == 4 for item in items_4)
 
+    # 4. Fetch assignments using remaining_days alias
+    fetch_rem_5 = await client.get(
+        "/persons/assignments?remaining_days=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert fetch_rem_5.status_code == 200
+    items_rem_5 = fetch_rem_5.json()
+    assert len(items_rem_5) >= 1
+    assert all(item["days_remaining"] == 5 for item in items_rem_5)
+
+    # 5. Fetch persons using remaining_days filter
+    persons_rem_5 = await client.get(
+        "/persons?remaining_days=5",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert persons_rem_5.status_code == 200
+    p_data_5 = persons_rem_5.json()
+    assert p_data_5["total"] >= 1
+    assert any(p["id"] == sample_person.id for p in p_data_5["items"])
+
 
 @pytest.mark.asyncio
 async def test_mahalla_stats_crud(

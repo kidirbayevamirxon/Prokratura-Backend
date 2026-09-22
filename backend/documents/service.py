@@ -31,6 +31,13 @@ class DocumentService:
             else None
         )
 
+        today = date.today()
+        days_remaining = None
+        if doc.due_date:
+            days_remaining = (doc.due_date - today).days
+        elif getattr(doc, "assignment", None) and doc.assignment and doc.assignment.next_check_in_due:
+            days_remaining = (doc.assignment.next_check_in_due - today).days
+
         return DocumentResponseSchema(
             id=doc.id,
             assignment_id=doc.assignment_id,
@@ -48,6 +55,7 @@ class DocumentService:
             notes=doc.notes,
             check_in_date=doc.check_in_date,
             due_date=doc.due_date,
+            days_remaining=days_remaining,
             status=doc.status,
             rejection_reason=doc.rejection_reason,
             reviewed_by_id=doc.reviewed_by_id,
@@ -216,10 +224,13 @@ class DocumentService:
         category_id: Optional[int] = None,
         person_id: Optional[int] = None,
         assignment_id: Optional[int] = None,
+        remaining_days: Optional[int] = None,
+        days_remaining: Optional[int] = None,
         caller_role: UserRole = UserRole.ADMIN,
         caller_mahalla_id: Optional[int] = None,
     ) -> PaginatedDocumentSchema:
         query = select(CheckInDocument).options(
+            selectinload(CheckInDocument.assignment),
             selectinload(CheckInDocument.person),
             selectinload(CheckInDocument.category),
             selectinload(CheckInDocument.mahalla),
@@ -265,6 +276,23 @@ class DocumentService:
         if assignment_id:
             query = query.where(CheckInDocument.assignment_id == assignment_id)
             count_query = count_query.where(CheckInDocument.assignment_id == assignment_id)
+
+        actual_remaining_days = remaining_days if remaining_days is not None else days_remaining
+        if actual_remaining_days is not None:
+            today = date.today()
+            target_due = today + timedelta(days=actual_remaining_days)
+            query = query.outerjoin(
+                PersonCategoryAssignment,
+                CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+            ).where(
+                func.coalesce(CheckInDocument.due_date, PersonCategoryAssignment.next_check_in_due) == target_due
+            )
+            count_query = count_query.outerjoin(
+                PersonCategoryAssignment,
+                CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+            ).where(
+                func.coalesce(CheckInDocument.due_date, PersonCategoryAssignment.next_check_in_due) == target_due
+            )
 
         total = (await db.execute(count_query)).scalar_one()
 

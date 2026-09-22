@@ -2150,19 +2150,22 @@
         "page, page_size: Sahifalash.",
         "status: pending, approved, rejected bo'yicha filtr.",
         "doc_type: regular yoki removal_request bo'yicha filtr.",
-        "category_id, person_id, assignment_id, mahalla_id: To'liq filtrlar."
+        "category_id, person_id, assignment_id, mahalla_id: To'liq filtrlar.",
+        "remaining_days (yoki days_remaining): Aniq qolgan kunlar bo'yicha filtr (masalan 5 bersangiz aynan 5 kuni qolgan hujjatlar chiqadi)."
       ],
       "en": [
         "page, page_size: Pagination.",
         "status: Filter by pending, approved, rejected.",
         "doc_type: Filter by regular or removal_request.",
-        "category_id, person_id, assignment_id, mahalla_id: Scoping filters."
+        "category_id, person_id, assignment_id, mahalla_id: Scoping filters.",
+        "remaining_days (or days_remaining): Filter by exact remaining days (e.g. 5 for 5 days left)."
       ],
       "ru": [
         "page, page_size: Пагинация.",
         "status: Фильтр по pending, approved, rejected.",
         "doc_type: Фильтр по regular или removal_request.",
-        "category_id, person_id, assignment_id, mahalla_id: Фильтры выборки."
+        "category_id, person_id, assignment_id, mahalla_id: Фильтры выборки.",
+        "remaining_days (или days_remaining): Фильтр по точному количеству оставшихся дней (например: 5)."
       ]
     },
     "edge": {
@@ -2177,7 +2180,7 @@
       ]
     },
     "payloadModel": "None (Query Params)",
-    "payloadJson": "// GET /documents?status=pending&doc_type=removal_request&page=1&page_size=10",
+    "payloadJson": "// GET /documents?remaining_days=5&page=1&page_size=10",
     "responseModel": "PaginatedDocumentSchema",
     "responseJson": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"assignment_id\": 1,\n      \"person_name\": \"Karimova Zilola Rustamovna\",\n      \"category_name\": \"Boquvchisi bo'lmagan yolg'iz ayollar\",\n      \"check_in_date\": \"2026-09-15\",\n      \"doc_type\": \"removal_request\",\n      \"status\": \"pending\",\n      \"photo_url\": \"/uploads/photos/2026/09/15/photo.jpg\",\n      \"pdf_url\": \"/uploads/documents/2026/09/15/legal.pdf\",\n      \"uploader_name\": \"Anvar Aliyev\"\n    }\n  ],\n  \"total\": 1,\n  \"page\": 1,\n  \"page_size\": 10\n}",
     "bruno": "Documents/Get Documents History.bru",

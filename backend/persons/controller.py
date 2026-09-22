@@ -48,6 +48,8 @@ async def get_persons(
     search: Optional[str] = Query(None, description="Search by F.I.SH"),
     mahalla_id: Optional[int] = Query(None, description="Filter by Mahalla ID (Admin/Prokuror only)"),
     category_id: Optional[int] = Query(None, description="Filter by Category ID"),
+    remaining_days: Optional[int] = Query(None, description="Filter persons by exact remaining days of active assignments"),
+    days_remaining: Optional[int] = Query(None, description="Alias for remaining_days"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -58,6 +60,8 @@ async def get_persons(
         search=search,
         mahalla_id=mahalla_id,
         category_id=category_id,
+        remaining_days=remaining_days,
+        days_remaining=days_remaining,
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
     )
@@ -94,18 +98,20 @@ async def get_assignments(
     status_filter: Optional[AssignmentStatus] = Query(None, description="Filter by status"),
     overdue_only: bool = Query(False, description="Filter only overdue assignments"),
     days_remaining: Optional[int] = Query(None, description="Filter by exact remaining days (e.g. 5 for 5 days left, 4 for 4 days left, 0 for today, -1 for overdue)"),
+    remaining_days: Optional[int] = Query(None, description="Alias for days_remaining"),
     min_days_remaining: Optional[int] = Query(None, description="Filter by minimum remaining days"),
     max_days_remaining: Optional[int] = Query(None, description="Filter by maximum remaining days"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
+    actual_days_remaining = remaining_days if remaining_days is not None else days_remaining
     return await PersonService.get_assignments(
         db=db,
         mahalla_id=mahalla_id,
         category_id=category_id,
         status_filter=status_filter,
         overdue_only=overdue_only,
-        days_remaining=days_remaining,
+        days_remaining=actual_days_remaining,
         min_days_remaining=min_days_remaining,
         max_days_remaining=max_days_remaining,
         caller_role=current_user["role"],
