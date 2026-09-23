@@ -374,6 +374,7 @@ class DocumentService:
             .where(CheckInDocument.id == document_id)
             .options(
                 selectinload(CheckInDocument.assignment),
+                selectinload(CheckInDocument.assignment).selectinload(PersonCategoryAssignment.category),
                 selectinload(CheckInDocument.person),
                 selectinload(CheckInDocument.category),
                 selectinload(CheckInDocument.mahalla),
@@ -399,8 +400,26 @@ class DocumentService:
 
         # If Mahalla official views document created by Prokuror / Admin:
         # Mark seen_at and seen_by_id, and mark completed (approved)
+        # Determine assigned roles for this document/assignment
+        assigned_roles = []
+        if doc.assignment and doc.assignment.assigned_roles:
+            assigned_roles = doc.assignment.assigned_roles
+        elif doc.assignment and doc.assignment.category and doc.assignment.category.assigned_roles:
+            assigned_roles = doc.assignment.category.assigned_roles
+        elif doc.category and doc.category.assigned_roles:
+            assigned_roles = doc.category.assigned_roles
+
+        assigned_role_values = {
+            r.value if hasattr(r, "value") else str(r)
+            for r in assigned_roles
+        }
+        caller_role_value = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
+
+        # When the employee assigned to this role views a document sent by Prokuror / Admin:
+        # Mark as seen (seen_at, seen_by_id), but DO NOT mark completed (status remains pending).
         if (
             caller_role in [UserRole.MAHALLA_RAISI, *MAHALLA_SEVEN_ROLES]
+            caller_role_value in assigned_role_values
             and doc.mahalla_id == caller_mahalla_id
             and doc.submitted_by
             and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
@@ -410,6 +429,7 @@ class DocumentService:
             if doc.seen_at is None:
                 doc.seen_at = datetime.now()
                 doc.seen_by_id = caller_id
+                seen_user = None
                 if caller_id:
                     seen_user = await db.get(User, caller_id)
                     doc.seen_by = seen_user
