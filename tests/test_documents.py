@@ -518,7 +518,6 @@ async def test_upload_document_requires_description(
 
 
 @pytest.mark.asyncio
-async def test_prokuror_document_seen_and_completed_by_mahalla(
 async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
     client: AsyncClient,
     prokuror_token: str,
@@ -560,8 +559,6 @@ async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
         headers={"Authorization": f"Bearer {rais_token}"},
     )
     assert rais_res.status_code == 200
-    seen_doc = rais_res.json()
-    # It must record when seen and who saw it
     rais_doc = rais_res.json()
     assert rais_doc["status"] == "pending"
     assert rais_doc["is_seen"] is False
@@ -590,13 +587,9 @@ async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
     seen_doc = inspector_res.json()
     assert seen_doc["is_seen"] is True
     assert seen_doc["seen_at"] is not None
-    assert seen_doc["seen_by_name"] is not None
-    # And document must now be completed ("approved")
-    assert seen_doc["status"] == "approved"
     assert seen_doc["seen_by_name"] == "Mansur Polatov"
     assert seen_doc["status"] == "pending"
 
-    # 3. Prokuror checks the document -> prokuror sees when Mahalla people seen it and that it is completed
     # 5. Prokuror checks the document -> prokuror sees that the assigned employee saw it, status still pending
     prok_view = await client.get(
         f"/documents/{doc_id}",
@@ -606,12 +599,9 @@ async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
     prok_doc = prok_view.json()
     assert prok_doc["is_seen"] is True
     assert prok_doc["seen_at"] is not None
-    assert prok_doc["seen_by_name"] == seen_doc["seen_by_name"]
-    assert prok_doc["status"] == "approved"
     assert prok_doc["seen_by_name"] == "Mansur Polatov"
     assert prok_doc["status"] == "pending"
 
-    # 4. In documents list, prokuror sees the document with seen info
     # 6. In documents list, prokuror sees the document with seen info and pending status
     list_res = await client.get(
         f"/documents?assignment_id={sample_assignment.id}",
@@ -621,20 +611,15 @@ async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
     items = list_res.json()["items"]
     target_item = [item for item in items if item["id"] == doc_id][0]
     assert target_item["is_seen"] is True
-    assert target_item["status"] == "approved"
     assert target_item["seen_by_name"] == "Mansur Polatov"
     assert target_item["status"] == "pending"
 
-    # 5. Explicit mark-as-seen endpoint POST /documents/{doc_id}/seen also succeeds
     # 7. Explicit mark-as-seen endpoint POST /documents/{doc_id}/seen also preserves seen state and pending status
     seen_endpoint_res = await client.post(
         f"/documents/{doc_id}/seen",
-        headers={"Authorization": f"Bearer {rais_token}"},
         headers={"Authorization": f"Bearer {inspector_token}"},
     )
     assert seen_endpoint_res.status_code == 200
     assert seen_endpoint_res.json()["is_seen"] is True
     assert seen_endpoint_res.json()["status"] == "pending"
-
-
 

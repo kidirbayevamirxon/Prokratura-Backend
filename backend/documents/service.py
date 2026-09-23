@@ -418,14 +418,11 @@ class DocumentService:
         # When the employee assigned to this role views a document sent by Prokuror / Admin:
         # Mark as seen (seen_at, seen_by_id), but DO NOT mark completed (status remains pending).
         if (
-            caller_role in [UserRole.MAHALLA_RAISI, *MAHALLA_SEVEN_ROLES]
             caller_role_value in assigned_role_values
             and doc.mahalla_id == caller_mahalla_id
             and doc.submitted_by
             and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
         ):
-            modified = False
-            seen_user = None
             if doc.seen_at is None:
                 doc.seen_at = datetime.now()
                 doc.seen_by_id = caller_id
@@ -433,18 +430,6 @@ class DocumentService:
                 if caller_id:
                     seen_user = await db.get(User, caller_id)
                     doc.seen_by = seen_user
-                modified = True
-            if doc.status == CheckInDocStatus.PENDING:
-                doc.status = CheckInDocStatus.APPROVED
-                if doc.assignment:
-                    if doc.doc_type == CheckInDocType.REMOVAL_REQUEST:
-                        doc.assignment.status = AssignmentStatus.REMOVED
-                    else:
-                        doc.assignment.next_check_in_due = doc.check_in_date + timedelta(
-                            days=doc.assignment.frequency_days
-                        )
-                modified = True
-            if modified:
                 await db.commit()
                 if seen_user:
                     doc.seen_by = seen_user
