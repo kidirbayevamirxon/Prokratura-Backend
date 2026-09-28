@@ -4,6 +4,7 @@ from db.connection import Base, engine
 
 try:
     Base.metadata.create_all(engine)
+    print("Great")
 except Exception as e:
     # If DB isn't reachable yet during build/import, defer to runtime
     pass
