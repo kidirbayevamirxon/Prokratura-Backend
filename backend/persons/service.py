@@ -10,6 +10,7 @@ from backend.persons.schemas import (
     PersonCreateSchema,
     PersonUpdateSchema,
     AssignmentCreateSchema,
+    AssignmentUpdateSchema,
     AssignmentResponseSchema,
     RemainingDaysStatsSchema,
     PersonResponseSchema,
@@ -158,6 +159,97 @@ class PersonService:
 
         assignment.category = category
         return cls._format_assignment(assignment)
+
+    @classmethod
+    async def update_assignment(
+        cls,
+        assignment_id: int,
+        data: AssignmentUpdateSchema,
+        editor_id: int,
+        db: AsyncSession,
+        person_id: Optional[int] = None,
+    ) -> AssignmentResponseSchema:
+        query = (
+            select(PersonCategoryAssignment)
+            .where(PersonCategoryAssignment.id == assignment_id)
+            .options(selectinload(PersonCategoryAssignment.category))
+        )
+        if person_id is not None:
+            query = query.where(PersonCategoryAssignment.person_id == person_id)
+
+        assignment = await db.scalar(query)
+        if not assignment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assignment not found",
+            )
+
+        if data.frequency_days is not None:
+            assignment.frequency_days = data.frequency_days
+
+        if data.next_check_in_due is not None:
+            assignment.next_check_in_due = data.next_check_in_due
+
+        await db.commit()
+        await db.refresh(assignment)
+        return cls._format_assignment(assignment)
+
+    @classmethod
+    async def update_person_category_assignment(
+        cls,
+        person_id: int,
+        data: AssignmentUpdateSchema,
+        editor_id: int,
+        db: AsyncSession,
+    ) -> AssignmentResponseSchema:
+        if data.category_id:
+            assignment = await db.scalar(
+                select(PersonCategoryAssignment)
+                .where(
+                    PersonCategoryAssignment.person_id == person_id,
+                    PersonCategoryAssignment.category_id == data.category_id,
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                )
+                .options(selectinload(PersonCategoryAssignment.category))
+            )
+            if not assignment:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Active assignment for category {data.category_id} not found for person {person_id}",
+                )
+        else:
+            active_assignments = (
+                await db.scalars(
+                    select(PersonCategoryAssignment)
+                    .where(
+                        PersonCategoryAssignment.person_id == person_id,
+                        PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    )
+                    .options(selectinload(PersonCategoryAssignment.category))
+                )
+            ).all()
+            if not active_assignments:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No active category assignment found for this person",
+                )
+            if len(active_assignments) > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Person has multiple active assignments; please specify 'category_id'",
+                )
+            assignment = active_assignments[0]
+
+        if data.frequency_days is not None:
+            assignment.frequency_days = data.frequency_days
+
+        if data.next_check_in_due is not None:
+            assignment.next_check_in_due = data.next_check_in_due
+
+        await db.commit()
+        await db.refresh(assignment)
+        return cls._format_assignment(assignment)
+
 
     @classmethod
     async def get_persons(

@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 class CheckInDocType(str, Enum):
     REGULAR = "regular"
     REMOVAL_REQUEST = "removal_request"
+    REQUEST_EXTENSION = "request_extension"
+    EXTENSION_REQUEST = "extension_request"
 
 
 class CheckInDocStatus(str, Enum):
@@ -61,7 +63,7 @@ class CheckInDocument(Base):
     )
 
     doc_type: Mapped[CheckInDocType] = mapped_column(
-        SQLEnum(CheckInDocType, name="checkin_doc_type", native_enum=False),
+        SQLEnum(CheckInDocType, name="checkin_doc_type", native_enum=False, length=50),
         default=CheckInDocType.REGULAR,
         nullable=False,
     )
@@ -70,6 +72,10 @@ class CheckInDocument(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     check_in_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     due_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
+    previous_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
+    requested_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
+    new_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
+    frequency_days: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     status: Mapped[CheckInDocStatus] = mapped_column(
         SQLEnum(CheckInDocStatus, name="checkin_doc_status", native_enum=False),

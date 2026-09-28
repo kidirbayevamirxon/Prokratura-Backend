@@ -23,6 +23,13 @@ class AssignmentCreateSchema(BaseModel):
     frequency_days: int = Field(..., ge=1, le=365, description="Frequency of check-in in days")
 
 
+class AssignmentUpdateSchema(BaseModel):
+    category_id: Optional[int] = Field(None, description="Category ID (optional, used when updating by person)")
+    frequency_days: int = Field(..., ge=1, le=365, description="Updated frequency of check-in in days")
+    next_check_in_due: Optional[date] = Field(None, description="Optional override for next check-in deadline date")
+
+
+
 class AssignmentResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

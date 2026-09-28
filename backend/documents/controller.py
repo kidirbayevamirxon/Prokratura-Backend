@@ -10,6 +10,7 @@ from backend.auth.service import (
 )
 from backend.documents.schemas import (
     DocumentReviewSchema,
+    DocumentUpdateSchema,
     DocumentResponseSchema,
     PaginatedDocumentSchema,
 )
@@ -31,16 +32,23 @@ async def upload_document(
     check_in_date: date = Form(default_factory=date.today, description="Date of check-in/visit"),
     doc_type: CheckInDocType = Form(
         CheckInDocType.REGULAR,
-        description="regular or removal_request (last check-in to remove category)",
+        description="regular, removal_request, or request_extension",
     ),
-    notes: Optional[str] = Form(None, description="Remarks / inspection notes (alias for description)"),
+    requested_date: Optional[date] = Form(None, description="Requested extension date"),
+    new_date: Optional[date] = Form(None, description="New deadline date"),
+    previous_date: Optional[date] = Form(None, description="Previous deadline date (optional, defaults to assignment next_check_in_due)"),
+    frequency_days: Optional[int] = Form(None, ge=1, le=365, description="Optional frequency days (for Prokuror doc outside regular frequency)"),
+    frequency_day: Optional[int] = Form(None, ge=1, le=365, description="Alias for frequency_days"),
+    document_id: Optional[int] = Form(None, description="Optional document ID if requesting extension on an existing document"),
     description: Optional[str] = Form(None, description="Description / remarks of the inspection (Required)"),
+    notes: Optional[str] = Form(None, description="Remarks / inspection notes (alias for description)"),
     photo: UploadFile = File(..., description="Photo proof (max 5 MB)"),
     pdf: Optional[UploadFile] = File(None, description="PDF legal document (max 10 MB)"),
     current_user: UserAuth = Depends(all_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
     doc_notes = (description or "").strip() or (notes or "").strip()
+    asked_date = new_date or requested_date
     return await DocumentService.create_document(
         assignment_id=assignment_id,
         check_in_date=check_in_date,
@@ -52,6 +60,12 @@ async def upload_document(
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
         db=db,
+        new_date=asked_date,
+        requested_date=requested_date,
+        previous_date=previous_date,
+        frequency_days=frequency_days,
+        frequency_day=frequency_day,
+        document_id=document_id,
     )
 
 
@@ -75,6 +89,56 @@ async def review_document(
     )
 
 
+@router.patch(
+    "/{document_id}",
+    response_model=DocumentResponseSchema,
+    summary="Update check-in document date or details (Prokuror/Admin or Employer asking for extension)",
+)
+async def update_document(
+    document_id: int,
+    data: DocumentUpdateSchema,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.update_document(
+        document_id=document_id,
+        data=data,
+        editor_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{document_id}/request-extension",
+    response_model=DocumentResponseSchema,
+    summary="Request extension for a check-in document (Employer / Assigned Mahalla Worker, Rais, or Prokuror)",
+)
+async def request_document_extension(
+    document_id: int,
+    requested_date: date = Form(..., description="Requested extension date"),
+    description: Optional[str] = Form(None, description="Reason / remarks for asking extension"),
+    notes: Optional[str] = Form(None, description="Alias for description"),
+    photo: Optional[UploadFile] = File(None, description="Optional photo proof"),
+    pdf: Optional[UploadFile] = File(None, description="Optional PDF supporting document"),
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    doc_notes = (description or "").strip() or (notes or "").strip()
+    return await DocumentService.request_document_extension(
+        document_id=document_id,
+        requested_date=requested_date,
+        description=doc_notes,
+        photo_file=photo,
+        pdf_file=pdf,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
 @router.get(
     "",
     response_model=PaginatedDocumentSchema,
@@ -84,7 +148,7 @@ async def get_documents(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Page size"),
     status: Optional[CheckInDocStatus] = Query(None, description="Filter by pending/approved/rejected"),
-    doc_type: Optional[CheckInDocType] = Query(None, description="Filter by regular/removal_request"),
+    doc_type: Optional[CheckInDocType] = Query(None, description="Filter by regular, removal_request, or request_extension"),
     mahalla_id: Optional[int] = Query(None, description="Filter by Mahalla (Admin/Prokuror only)"),
     category_id: Optional[int] = Query(None, description="Filter by Category ID"),
     person_id: Optional[int] = Query(None, description="Filter by Person ID"),
@@ -168,4 +232,3 @@ async def delete_document(
         db=db,
     )
     return {"detail": "Check-in document and associated files deleted successfully"}
-

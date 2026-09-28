@@ -623,3 +623,360 @@ async def test_prokuror_document_seen_by_assigned_role_and_not_completed(
     assert seen_endpoint_res.json()["is_seen"] is True
     assert seen_endpoint_res.json()["status"] == "pending"
 
+
+@pytest.mark.asyncio
+async def test_upload_document_saves_previous_and_new_date(
+    client: AsyncClient,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"dummy photo content" * 50)
+    files = {"photo": ("visit_photo.jpg", fake_photo, "image/jpeg")}
+
+    asked_date = str(datetime.date.today() + datetime.timedelta(days=12))
+    original_due = str(sample_assignment.next_check_in_due)
+
+    data = {
+        "assignment_id": str(sample_assignment.id),
+        "check_in_date": str(datetime.date.today()),
+        "doc_type": "regular",
+        "new_date": asked_date,
+        "description": "Fuqaro betob bo'lganligi sababli muddat uzaytirish so'ralmoqda",
+    }
+
+    res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data=data,
+        files=files,
+    )
+    assert res.status_code == 201
+    doc = res.json()
+    assert doc["status"] == "pending"
+    assert doc["doc_type"] == "regular"
+    assert doc["previous_date"] == original_due
+    assert doc["new_date"] == asked_date
+
+
+@pytest.mark.asyncio
+async def test_prokuror_review_approves_submitted_new_date(
+    client: AsyncClient,
+    inspector_token: str,
+    prokuror_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo" * 50)
+    files = {"photo": ("visit.jpg", fake_photo, "image/jpeg")}
+    asked_date = str(datetime.date.today() + datetime.timedelta(days=15))
+
+    upload_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "doc_type": "regular",
+            "new_date": asked_date,
+            "description": "Muddat uzaytirish so'ralmoqda",
+        },
+        files=files,
+    )
+    assert upload_res.status_code == 201
+    doc_id = upload_res.json()["id"]
+
+    # Prokuror approves
+    rev_res = await client.patch(
+        f"/documents/{doc_id}/review",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"status": "approved"},
+    )
+    assert rev_res.status_code == 200
+    rev_doc = rev_res.json()
+    assert rev_doc["status"] == "approved"
+    assert rev_doc["new_date"] == asked_date
+
+    # Verify assignment next_check_in_due was updated to the new date
+    person_res = await client.get(
+        f"/persons/{sample_assignment.person_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assignment = person_res.json()["assignments"][0]
+    assert assignment["next_check_in_due"] == asked_date
+
+
+@pytest.mark.asyncio
+async def test_prokuror_review_with_custom_new_date(
+    client: AsyncClient,
+    inspector_token: str,
+    prokuror_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo" * 50)
+    files = {"photo": ("visit.jpg", fake_photo, "image/jpeg")}
+    original_due = str(sample_assignment.next_check_in_due)
+
+    upload_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "description": "Muntazam tekshiruv hisoboti",
+        },
+        files=files,
+    )
+    assert upload_res.status_code == 201
+    doc_id = upload_res.json()["id"]
+
+    custom_new_date = str(datetime.date.today() + datetime.timedelta(days=20))
+    rev_res = await client.patch(
+        f"/documents/{doc_id}/review",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"status": "approved", "new_date": custom_new_date},
+    )
+    assert rev_res.status_code == 200
+    rev_doc = rev_res.json()
+    assert rev_doc["status"] == "approved"
+    assert rev_doc["previous_date"] == original_due
+    assert rev_doc["new_date"] == custom_new_date
+
+    person_res = await client.get(
+        f"/persons/{sample_assignment.person_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assignment = person_res.json()["assignments"][0]
+    assert assignment["next_check_in_due"] == custom_new_date
+
+
+@pytest.mark.asyncio
+async def test_prokuror_patch_document_changes_date(
+    client: AsyncClient,
+    inspector_token: str,
+    prokuror_token: str,
+    rais_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo" * 50)
+    files = {"photo": ("visit.jpg", fake_photo, "image/jpeg")}
+
+    upload_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "description": "Tekshiruv dalolatnomasi",
+        },
+        files=files,
+    )
+    assert upload_res.status_code == 201
+    doc_id = upload_res.json()["id"]
+
+    # 1. Non-prokuror / non-admin cannot patch document
+    forbidden_res = await client.patch(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        json={"new_date": "2026-10-30"},
+    )
+    assert forbidden_res.status_code == 403
+
+    rais_forbidden = await client.patch(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {rais_token}"},
+        json={"new_date": "2026-10-30"},
+    )
+    assert rais_forbidden.status_code == 403
+
+    # 2. Prokuror successfully patches document new_date
+    target_date = str(datetime.date.today() + datetime.timedelta(days=25))
+    patch_res = await client.patch(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"new_date": target_date},
+    )
+    assert patch_res.status_code == 200
+    patched_doc = patch_res.json()
+    assert patched_doc["new_date"] == target_date
+    assert patched_doc["previous_date"] is not None
+
+    # Check assignment updated
+    person_res = await client.get(
+        f"/persons/{sample_assignment.person_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assignment = person_res.json()["assignments"][0]
+    assert assignment["next_check_in_due"] == target_date
+
+
+@pytest.mark.asyncio
+async def test_upload_document_request_extension(
+    client: AsyncClient,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"dummy photo content" * 50)
+    files = {"photo": ("photo.jpg", fake_photo, "image/jpeg")}
+    target_ext_date = str(datetime.date.today() + datetime.timedelta(days=14))
+
+    data = {
+        "assignment_id": str(sample_assignment.id),
+        "check_in_date": str(datetime.date.today()),
+        "doc_type": "request_extension",
+        "requested_date": target_ext_date,
+        "description": "Muddatni uzaytirish so'rovi",
+    }
+
+    response = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data=data,
+        files=files,
+    )
+    assert response.status_code == 201
+    res_data = response.json()
+    assert res_data["doc_type"] == "request_extension"
+    assert res_data["requested_date"] == target_ext_date
+
+
+@pytest.mark.asyncio
+async def test_prokuror_sends_doc_outside_regular_frequency_with_optional_frequency_days(
+    client: AsyncClient,
+    prokuror_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"prokuror task photo" * 50)
+    files = {"photo": ("task.jpg", fake_photo, "image/jpeg")}
+    original_due = str(sample_assignment.next_check_in_due)
+
+    # Prokuror sends document for employers with frequency_days = 3
+    prokuror_doc_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "frequency_days": "3",
+            "description": "Prokuror topshirig'i: 3 kun muddatda fuqaro holatini o'rganish",
+        },
+        files=files,
+    )
+    assert prokuror_doc_res.status_code == 201
+    doc = prokuror_doc_res.json()
+    expected_due = str(datetime.date.today() + datetime.timedelta(days=3))
+    assert doc["is_from_prokuror"] is True
+    assert doc["frequency_days"] == 3
+    assert doc["due_date"] == expected_due
+
+    # The regular assignment's next_check_in_due is unchanged (outside regular frequency)
+    person_res = await client.get(
+        f"/persons/{sample_assignment.person_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assignment = person_res.json()["assignments"][0]
+    assert str(assignment["next_check_in_due"]) == original_due
+
+
+@pytest.mark.asyncio
+async def test_employer_requests_extension_on_prokuror_sent_doc(
+    client: AsyncClient,
+    prokuror_token: str,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"task" * 50)
+    files = {"photo": ("task.jpg", fake_photo, "image/jpeg")}
+    original_due = str(sample_assignment.next_check_in_due)
+
+    # 1. Prokuror sends doc with frequency_days = 2
+    prokuror_doc_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "frequency_days": "2",
+            "description": "Tezkor tekshiruv",
+        },
+        files=files,
+    )
+    assert prokuror_doc_res.status_code == 201
+    doc_id = prokuror_doc_res.json()["id"]
+
+    # 2. Employer requests extension for this prokuror doc via POST /{document_id}/request-extension
+    ext_date = str(datetime.date.today() + datetime.timedelta(days=7))
+    ext_res = await client.post(
+        f"/documents/{doc_id}/request-extension",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "requested_date": ext_date,
+            "description": "Qo'shimcha hujjatlarni to'plash uchun 7 kun muddat so'raladi",
+        },
+    )
+    assert ext_res.status_code == 200
+    ext_doc = ext_res.json()
+    assert ext_doc["requested_date"] == ext_date
+    assert ext_doc["doc_type"] == "request_extension"
+
+    # 3. Prokuror reviews and approves the extension request on the prokuror doc
+    rev_res = await client.patch(
+        f"/documents/{doc_id}/review",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"status": "approved"},
+    )
+    assert rev_res.status_code == 200
+    rev_doc = rev_res.json()
+    assert rev_doc["status"] == "approved"
+    assert rev_doc["due_date"] == ext_date
+    assert rev_doc["new_date"] == ext_date
+
+    # 4. Assignment's regular frequency schedule remains intact (outside regular frequency)
+    person_res = await client.get(
+        f"/persons/{sample_assignment.person_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assignment = person_res.json()["assignments"][0]
+    assert str(assignment["next_check_in_due"]) == original_due
+
+
+@pytest.mark.asyncio
+async def test_employer_requests_extension_via_patch_document(
+    client: AsyncClient,
+    prokuror_token: str,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"doc" * 50)
+    files = {"photo": ("doc.jpg", fake_photo, "image/jpeg")}
+
+    # Upload document
+    upload_res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(datetime.date.today()),
+            "frequency_days": "5",
+            "description": "Tekshiruv vazifasi",
+        },
+        files=files,
+    )
+    assert upload_res.status_code == 201
+    doc_id = upload_res.json()["id"]
+
+    # Employer uses PATCH /documents/{doc_id} to request extension
+    ext_date = str(datetime.date.today() + datetime.timedelta(days=10))
+    patch_res = await client.patch(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        json={
+            "requested_date": ext_date,
+            "description": "Muddat uzaytirish so'rovi",
+        },
+    )
+    assert patch_res.status_code == 200
+    patched_doc = patch_res.json()
+    assert patched_doc["requested_date"] == ext_date
+    assert patched_doc["doc_type"] == "request_extension"
+
+
+

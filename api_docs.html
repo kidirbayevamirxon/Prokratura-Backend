@@ -2032,7 +2032,9 @@
       "uz": [
         "assignment_id: Biriktiruv ID raqami (qaysi toifa nazorati bo'yicha hisobot berilayotgani).",
         "check_in_date: Tekshiruv sanasi (standart: bugungi sana).",
-        "doc_type: 'regular' (odatiy navbatdagi tekshiruv) yoki 'removal_request' (fuqaroni toifadan butunlay chiqarish bo'yicha so'nggi tekshiruv).",
+        "doc_type: 'regular' (odatiy navbatdagi tekshiruv), 'removal_request' (oxirgi tekshiruv), 'extension_request' yoki 'muddat_request' (muddat so'rash).",
+        "new_date: Yangi so'ralayotgan muddat (asking muddat, masalan '2026-10-15'). Aliaslar: requested_date, muddat.",
+        "previous_date: Oldingi muddat (ixtiyoriy, avtomatik biriktiruv muddatidan olinadi).",
         "description (yoki notes): Tekshiruv natijalari, xulosa va tavsiyalar. Majburiy (Required)!",
         "photo: Surat (png, jpg, jpeg, webp, max 5 MB). Majburiy!",
         "pdf: Yuridik asos hujjati PDF formati (max 10 MB). Ixtiyoriy.",
@@ -2096,21 +2098,24 @@
       "ru": "Только Прокурор или Админ"
     },
     "why": {
-      "uz": "Prokuror yuklangan hisobot hujjatini tekshiradi va tasdiqlaydi ('approved') yoki rad etadi ('rejected'). Agar rad etilsa, rad etish sababi (rejection_reason) MAJBURIY kiritilishi shart. Agar 'removal_request' tasdiqlansa, fuqaro toifadan BUTUNLAY chiqariladi (status='removed').",
-      "en": "Prokuror reviews the submitted document and either approves ('approved') or rejects ('rejected') it. If rejected, rejection_reason is MANDATORY. If approved and doc_type='removal_request', the category is permanently dismissed from the person (status='removed').",
-      "ru": "Прокурор проверяет документ и подтверждает ('approved') или отклоняет ('rejected'). При отклонении причина (rejection_reason) ОБЯЗАТЕЛЬНА. Если подтвержден 'removal_request', гражданин полностью снимается с учета (status='removed')."
+      "uz": "Prokuror yuklangan hisobot hujjatini tekshiradi va tasdiqlaydi ('approved') yoki rad etadi ('rejected'). Tasdiqlash paytida yangi muddat (new_date) belgilashi mumkin. Agar rad etilsa, rad etish sababi (rejection_reason) MAJBURIY kiritilishi shart. Agar 'removal_request' tasdiqlansa, fuqaro toifadan BUTUNLAY chiqariladi (status='removed').",
+      "en": "Prokuror reviews the submitted document and either approves ('approved') or rejects ('rejected') it. Can set or change the new deadline date (new_date) upon approval. If rejected, rejection_reason is MANDATORY. If approved and doc_type='removal_request', the category is permanently dismissed from the person (status='removed').",
+      "ru": "Прокурор проверяет документ и подтверждает ('approved') или отклоняет ('rejected'). При подтверждении может установить новую дату срока (new_date). При отклонении причина (rejection_reason) ОБЯЗАТЕЛЬНА. Если подтвержден 'removal_request', гражданин полностью снимается с учета (status='removed')."
     },
     "fields": {
       "uz": [
         "status: 'approved' yoki 'rejected' (3 ta holat: pending, approved, rejected).",
+        "new_date: Yangi sana / muddat (ixtiyoriy, tasdiqlanganda navbatdagi qatnov sanasi shu sanaga o'zgaradi).",
         "rejection_reason: Agar status='rejected' bo'lsa MAJBURIY matn! Agar status='approved' bo'lsa null bo'lishi mumkin."
       ],
       "en": [
         "status: 'approved' or 'rejected'.",
+        "new_date: New deadline date (optional, updates next check-in due date upon approval).",
         "rejection_reason: MANDATORY text if status is 'rejected'; optional/null if approved."
       ],
       "ru": [
         "status: 'approved' или 'rejected'.",
+        "new_date: Новая дата срока (опционально, обновляет дату следующей проверки при подтверждении).",
         "rejection_reason: ОБЯЗАТЕЛЬНО при статусе 'rejected'; null если approved."
       ]
     },
@@ -2118,24 +2123,87 @@
       "uz": [
         "Rad etilganda rejection_reason bo'sh bo'lsa: 422 Unprocessable Entity ('rejection_reason is mandatory when rejecting document').",
         "Oddiy xodim yoki Rais tasdiqlamoqchi bo'lsa: 403 Forbidden.",
+        "Muddat so'ralgan yoki new_date ko'rsatilgan hujjat tasdiqlanganda navbatdagi sana new_date ga tenglashtiriladi.",
         "Muntazam tekshiruv ('regular') tasdiqlanganda navbatdagi kelish sanasi avtomatik keyingi davrga suriladi."
       ],
       "en": [
         "Rejecting without rejection_reason returns 422 Unprocessable Entity.",
         "Non-prokuror/admin caller returns 403 Forbidden.",
+        "Approving asked muddat sets next_check_in_due to new_date.",
         "Approving regular check-in automatically advances next_check_in_due by frequency_days."
       ],
       "ru": [
         "Отклонение без причины возвращает 422 Unprocessable Entity.",
         "Попытка подтверждения сотрудником возвращает 403 Forbidden.",
+        "Подтверждение запроса срока устанавливает next_check_in_due равным new_date.",
         "Подтверждение регулярной проверки автоматически сдвигает next_check_in_due на frequency_days."
       ]
     },
     "payloadModel": "DocumentReviewSchema",
-    "payloadJson": "{\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Surat noaniq olingan, fuqaroning shaxsi va xonadon holatini aniqlab bo'lmadi\"\n}",
+    "payloadJson": "{\n  \"status\": \"approved\",\n  \"new_date\": \"2026-10-15\"\n}",
     "responseModel": "DocumentResponseSchema",
-    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Surat noaniq olingan, fuqaroning shaxsi va xonadon holatini aniqlab bo'lmadi\",\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:15:00\"\n}",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"status\": \"approved\",\n  \"previous_date\": \"2026-09-20\",\n  \"new_date\": \"2026-10-15\",\n  \"rejection_reason\": null,\n  \"reviewed_by_id\": 1,\n  \"reviewer_name\": \"Sardor Rahimov\",\n  \"reviewed_at\": \"2026-09-15T12:15:00\"\n}",
     "bruno": "Documents/Review Document.bru",
+    "authHeader": "Bearer {{token}}"
+  },
+  {
+    "id": "documents-patch",
+    "cat": "documents",
+    "method": "patch",
+    "path": "/documents/{document_id}",
+    "role": "prokuror",
+    "roleLabel": {
+      "uz": "Faqat Prokuror yoki Admin",
+      "en": "Prokuror or Admin Only",
+      "ru": "Только Прокурор или Админ"
+    },
+    "why": {
+      "uz": "Prokuror hujjat sanasini (new_date) o'zgartirishi, muddatni yangilashi va bu orqali fuqaroning navbatdagi tekshiruv sanasini o'zgartirishi mumkin. Oldingi (previous_date) va yangi (new_date) sana bazada to'liq saqlanadi.",
+      "en": "Prokuror changes document deadline date (new_date) directly, updating the person's next inspection due date. Both previous_date and new_date are safely saved.",
+      "ru": "Прокурор изменяет дату документа (new_date) напрямую, обновляя дату следующей проверки гражданина. previous_date и new_date сохраняются."
+    },
+    "fields": {
+      "uz": [
+        "new_date: Yangi sana / muddat (masalan: '2026-10-25'). Aliaslar: date, muddat.",
+        "previous_date: Oldingi sana (ixtiyoriy override).",
+        "check_in_date: Tekshiruv o'tkazilgan sana (ixtiyoriy).",
+        "notes / description: Yangilangan izoh (ixtiyoriy)."
+      ],
+      "en": [
+        "new_date: New deadline date (e.g. '2026-10-25'). Aliases: date, muddat.",
+        "previous_date: Previous date override (optional).",
+        "check_in_date: Visit check-in date (optional).",
+        "notes / description: Updated remarks (optional)."
+      ],
+      "ru": [
+        "new_date: Новая дата срока (например: '2026-10-25'). Алиасы: date, muddat.",
+        "previous_date: Переопределение предыдущей даты (опционально).",
+        "check_in_date: Дата визита (опционально).",
+        "notes / description: Примечания (опционально)."
+      ]
+    },
+    "edge": {
+      "uz": [
+        "Oddiy xodim yoki Rais o'zgartirmoqchi bo'lsa: 403 Forbidden.",
+        "Hujjat topilmasa: 404 Not Found.",
+        "Sana o'zgartirilganda biriktiruvning next_check_in_due sanasi ham avtomatik yangilanadi."
+      ],
+      "en": [
+        "Non-prokuror/admin caller: 403 Forbidden.",
+        "Document not found: 404 Not Found.",
+        "Changing date automatically updates assignment next_check_in_due."
+      ],
+      "ru": [
+        "Посторонний сотрудник или Раис: 403 Forbidden.",
+        "Документ не найден: 404 Not Found.",
+        "При изменении даты срок привязки next_check_in_due автоматически обновляется."
+      ]
+    },
+    "payloadModel": "DocumentUpdateSchema",
+    "payloadJson": "{\n  \"new_date\": \"2026-10-25\"\n}",
+    "responseModel": "DocumentResponseSchema",
+    "responseJson": "{\n  \"id\": 1,\n  \"assignment_id\": 1,\n  \"check_in_date\": \"2026-09-15\",\n  \"previous_date\": \"2026-09-20\",\n  \"new_date\": \"2026-10-25\",\n  \"status\": \"pending\",\n  \"created_at\": \"2026-09-15T12:00:00\"\n}",
+    "bruno": "Documents/Patch Document Date.bru",
     "authHeader": "Bearer {{token}}"
   },
   {

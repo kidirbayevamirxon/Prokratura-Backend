@@ -166,3 +166,60 @@ async def test_rbac_person_visibility(
     assert res_w.status_code == 200
     assert len(res_w.json()) == 0
 
+
+@pytest.mark.asyncio
+async def test_update_assignment_frequency_days(
+    client: AsyncClient,
+    prokuror_token: str,
+    inspector_token: str,
+    sample_person: Person,
+    sample_category: Category,
+):
+    # 1. Assign category with frequency_days=5
+    assign_res = await client.post(
+        f"/persons/{sample_person.id}/assign-category",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"category_id": sample_category.id, "frequency_days": 5},
+    )
+    assert assign_res.status_code == 201
+    assignment_id = assign_res.json()["id"]
+    assert assign_res.json()["frequency_days"] == 5
+
+    # 2. Non-prokuror / non-admin cannot update assignment
+    patch_forbidden = await client.patch(
+        f"/persons/{sample_person.id}/assign-category",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        json={"frequency_days": 10},
+    )
+    assert patch_forbidden.status_code == 403
+
+    # 3. Prokuror updates frequency_days via PATCH /persons/{person_id}/assign-category
+    patch_res = await client.patch(
+        f"/persons/{sample_person.id}/assign-category",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"frequency_days": 15},
+    )
+    assert patch_res.status_code == 200
+    assert patch_res.json()["frequency_days"] == 15
+    assert patch_res.json()["id"] == assignment_id
+
+    # 4. Prokuror updates frequency_days via PATCH /persons/assignments/{assignment_id}
+    patch_assign_res = await client.patch(
+        f"/persons/assignments/{assignment_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+        json={"frequency_days": 20},
+    )
+    assert patch_assign_res.status_code == 200
+    assert patch_assign_res.json()["frequency_days"] == 20
+
+    # 5. Check person profile reflects updated frequency_days
+    person_res = await client.get(
+        f"/persons/{sample_person.id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert person_res.status_code == 200
+    assignments = person_res.json()["assignments"]
+    assert len(assignments) == 1
+    assert assignments[0]["frequency_days"] == 20
+
+

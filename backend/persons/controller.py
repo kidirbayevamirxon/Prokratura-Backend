@@ -11,6 +11,7 @@ from backend.persons.schemas import (
     PersonCreateSchema,
     PersonUpdateSchema,
     AssignmentCreateSchema,
+    AssignmentUpdateSchema,
     AssignmentResponseSchema,
     RemainingDaysStatsSchema,
     PersonResponseSchema,
@@ -173,4 +174,45 @@ async def assign_category(
         created_by_id=current_user["id"],
         db=db,
     )
+
+
+@router.patch(
+    "/{person_id}/assign-category",
+    response_model=AssignmentResponseSchema,
+    summary="Update check-in frequency days for an existing category assignment of a person (Prokuror or Admin only)",
+    dependencies=[Depends(prokuror_or_admin_guard)],
+)
+async def update_person_category_assignment(
+    person_id: int,
+    data: AssignmentUpdateSchema,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await PersonService.update_person_category_assignment(
+        person_id=person_id,
+        data=data,
+        editor_id=current_user["id"],
+        db=db,
+    )
+
+
+@router.patch(
+    "/assignments/{assignment_id}",
+    response_model=AssignmentResponseSchema,
+    summary="Update check-in frequency days or due date for an existing assignment by assignment ID (Prokuror or Admin only)",
+    dependencies=[Depends(prokuror_or_admin_guard)],
+)
+async def update_assignment(
+    assignment_id: int,
+    data: AssignmentUpdateSchema,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await PersonService.update_assignment(
+        assignment_id=assignment_id,
+        data=data,
+        editor_id=current_user["id"],
+        db=db,
+    )
+
 
