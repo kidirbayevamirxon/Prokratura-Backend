@@ -2,7 +2,7 @@ import asyncio
 import os
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from db.connection import ASYNC_DB_URL
+from db.connection import ASYNC_DB_URL, Base, engine
 from db.models.user import User, UserRole
 from backend.auth.service import AuthServices
 
@@ -11,6 +11,8 @@ ADMIN_PHONE = os.getenv("FIRST_ADMIN_PHONE", "+998900000000")
 ADMIN_PASSWORD = os.getenv("FIRST_ADMIN_PASSWORD", "AdminPass123!")
 
 async def seed_first_admin():
+    Base.metadata.create_all(engine)
+    print("[INIT] Database tables created (if not existing)")
     engine = create_async_engine(ASYNC_DB_URL)
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with session_factory() as session:
