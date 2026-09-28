@@ -10,8 +10,8 @@ ADMIN_LOGIN = os.getenv("FIRST_ADMIN_LOGIN", "admin")
 ADMIN_PHONE = os.getenv("FIRST_ADMIN_PHONE", "+998900000000")
 ADMIN_PASSWORD = os.getenv("FIRST_ADMIN_PASSWORD", "AdminPass123!")
 
+Base.metadata.create_all(engine)
 async def seed_first_admin():
-    Base.metadata.create_all(engine)
     print("[INIT] Database tables created (if not existing)")
     engine = create_async_engine(ASYNC_DB_URL)
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
