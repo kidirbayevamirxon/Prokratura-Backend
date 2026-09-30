@@ -2,7 +2,7 @@ import math
 from datetime import date, datetime, timedelta
 from typing import Optional
 from fastapi import HTTPException, status, UploadFile
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, and_, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,6 +15,7 @@ from backend.documents.schemas import (
 )
 from db.models.document import CheckInDocument, CheckInDocType, CheckInDocStatus
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
+from db.models.category import Category
 from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
 
 
@@ -539,6 +540,7 @@ class DocumentService:
         latest_only: Optional[bool] = None,
         caller_role: UserRole = UserRole.ADMIN,
         caller_mahalla_id: Optional[int] = None,
+        caller_id: Optional[int] = None,
     ) -> PaginatedDocumentSchema:
         query = select(CheckInDocument).options(
             selectinload(CheckInDocument.assignment),
@@ -551,6 +553,9 @@ class DocumentService:
         )
         count_query = select(func.count(CheckInDocument.id))
 
+        has_assignment_joined = False
+        has_category_joined = False
+
         # RBAC Filtering
         if caller_role in [UserRole.ADMIN, UserRole.PROKUROR]:
             if mahalla_id is not None:
@@ -561,12 +566,56 @@ class DocumentService:
             query = query.where(CheckInDocument.mahalla_id == caller_mahalla_id)
             count_query = count_query.where(CheckInDocument.mahalla_id == caller_mahalla_id)
         elif caller_role in MAHALLA_SEVEN_ROLES:
-            # Mahalla 7 member sees docs in their own mahalla for their category
-            query = query.join(CheckInDocument.category).where(
-                CheckInDocument.mahalla_id == caller_mahalla_id
+            # Mahalla 7 member sees ONLY their own documents in their own mahalla
+            role_val = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
+            if not has_assignment_joined:
+                query = query.outerjoin(
+                    PersonCategoryAssignment,
+                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                )
+                count_query = count_query.outerjoin(
+                    PersonCategoryAssignment,
+                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                )
+                has_assignment_joined = True
+
+            if not has_category_joined:
+                query = query.join(
+                    Category,
+                    CheckInDocument.category_id == Category.id,
+                )
+                count_query = count_query.join(
+                    Category,
+                    CheckInDocument.category_id == Category.id,
+                )
+                has_category_joined = True
+
+            role_condition = or_(
+                and_(
+                    PersonCategoryAssignment.assigned_roles.isnot(None),
+                    PersonCategoryAssignment.assigned_roles.cast(String).like(f'%"{role_val}"%'),
+                ),
+                and_(
+                    or_(
+                        PersonCategoryAssignment.assigned_roles.is_(None),
+                        PersonCategoryAssignment.assigned_roles.cast(String) == "[]",
+                    ),
+                    Category.assigned_roles.cast(String).like(f'%"{role_val}"%'),
+                ),
             )
-            count_query = count_query.join(CheckInDocument.category).where(
-                CheckInDocument.mahalla_id == caller_mahalla_id
+            if caller_id is not None:
+                role_condition = or_(
+                    CheckInDocument.submitted_by_id == caller_id,
+                    role_condition,
+                )
+
+            query = query.where(
+                CheckInDocument.mahalla_id == caller_mahalla_id,
+                role_condition,
+            )
+            count_query = count_query.where(
+                CheckInDocument.mahalla_id == caller_mahalla_id,
+                role_condition,
             )
 
         if status:
@@ -594,19 +643,23 @@ class DocumentService:
         if actual_remaining_days is not None:
             today = date.today()
             target_due = today + timedelta(days=actual_remaining_days)
-            query = query.outerjoin(
-                PersonCategoryAssignment,
-                CheckInDocument.assignment_id == PersonCategoryAssignment.id,
-            ).where(
+            if not has_assignment_joined:
+                query = query.outerjoin(
+                    PersonCategoryAssignment,
+                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                )
+                count_query = count_query.outerjoin(
+                    PersonCategoryAssignment,
+                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                )
+                has_assignment_joined = True
+            query = query.where(
                 or_(
                     PersonCategoryAssignment.next_check_in_due == target_due,
                     CheckInDocument.due_date == target_due,
                 )
             )
-            count_query = count_query.outerjoin(
-                PersonCategoryAssignment,
-                CheckInDocument.assignment_id == PersonCategoryAssignment.id,
-            ).where(
+            count_query = count_query.where(
                 or_(
                     PersonCategoryAssignment.next_check_in_due == target_due,
                     CheckInDocument.due_date == target_due,

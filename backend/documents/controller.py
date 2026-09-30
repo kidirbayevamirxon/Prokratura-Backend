@@ -174,6 +174,7 @@ async def get_documents(
         latest_only=latest_only,
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
+        caller_id=current_user["id"],
     )
 
 

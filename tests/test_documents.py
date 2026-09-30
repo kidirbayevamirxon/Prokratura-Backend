@@ -286,6 +286,7 @@ async def test_history_and_visibility_for_rais_and_prokuror(
     prokuror_token: str,
     rais_token: str,
     inspector_token: str,
+    women_activist_token: str,
     sample_assignment: PersonCategoryAssignment,
 ):
     fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"photo")
@@ -310,6 +311,20 @@ async def test_history_and_visibility_for_rais_and_prokuror(
     )
     assert r_docs.status_code == 200
     assert r_docs.json()["total"] >= 1
+
+    # Assigned worker (Inspector) sees their documents
+    i_docs = await client.get(
+        "/documents", headers={"Authorization": f"Bearer {inspector_token}"}
+    )
+    assert i_docs.status_code == 200
+    assert i_docs.json()["total"] == 1
+
+    # Another Mahalla 7 worker not assigned to this category (Women activist) does NOT see this document
+    w_docs = await client.get(
+        "/documents", headers={"Authorization": f"Bearer {women_activist_token}"}
+    )
+    assert w_docs.status_code == 200
+    assert w_docs.json()["total"] == 0
 
 
 @pytest.mark.asyncio
