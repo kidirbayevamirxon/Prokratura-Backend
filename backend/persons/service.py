@@ -2,7 +2,7 @@ import math
 from datetime import date, timedelta
 from typing import Optional, List, Sequence
 from fastapi import HTTPException, status
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, and_, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -268,46 +268,96 @@ class PersonService:
         query = select(Person).options(selectinload(Person.mahalla))
         count_query = select(func.count(func.distinct(Person.id)))
 
+        actual_remaining_days = remaining_days if remaining_days is not None else days_remaining
+
         # RBAC Filtering
         if caller_role in [UserRole.ADMIN, UserRole.PROKUROR]:
             if mahalla_id is not None:
                 query = query.where(Person.mahalla_id == mahalla_id)
                 count_query = count_query.where(Person.mahalla_id == mahalla_id)
         elif caller_role == UserRole.MAHALLA_RAISI:
+            if caller_mahalla_id is None:
+                return PaginatedPersonSchema(
+                    items=[], total=0, page=page, page_size=page_size, total_pages=1
+                )
             query = query.where(Person.mahalla_id == caller_mahalla_id)
             count_query = count_query.where(Person.mahalla_id == caller_mahalla_id)
         elif caller_role in MAHALLA_SEVEN_ROLES:
-            query = query.where(Person.mahalla_id == caller_mahalla_id)
-            count_query = count_query.where(Person.mahalla_id == caller_mahalla_id)
+            if caller_mahalla_id is None:
+                return PaginatedPersonSchema(
+                    items=[], total=0, page=page, page_size=page_size, total_pages=1
+                )
+            role_val = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
+            role_condition = or_(
+                and_(
+                    PersonCategoryAssignment.assigned_roles.isnot(None),
+                    PersonCategoryAssignment.assigned_roles.cast(String).like(f"%\"{role_val}\"%"),
+                ),
+                and_(
+                    or_(
+                        PersonCategoryAssignment.assigned_roles.is_(None),
+                        PersonCategoryAssignment.assigned_roles.cast(String) == "[]",
+                    ),
+                    Category.assigned_roles.cast(String).like(f"%\"{role_val}\"%"),
+                ),
+            )
+            own_conditions = [
+                PersonCategoryAssignment.person_id == Person.id,
+                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                role_condition,
+            ]
+            if category_id:
+                own_conditions.append(PersonCategoryAssignment.category_id == category_id)
+            if actual_remaining_days is not None:
+                today = date.today()
+                target_due = today + timedelta(days=actual_remaining_days)
+                own_conditions.append(PersonCategoryAssignment.next_check_in_due == target_due)
+
+            has_own_assignment = (
+                select(1)
+                .select_from(PersonCategoryAssignment)
+                .join(Category, PersonCategoryAssignment.category_id == Category.id)
+                .where(*own_conditions)
+                .exists()
+            )
+            query = query.where(
+                Person.mahalla_id == caller_mahalla_id,
+                has_own_assignment,
+            )
+            count_query = count_query.where(
+                Person.mahalla_id == caller_mahalla_id,
+                has_own_assignment,
+            )
 
         if search:
             pattern = f"%{search}%"
             query = query.where(Person.full_name.ilike(pattern))
             count_query = count_query.where(Person.full_name.ilike(pattern))
 
-        if category_id:
-            query = query.join(Person.assignments).where(
-                PersonCategoryAssignment.category_id == category_id
-            )
-            count_query = count_query.join(Person.assignments).where(
-                PersonCategoryAssignment.category_id == category_id
-            )
+        # Category and remaining_days filters for non-seven-member callers (Admin, Prokuror, Rais)
+        if caller_role not in MAHALLA_SEVEN_ROLES or caller_role == UserRole.MAHALLA_RAISI:
+            if category_id:
+                query = query.join(Person.assignments).where(
+                    PersonCategoryAssignment.category_id == category_id
+                )
+                count_query = count_query.join(Person.assignments).where(
+                    PersonCategoryAssignment.category_id == category_id
+                )
 
-        actual_remaining_days = remaining_days if remaining_days is not None else days_remaining
-        if actual_remaining_days is not None:
-            today = date.today()
-            target_due = today + timedelta(days=actual_remaining_days)
-            if not category_id:
-                query = query.join(Person.assignments)
-                count_query = count_query.join(Person.assignments)
-            query = query.where(
-                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
-                PersonCategoryAssignment.next_check_in_due == target_due,
-            )
-            count_query = count_query.where(
-                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
-                PersonCategoryAssignment.next_check_in_due == target_due,
-            )
+            if actual_remaining_days is not None:
+                today = date.today()
+                target_due = today + timedelta(days=actual_remaining_days)
+                if not category_id:
+                    query = query.join(Person.assignments)
+                    count_query = count_query.join(Person.assignments)
+                query = query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                )
+                count_query = count_query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                )
 
         total = (await db.execute(count_query)).scalar_one()
 
@@ -330,8 +380,15 @@ class PersonService:
                     .order_by(PersonCategoryAssignment.created_at.desc())
                 )
             ).all()
-            for a in all_assignments:
-                assignments_map[a.person_id].append(a)
+            if caller_role in MAHALLA_SEVEN_ROLES and caller_role != UserRole.MAHALLA_RAISI:
+                role_val = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
+                for a in all_assignments:
+                    roles = a.assigned_roles or (a.category.assigned_roles if a.category else [])
+                    if role_val in roles:
+                        assignments_map[a.person_id].append(a)
+            else:
+                for a in all_assignments:
+                    assignments_map[a.person_id].append(a)
 
         items = [cls._format_person(p, assignments=assignments_map.get(p.id, [])) for p in persons]
 
@@ -375,6 +432,23 @@ class PersonService:
                 .order_by(PersonCategoryAssignment.created_at.desc())
             )
         ).all()
+
+        if caller_role in MAHALLA_SEVEN_ROLES and caller_role != UserRole.MAHALLA_RAISI:
+            role_val = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
+            has_active_own = any(
+                a.status == AssignmentStatus.ACTIVE
+                and role_val in (a.assigned_roles or (a.category.assigned_roles if a.category else []))
+                for a in assignments
+            )
+            if not has_active_own:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to view this person",
+                )
+            assignments = [
+                a for a in assignments
+                if role_val in (a.assigned_roles or (a.category.assigned_roles if a.category else []))
+            ]
 
         return cls._format_person(person, assignments=assignments)
 
