@@ -2,7 +2,7 @@ import math
 from datetime import date, datetime, timedelta
 from typing import Optional
 from fastapi import HTTPException, status, UploadFile
-from sqlalchemy import select, func, or_, and_, String
+from sqlalchemy import select, func, or_, and_, String, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -653,18 +653,21 @@ class DocumentService:
                     CheckInDocument.assignment_id == PersonCategoryAssignment.id,
                 )
                 has_assignment_joined = True
-            query = query.where(
-                or_(
-                    PersonCategoryAssignment.next_check_in_due == target_due,
-                    CheckInDocument.due_date == target_due,
-                )
+            doc_effective_due = func.coalesce(
+                case(
+                    (
+                        and_(
+                            CheckInDocument.status == CheckInDocStatus.APPROVED,
+                            CheckInDocument.new_date.isnot(None),
+                        ),
+                        CheckInDocument.new_date,
+                    ),
+                    else_=CheckInDocument.due_date,
+                ),
+                PersonCategoryAssignment.next_check_in_due,
             )
-            count_query = count_query.where(
-                or_(
-                    PersonCategoryAssignment.next_check_in_due == target_due,
-                    CheckInDocument.due_date == target_due,
-                )
-            )
+            query = query.where(doc_effective_due == target_due)
+            count_query = count_query.where(doc_effective_due == target_due)
 
         # When filtering by remaining_days, default to latest document per assignment to prevent duplicate person entries
         is_latest_only = latest_only if latest_only is not None else (actual_remaining_days is not None)
@@ -673,15 +676,23 @@ class DocumentService:
             if status:
                 latest_subq = latest_subq.where(CheckInDocument.status == status)
             if target_due is not None:
+                doc_effective_due_sub = func.coalesce(
+                    case(
+                        (
+                            and_(
+                                CheckInDocument.status == CheckInDocStatus.APPROVED,
+                                CheckInDocument.new_date.isnot(None),
+                            ),
+                            CheckInDocument.new_date,
+                        ),
+                        else_=CheckInDocument.due_date,
+                    ),
+                    PersonCategoryAssignment.next_check_in_due,
+                )
                 latest_subq = latest_subq.outerjoin(
                     PersonCategoryAssignment,
                     CheckInDocument.assignment_id == PersonCategoryAssignment.id,
-                ).where(
-                    or_(
-                        PersonCategoryAssignment.next_check_in_due == target_due,
-                        CheckInDocument.due_date == target_due,
-                    )
-                )
+                ).where(doc_effective_due_sub == target_due)
             latest_subq = latest_subq.group_by(CheckInDocument.assignment_id).scalar_subquery()
 
             query = query.where(CheckInDocument.id.in_(latest_subq))

@@ -674,6 +674,16 @@ class PersonService:
         ])
         bugun_bajarilmagan = today_count
 
+        # Pending documents breakdown by remaining days (0 to max_days)
+        docs_by_day = {d: 0 for d in range(0, max_days + 1)}
+        for d in docs:
+            if d.status == CheckInDocStatus.PENDING:
+                eff_due = d.due_date or (d.assignment.next_check_in_due if d.assignment else None)
+                if eff_due:
+                    d_diff = (eff_due - today).days
+                    if 0 <= d_diff <= max_days:
+                        docs_by_day[d_diff] += 1
+
         return RemainingDaysStatsSchema(
             jami_hujjatlar=jami_hujjatlar,
             kiruvchi_hujjatlar=kiruvchi_hujjatlar,
@@ -696,6 +706,8 @@ class PersonService:
             ertaga=by_day.get(1, 0),
             indinga=by_day.get(2, 0),
             by_day=by_day,
+            docs_by_day=docs_by_day,
+            pending_docs_by_day=docs_by_day,
             total_active=len(assignments),
             after_max_days=later_count,
             kelgusida=later_count,
