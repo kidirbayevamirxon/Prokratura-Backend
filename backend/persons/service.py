@@ -502,10 +502,16 @@ class PersonService:
             )
 
         if days_remaining is not None:
-            target_due = today + timedelta(days=days_remaining)
-            query = query.where(
-                PersonCategoryAssignment.next_check_in_due == target_due
-            )
+            if days_remaining < 0:
+                query = query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due < today,
+                )
+            else:
+                target_due = today + timedelta(days=days_remaining)
+                query = query.where(
+                    PersonCategoryAssignment.next_check_in_due == target_due
+                )
 
         if min_days_remaining is not None:
             min_due = today + timedelta(days=min_days_remaining)
@@ -666,7 +672,7 @@ class PersonService:
             ]
         )
 
-        # Muddati buzilgan hujjatlar: overdue active assignments / overdue pending check-ins
+        # Documents whose deadline has passed (Overdue pending check-ins)
         pending_overdue_docs = len(
             [
                 d
@@ -676,7 +682,8 @@ class PersonService:
                 and d.due_date < today
             ]
         )
-        muddati_buzilgan_hujjatlar = max(overdue_count, pending_overdue_docs)
+        hujjatlar_muddati_buzilgan = pending_overdue_docs
+        odamlar_muddati_buzilgan = overdue_count
 
         # Today's task metrics
         bugun_bajarilgan = len(
@@ -710,14 +717,21 @@ class PersonService:
             muddati_buzilib_bajarilgan=muddati_buzilib_bajarilgan,
             kechikib_bajarilgan=muddati_buzilib_bajarilgan,
             kech_qabul_qilingan=kech_qabul_qilingan,
-            muddati_buzilgan_hujjatlar=muddati_buzilgan_hujjatlar,
+            muddati_buzilgan_hujjatlar=hujjatlar_muddati_buzilgan,
+            hujjatlar_muddati_buzilgan=hujjatlar_muddati_buzilgan,
+            documents_muddati_buzilgan=hujjatlar_muddati_buzilgan,
+            odamlar_muddati_buzilgan=odamlar_muddati_buzilgan,
+            muddati_buzilgan_odamlar=odamlar_muddati_buzilgan,
+            muddati_buzilgan_shaxslar=odamlar_muddati_buzilgan,
+            muddati_buzilgan=odamlar_muddati_buzilgan,
             total_documents=jami_hujjatlar,
             pending_documents=kiruvchi_hujjatlar,
             completed_documents=bajarilgan_hujjatlar,
             rejected_documents=rad_etilgan_hujjatlar,
             completed_overdue=muddati_buzilib_bajarilgan,
             late_accepted=kech_qabul_qilingan,
-            overdue_documents=muddati_buzilgan_hujjatlar,
+            overdue_documents=hujjatlar_muddati_buzilgan,
+            overdue_persons=odamlar_muddati_buzilgan,
             overdue=overdue_count,
             today=today_count,
             bugun=today_count,

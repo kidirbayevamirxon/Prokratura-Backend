@@ -78,7 +78,25 @@ class RemainingDaysStatsSchema(BaseModel):
         0, description="Kech qabul qilingan (Submitted or accepted late)"
     )
     muddati_buzilgan_hujjatlar: int = Field(
-        0, description="Muddati buzilgan hujjatlar (Deadline violated / overdue)"
+        0, description="Muddati buzilgan hujjatlar (Overdue pending documents count)"
+    )
+    hujjatlar_muddati_buzilgan: int = Field(
+        0, description="Hujjatlar muddati buzilgan (Overdue pending documents count)"
+    )
+    documents_muddati_buzilgan: int = Field(
+        0, description="Alias for hujjatlar_muddati_buzilgan"
+    )
+    odamlar_muddati_buzilgan: int = Field(
+        0, description="Odamlar muddati buzilgan (Overdue persons / assignments count)"
+    )
+    muddati_buzilgan_odamlar: int = Field(
+        0, description="Alias for odamlar_muddati_buzilgan"
+    )
+    muddati_buzilgan_shaxslar: int = Field(
+        0, description="Alias for odamlar_muddati_buzilgan"
+    )
+    muddati_buzilgan: int = Field(
+        0, description="Muddati buzilgan (Alias for odamlar_muddati_buzilgan)"
     )
 
     # English aliases for developer convenience
@@ -91,7 +109,10 @@ class RemainingDaysStatsSchema(BaseModel):
     )
     late_accepted: int = Field(0, description="Alias for kech_qabul_qilingan")
     overdue_documents: int = Field(
-        0, description="Alias for muddati_buzilgan_hujjatlar"
+        0, description="Overdue documents count (Alias for hujjatlar_muddati_buzilgan)"
+    )
+    overdue_persons: int = Field(
+        0, description="Overdue persons count (Alias for odamlar_muddati_buzilgan)"
     )
 
     # Muddat / Days remaining breakdown
