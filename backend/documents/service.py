@@ -197,6 +197,12 @@ class DocumentService:
         is_prokuror = caller_role in [UserRole.ADMIN, UserRole.PROKUROR]
         effective_freq = frequency_days or frequency_day
 
+        if not assignment.frequency_days and not effective_freq and not new_date and not requested_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ushbu shaxsning kategoriyasi uchun dastlabki tekshiruv chastotasi belgilanmagan. Iltimos, hujjat yaratishdan oldin chastota (frequency_days) ni kiriting.",
+            )
+
         if is_prokuror:
             # Prokuror sends docs for employers: outside regular frequency with optional frequency day
             if effective_freq:
@@ -208,6 +214,11 @@ class DocumentService:
             doc_frequency_days = effective_freq
             doc_new_date = new_date or (doc_due_date if effective_freq else None)
             doc_requested_date = requested_date
+            # Update assignment's current due date to match this new task's deadline
+            if assignment:
+                if not assignment.frequency_days and effective_freq:
+                    assignment.frequency_days = effective_freq
+                assignment.next_check_in_due = doc_due_date
         else:
             # Employers docs are in frequency decided by prokuror
             doc_frequency_days = None
@@ -327,11 +338,16 @@ class DocumentService:
                         doc.new_date = target
                     else:
                         # Regular check in approved: calculate next check-in deadline by prokuror's decided frequency
-                        doc.assignment.next_check_in_due = doc.check_in_date + timedelta(
-                            days=doc.assignment.frequency_days
-                        )
-                        doc.new_date = doc.assignment.next_check_in_due
-                        doc.due_date = doc.assignment.next_check_in_due
+                        if doc.assignment.frequency_days is not None:
+                            doc.assignment.next_check_in_due = doc.check_in_date + timedelta(
+                                days=doc.assignment.frequency_days
+                            )
+                            doc.new_date = doc.assignment.next_check_in_due
+                            doc.due_date = doc.assignment.next_check_in_due
+                        else:
+                            # One-time assignment completed
+                            doc.assignment.status = AssignmentStatus.COMPLETED
+                            doc.assignment.next_check_in_due = None
         elif data.status == CheckInDocStatus.REJECTED:
             doc.rejection_reason = data.rejection_reason
 
@@ -430,7 +446,7 @@ class DocumentService:
             is_prokuror_doc = bool(
                 doc.submitted_by and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
             )
-            if not is_prokuror_doc and doc.assignment:
+            if doc.assignment:
                 doc.assignment.next_check_in_due = effective_new_date
 
         if data.check_in_date is not None:
@@ -666,8 +682,12 @@ class DocumentService:
                 ),
                 PersonCategoryAssignment.next_check_in_due,
             )
-            query = query.where(doc_effective_due == target_due)
-            count_query = count_query.where(doc_effective_due == target_due)
+            if actual_remaining_days < 0:
+                query = query.where(doc_effective_due < today)
+                count_query = count_query.where(doc_effective_due < today)
+            else:
+                query = query.where(doc_effective_due == target_due)
+                count_query = count_query.where(doc_effective_due == target_due)
 
         # When filtering by remaining_days, default to latest document per assignment to prevent duplicate person entries
         is_latest_only = latest_only if latest_only is not None else (actual_remaining_days is not None)
@@ -689,10 +709,16 @@ class DocumentService:
                     ),
                     PersonCategoryAssignment.next_check_in_due,
                 )
-                latest_subq = latest_subq.outerjoin(
-                    PersonCategoryAssignment,
-                    CheckInDocument.assignment_id == PersonCategoryAssignment.id,
-                ).where(doc_effective_due_sub == target_due)
+                if actual_remaining_days < 0:
+                    latest_subq = latest_subq.outerjoin(
+                        PersonCategoryAssignment,
+                        CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                    ).where(doc_effective_due_sub < date.today())
+                else:
+                    latest_subq = latest_subq.outerjoin(
+                        PersonCategoryAssignment,
+                        CheckInDocument.assignment_id == PersonCategoryAssignment.id,
+                    ).where(doc_effective_due_sub == target_due)
             latest_subq = latest_subq.group_by(CheckInDocument.assignment_id).scalar_subquery()
 
             query = query.where(CheckInDocument.id.in_(latest_subq))

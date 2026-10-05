@@ -42,9 +42,9 @@ class PersonCategoryAssignment(Base):
         nullable=False,
         index=True,
     )
-    frequency_days: Mapped[int] = mapped_column(nullable=False)
+    frequency_days: Mapped[Optional[int]] = mapped_column(nullable=True)
     assigned_roles: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
-    next_check_in_due: Mapped[datetime.date] = mapped_column(Date, nullable=False, index=True)
+    next_check_in_due: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True, index=True)
     status: Mapped[AssignmentStatus] = mapped_column(
         SQLEnum(AssignmentStatus, name="assignment_status", native_enum=False),
         default=AssignmentStatus.ACTIVE,

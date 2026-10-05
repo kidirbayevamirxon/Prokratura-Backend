@@ -30,15 +30,18 @@ class PersonService:
         assignment: PersonCategoryAssignment,
     ) -> AssignmentResponseSchema:
         today = date.today()
-        is_overdue = (
-            assignment.status == AssignmentStatus.ACTIVE
-            and assignment.next_check_in_due < today
-        )
+        is_overdue = False
+        days_remaining = None
+        if assignment.next_check_in_due:
+            is_overdue = (
+                assignment.status == AssignmentStatus.ACTIVE
+                and assignment.next_check_in_due < today
+            )
+            days_remaining = (assignment.next_check_in_due - today).days
+
         assigned_roles = assignment.assigned_roles
         if not assigned_roles and assignment.category:
             assigned_roles = assignment.category.assigned_roles or []
-
-        days_remaining = (assignment.next_check_in_due - today).days
 
         return AssignmentResponseSchema(
             id=assignment.id,
@@ -145,7 +148,10 @@ class PersonService:
         # Inherit assigned roles directly from category
         assigned_roles = category.assigned_roles or []
 
-        next_due = date.today() + timedelta(days=data.frequency_days)
+        if data.frequency_days is not None:
+            next_due = date.today() + timedelta(days=data.frequency_days)
+        else:
+            next_due = None
 
         assignment = PersonCategoryAssignment(
             person_id=person.id,
@@ -305,14 +311,25 @@ class PersonService:
             if not category_id:
                 query = query.join(Person.assignments)
                 count_query = count_query.join(Person.assignments)
-            query = query.where(
-                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
-                PersonCategoryAssignment.next_check_in_due == target_due,
-            )
-            count_query = count_query.where(
-                PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
-                PersonCategoryAssignment.next_check_in_due == target_due,
-            )
+            
+            if actual_remaining_days < 0:
+                query = query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due < today,
+                )
+                count_query = count_query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due < today,
+                )
+            else:
+                query = query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                )
+                count_query = count_query.where(
+                    PersonCategoryAssignment.status == AssignmentStatus.ACTIVE,
+                    PersonCategoryAssignment.next_check_in_due == target_due,
+                )
 
         total = (await db.execute(count_query)).scalar_one()
 
@@ -565,6 +582,8 @@ class PersonService:
         later_count = 0
 
         for a in assignments:
+            if not a.next_check_in_due:
+                continue
             diff = (a.next_check_in_due - today).days
             if diff < 0:
                 overdue_count += 1

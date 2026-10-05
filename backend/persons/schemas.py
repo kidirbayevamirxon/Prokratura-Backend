@@ -22,8 +22,8 @@ class PersonUpdateSchema(BaseModel):
 
 class AssignmentCreateSchema(BaseModel):
     category_id: int = Field(..., description="Category / Docs type ID to assign")
-    frequency_days: int = Field(
-        ..., ge=1, le=365, description="Frequency of check-in in days"
+    frequency_days: Optional[int] = Field(
+        None, ge=1, le=365, description="Frequency of check-in in days"
     )
 
 
@@ -31,8 +31,8 @@ class AssignmentUpdateSchema(BaseModel):
     category_id: Optional[int] = Field(
         None, description="Category ID (optional, used when updating by person)"
     )
-    frequency_days: int = Field(
-        ..., ge=1, le=365, description="Updated frequency of check-in in days"
+    frequency_days: Optional[int] = Field(
+        None, ge=1, le=365, description="Updated frequency of check-in in days"
     )
     next_check_in_due: Optional[date] = Field(
         None, description="Optional override for next check-in deadline date"
@@ -47,10 +47,10 @@ class AssignmentResponseSchema(BaseModel):
     category_id: int
     category_name: str
     mahalla_id: int
-    frequency_days: int
+    frequency_days: Optional[int] = None
     assigned_roles: List[str]
-    next_check_in_due: date
-    days_remaining: int
+    next_check_in_due: Optional[date] = None
+    days_remaining: Optional[int] = None
     is_overdue: bool
     status: AssignmentStatus
     created_at: datetime
