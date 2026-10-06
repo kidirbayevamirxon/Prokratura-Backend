@@ -2,6 +2,7 @@ from datetime import date as dt_date, datetime as dt_datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from db.models.document import CheckInDocType, CheckInDocStatus
+from db.models.document_message import DocumentMessageType
 
 
 class DocumentReviewSchema(BaseModel):
@@ -78,3 +79,40 @@ class PaginatedDocumentSchema(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class MessageCreateSchema(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000, description="Message text or extension reason")
+    message_type: DocumentMessageType = Field(default=DocumentMessageType.TEXT, description="Message type")
+    requested_date: Optional[dt_date] = Field(None, description="Requested new deadline date (required when message_type is extension_request)")
+
+    @model_validator(mode="after")
+    def check_requested_date(self):
+        if self.message_type == DocumentMessageType.EXTENSION_REQUEST:
+            if not self.requested_date:
+                raise ValueError("requested_date is required when message_type is extension_request")
+        return self
+
+
+class MessageResponseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    document_id: int
+    sender_id: int
+    sender_name: str
+    sender_role: str
+    message: str
+    message_type: DocumentMessageType
+    requested_date: Optional[dt_date] = None
+    granted_date: Optional[dt_date] = None
+    created_at: dt_datetime
+
+
+class ExtendDeadlineSchema(BaseModel):
+    new_date: dt_date = Field(..., description="New approved deadline date")
+    comment: Optional[str] = Field(None, max_length=1000, description="Optional explanation/note by prosecutor")
+
+
+class RejectExtensionSchema(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=1000, description="Reason for rejecting extension request")

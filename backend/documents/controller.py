@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, File, Form, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,10 @@ from backend.documents.schemas import (
     DocumentUpdateSchema,
     DocumentResponseSchema,
     PaginatedDocumentSchema,
+    MessageCreateSchema,
+    MessageResponseSchema,
+    ExtendDeadlineSchema,
+    RejectExtensionSchema,
 )
 from backend.documents.service import DocumentService
 from db.connection import get_async_db
@@ -137,6 +141,85 @@ async def request_document_extension(
         caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )
+
+
+@router.get(
+    "/{document_id}/messages",
+    response_model=List[MessageResponseSchema],
+    summary="Get discussion messages for a check-in document",
+)
+async def get_document_messages(
+    document_id: int,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.get_document_messages(
+        document_id=document_id,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{document_id}/messages",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Post a message or send extension request in document chat",
+)
+async def create_document_message(
+    document_id: int,
+    data: MessageCreateSchema,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.create_document_message(
+        document_id=document_id,
+        data=data,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{document_id}/extend-deadline",
+    response_model=DocumentResponseSchema,
+    summary="Directly extend check-in deadline (Prokuror/Admin) without approving the document",
+)
+async def extend_document_deadline(
+    document_id: int,
+    data: ExtendDeadlineSchema,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.extend_document_deadline(
+        document_id=document_id,
+        data=data,
+        prosecutor_id=current_user["id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{document_id}/reject-extension",
+    response_model=DocumentResponseSchema,
+    summary="Reject deadline extension request (Prokuror/Admin)",
+)
+async def reject_document_extension(
+    document_id: int,
+    data: RejectExtensionSchema,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await DocumentService.reject_document_extension(
+        document_id=document_id,
+        data=data,
+        prosecutor_id=current_user["id"],
+        db=db,
+    )
+
 
 
 @router.get(

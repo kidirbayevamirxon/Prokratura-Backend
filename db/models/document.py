@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from db.models.category import Category
     from db.models.mahalla import Mahalla
     from db.models.user import User
+    from db.models.document_message import DocumentMessage
 
 
 class CheckInDocType(str, Enum):
@@ -108,4 +109,10 @@ class CheckInDocument(Base):
     submitted_by: Mapped["User"] = relationship("User", foreign_keys=[submitted_by_id], lazy="selectin")
     reviewed_by: Mapped[Optional["User"]] = relationship("User", foreign_keys=[reviewed_by_id], lazy="selectin")
     seen_by: Mapped[Optional["User"]] = relationship("User", foreign_keys=[seen_by_id], lazy="selectin")
+    messages: Mapped[list["DocumentMessage"]] = relationship(
+        "DocumentMessage",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="DocumentMessage.created_at.asc()",
+    )
 

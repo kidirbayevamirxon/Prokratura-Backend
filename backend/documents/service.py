@@ -1,6 +1,6 @@
 import math
 from datetime import date, datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, func, or_, and_, String, case
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,8 +12,13 @@ from backend.documents.schemas import (
     DocumentUpdateSchema,
     DocumentResponseSchema,
     PaginatedDocumentSchema,
+    MessageCreateSchema,
+    MessageResponseSchema,
+    ExtendDeadlineSchema,
+    RejectExtensionSchema,
 )
 from db.models.document import CheckInDocument, CheckInDocType, CheckInDocStatus
+from db.models.document_message import DocumentMessage, DocumentMessageType
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
 from db.models.category import Category
 from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
@@ -84,6 +89,33 @@ class DocumentService:
             seen_by_name=seen_by_name,
             is_seen=doc.seen_at is not None,
             created_at=doc.created_at,
+        )
+
+    @staticmethod
+    def _format_message(msg: DocumentMessage) -> MessageResponseSchema:
+        sender_name = (
+            f"{msg.sender.first_name} {msg.sender.last_name}"
+            if msg.sender
+            else "Noma'lum"
+        )
+        sender_role = (
+            msg.sender.role.value
+            if msg.sender and hasattr(msg.sender.role, "value")
+            else str(msg.sender.role)
+            if msg.sender
+            else "unknown"
+        )
+        return MessageResponseSchema(
+            id=msg.id,
+            document_id=msg.document_id,
+            sender_id=msg.sender_id,
+            sender_name=sender_name,
+            sender_role=sender_role,
+            message=msg.message,
+            message_type=msg.message_type,
+            requested_date=msg.requested_date,
+            granted_date=msg.granted_date,
+            created_at=msg.created_at,
         )
 
     @classmethod
@@ -878,3 +910,205 @@ class DocumentService:
             FileService.delete_file_by_url_or_path(pdf_url)
 
         return True
+
+    @classmethod
+    async def get_document_messages(
+        cls,
+        document_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> List[MessageResponseSchema]:
+        doc = await db.get(CheckInDocument, document_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Check-in document not found",
+            )
+        if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if doc.mahalla_id != caller_mahalla_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot view messages for document of another mahalla",
+                )
+
+        stmt = (
+            select(DocumentMessage)
+            .where(DocumentMessage.document_id == document_id)
+            .options(selectinload(DocumentMessage.sender))
+            .order_by(DocumentMessage.created_at.asc())
+        )
+        messages = (await db.execute(stmt)).scalars().all()
+        return [cls._format_message(m) for m in messages]
+
+    @classmethod
+    async def create_document_message(
+        cls,
+        document_id: int,
+        data: MessageCreateSchema,
+        caller_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> MessageResponseSchema:
+        doc = await db.scalar(
+            select(CheckInDocument)
+            .where(CheckInDocument.id == document_id)
+            .options(selectinload(CheckInDocument.assignment))
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Check-in document not found",
+            )
+        if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+            if doc.mahalla_id != caller_mahalla_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot post message for document of another mahalla",
+                )
+
+        if data.message_type == DocumentMessageType.EXTENSION_REQUEST:
+            if not data.requested_date:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="requested_date is required when requesting extension",
+                )
+            if data.requested_date <= date.today():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Requested date must be in the future",
+                )
+            doc.requested_date = data.requested_date
+            if not doc.previous_date:
+                doc.previous_date = doc.due_date or (
+                    doc.assignment.next_check_in_due if doc.assignment else None
+                )
+
+        msg = DocumentMessage(
+            document_id=document_id,
+            sender_id=caller_id,
+            message=data.message.strip(),
+            message_type=data.message_type,
+            requested_date=data.requested_date if data.message_type == DocumentMessageType.EXTENSION_REQUEST else None,
+        )
+        db.add(msg)
+        await db.commit()
+        await db.refresh(msg)
+
+        loaded_msg = await db.scalar(
+            select(DocumentMessage)
+            .where(DocumentMessage.id == msg.id)
+            .options(selectinload(DocumentMessage.sender))
+        )
+        return cls._format_message(loaded_msg or msg)
+
+    @classmethod
+    async def extend_document_deadline(
+        cls,
+        document_id: int,
+        data: ExtendDeadlineSchema,
+        prosecutor_id: int,
+        db: AsyncSession,
+    ) -> DocumentResponseSchema:
+        doc = await db.scalar(
+            select(CheckInDocument)
+            .where(CheckInDocument.id == document_id)
+            .options(
+                selectinload(CheckInDocument.assignment),
+                selectinload(CheckInDocument.person),
+                selectinload(CheckInDocument.category),
+                selectinload(CheckInDocument.mahalla),
+                selectinload(CheckInDocument.submitted_by),
+                selectinload(CheckInDocument.reviewed_by),
+                selectinload(CheckInDocument.seen_by),
+            )
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Check-in document not found",
+            )
+
+        if data.new_date <= date.today():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New deadline date must be in the future",
+            )
+
+        old_due = doc.due_date or (doc.assignment.next_check_in_due if doc.assignment else None)
+        if not doc.previous_date:
+            doc.previous_date = old_due
+
+        doc.due_date = data.new_date
+        doc.new_date = data.new_date
+        if doc.assignment:
+            doc.assignment.next_check_in_due = data.new_date
+        doc.requested_date = None
+
+        comment_text = f" Izoh: {data.comment.strip()}" if data.comment and data.comment.strip() else ""
+        system_msg = DocumentMessage(
+            document_id=document_id,
+            sender_id=prosecutor_id,
+            message=f"Prokuror muddatni {data.new_date.strftime('%d.%m.%Y')} gacha uzaytirdi.{comment_text}",
+            message_type=DocumentMessageType.EXTENSION_GRANTED,
+            granted_date=data.new_date,
+        )
+        db.add(system_msg)
+
+        await db.commit()
+        await db.refresh(doc)
+
+        return await cls.get_document_by_id(
+            doc.id,
+            caller_role=UserRole.ADMIN,
+            caller_mahalla_id=None,
+            db=db,
+        )
+
+    @classmethod
+    async def reject_document_extension(
+        cls,
+        document_id: int,
+        data: RejectExtensionSchema,
+        prosecutor_id: int,
+        db: AsyncSession,
+    ) -> DocumentResponseSchema:
+        doc = await db.scalar(
+            select(CheckInDocument)
+            .where(CheckInDocument.id == document_id)
+            .options(
+                selectinload(CheckInDocument.assignment),
+                selectinload(CheckInDocument.person),
+                selectinload(CheckInDocument.category),
+                selectinload(CheckInDocument.mahalla),
+                selectinload(CheckInDocument.submitted_by),
+                selectinload(CheckInDocument.reviewed_by),
+                selectinload(CheckInDocument.seen_by),
+            )
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Check-in document not found",
+            )
+
+        doc.requested_date = None
+
+        system_msg = DocumentMessage(
+            document_id=document_id,
+            sender_id=prosecutor_id,
+            message=f"Muddat uzaytirish so'rovi rad etildi. Sabab: {data.reason.strip()}",
+            message_type=DocumentMessageType.EXTENSION_REJECTED,
+        )
+        db.add(system_msg)
+
+        await db.commit()
+        await db.refresh(doc)
+
+        return await cls.get_document_by_id(
+            doc.id,
+            caller_role=UserRole.ADMIN,
+            caller_mahalla_id=None,
+            db=db,
+        )
