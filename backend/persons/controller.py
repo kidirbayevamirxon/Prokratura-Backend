@@ -147,11 +147,14 @@ async def get_person_by_id(
 async def update_person(
     person_id: int,
     data: PersonUpdateSchema,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
     return await PersonService.update_person(
         person_id=person_id,
         data=data,
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )
 
@@ -172,6 +175,8 @@ async def assign_category(
         person_id=person_id,
         data=data,
         created_by_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )
 
@@ -192,6 +197,8 @@ async def update_person_category_assignment(
         person_id=person_id,
         data=data,
         editor_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )
 
@@ -212,6 +219,8 @@ async def update_assignment(
         assignment_id=assignment_id,
         data=data,
         editor_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
         db=db,
     )
 

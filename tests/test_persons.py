@@ -144,6 +144,8 @@ async def test_rbac_person_visibility(
     )
     assert res_p.status_code == 200
     assert res_p.json()["total"] >= 1
+    assert res_p.json()["items"][0]["assignments"][0]["ami_i_conntected"] is True
+    assert res_p.json()["items"][0]["assignments"][0]["am_i_connected"] is True
 
     # 2. Rais sees the person (in own mahalla)
     res_r = await client.get(
@@ -151,6 +153,8 @@ async def test_rbac_person_visibility(
     )
     assert res_r.status_code == 200
     assert res_r.json()["total"] >= 1
+    assert res_r.json()["items"][0]["assignments"][0]["ami_i_conntected"] is True
+    assert res_r.json()["items"][0]["assignments"][0]["am_i_connected"] is True
 
     # 3. Profilaktika inspector sees the assignment for their role
     res_i = await client.get(
@@ -158,6 +162,15 @@ async def test_rbac_person_visibility(
     )
     assert res_i.status_code == 200
     assert len(res_i.json()) >= 1
+    assert res_i.json()[0]["ami_i_conntected"] is True
+    assert res_i.json()[0]["am_i_connected"] is True
+
+    res_i_persons = await client.get(
+        "/persons", headers={"Authorization": f"Bearer {inspector_token}"}
+    )
+    assert res_i_persons.status_code == 200
+    assert res_i_persons.json()["items"][0]["assignments"][0]["ami_i_conntected"] is True
+    assert res_i_persons.json()["items"][0]["assignments"][0]["am_i_connected"] is True
 
     # 4. Women activist has no assignments for her role on this person
     res_w = await client.get(
@@ -165,6 +178,13 @@ async def test_rbac_person_visibility(
     )
     assert res_w.status_code == 200
     assert len(res_w.json()) == 0
+
+    res_w_persons = await client.get(
+        "/persons", headers={"Authorization": f"Bearer {women_activist_token}"}
+    )
+    assert res_w_persons.status_code == 200
+    assert res_w_persons.json()["items"][0]["assignments"][0]["ami_i_conntected"] is False
+    assert res_w_persons.json()["items"][0]["assignments"][0]["am_i_connected"] is False
 
 
 @pytest.mark.asyncio

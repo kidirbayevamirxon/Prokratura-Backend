@@ -26,8 +26,45 @@ from db.models.user import UserRole, MAHALLA_SEVEN_ROLES
 
 class PersonService:
     @staticmethod
-    def _format_assignment(
+    def _is_user_connected(
         assignment: PersonCategoryAssignment,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
+    ) -> bool:
+        if caller_role is None:
+            return False
+
+        role_val = (
+            caller_role.value
+            if hasattr(caller_role, "value")
+            else str(caller_role)
+        )
+
+        # Prokuror and Admin have universal authority over all assignments
+        if role_val in [UserRole.ADMIN.value, UserRole.PROKUROR.value, "admin", "prokuror"]:
+            return True
+
+        # Mahalla-level users can only be connected within their own mahalla
+        if caller_mahalla_id is not None and assignment.mahalla_id != caller_mahalla_id:
+            return False
+
+        # Mahalla raisi oversees all assignments in their own mahalla
+        if role_val in [UserRole.MAHALLA_RAISI.value, "mahalla_raisi"]:
+            return True
+
+        # Mahalla specialized staff (6 roles): connected if their role is in assigned_roles
+        assigned_roles = assignment.assigned_roles
+        if not assigned_roles and assignment.category:
+            assigned_roles = assignment.category.assigned_roles or []
+
+        return bool(role_val and assigned_roles and role_val in assigned_roles)
+
+    @classmethod
+    def _format_assignment(
+        cls,
+        assignment: PersonCategoryAssignment,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> AssignmentResponseSchema:
         today = date.today()
         is_overdue = False
@@ -43,6 +80,12 @@ class PersonService:
         if not assigned_roles and assignment.category:
             assigned_roles = assignment.category.assigned_roles or []
 
+        is_connected = cls._is_user_connected(
+            assignment,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
+
         return AssignmentResponseSchema(
             id=assignment.id,
             person_id=assignment.person_id,
@@ -55,6 +98,9 @@ class PersonService:
             days_remaining=days_remaining,
             is_overdue=is_overdue,
             status=assignment.status,
+            am_i_connected=is_connected,
+            ami_i_conntected=is_connected,
+            ami_i_connected=is_connected,
             created_at=assignment.created_at,
         )
 
@@ -63,11 +109,20 @@ class PersonService:
         cls,
         person: Person,
         assignments: Optional[Sequence[PersonCategoryAssignment]] = None,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> PersonResponseSchema:
         ass_list = (
             assignments if assignments is not None else (person.assignments or [])
         )
-        assignments_formatted = [cls._format_assignment(a) for a in ass_list]
+        assignments_formatted = [
+            cls._format_assignment(
+                a,
+                caller_role=caller_role,
+                caller_mahalla_id=caller_mahalla_id,
+            )
+            for a in ass_list
+        ]
         return PersonResponseSchema(
             id=person.id,
             full_name=person.full_name,
@@ -114,6 +169,8 @@ class PersonService:
         data: AssignmentCreateSchema,
         created_by_id: int,
         db: AsyncSession,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> AssignmentResponseSchema:
         person = await db.scalar(select(Person).where(Person.id == person_id))
         if not person:
@@ -168,7 +225,11 @@ class PersonService:
         await db.refresh(assignment)
 
         assignment.category = category
-        return cls._format_assignment(assignment)
+        return cls._format_assignment(
+            assignment,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
 
     @classmethod
     async def update_assignment(
@@ -178,6 +239,8 @@ class PersonService:
         editor_id: int,
         db: AsyncSession,
         person_id: Optional[int] = None,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> AssignmentResponseSchema:
         query = (
             select(PersonCategoryAssignment)
@@ -202,7 +265,11 @@ class PersonService:
 
         await db.commit()
         await db.refresh(assignment)
-        return cls._format_assignment(assignment)
+        return cls._format_assignment(
+            assignment,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
 
     @classmethod
     async def update_person_category_assignment(
@@ -211,6 +278,8 @@ class PersonService:
         data: AssignmentUpdateSchema,
         editor_id: int,
         db: AsyncSession,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> AssignmentResponseSchema:
         if data.category_id:
             assignment = await db.scalar(
@@ -258,7 +327,11 @@ class PersonService:
 
         await db.commit()
         await db.refresh(assignment)
-        return cls._format_assignment(assignment)
+        return cls._format_assignment(
+            assignment,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
 
     @classmethod
     async def get_persons(
@@ -356,7 +429,12 @@ class PersonService:
                 assignments_map[a.person_id].append(a)
 
         items = [
-            cls._format_person(p, assignments=assignments_map.get(p.id, []))
+            cls._format_person(
+                p,
+                assignments=assignments_map.get(p.id, []),
+                caller_role=caller_role,
+                caller_mahalla_id=caller_mahalla_id,
+            )
             for p in persons
         ]
 
@@ -405,7 +483,12 @@ class PersonService:
             )
         ).all()
 
-        return cls._format_person(person, assignments=assignments)
+        return cls._format_person(
+            person,
+            assignments=assignments,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
 
     @classmethod
     async def update_person(
@@ -413,6 +496,8 @@ class PersonService:
         person_id: int,
         data: PersonUpdateSchema,
         db: AsyncSession,
+        caller_role: Optional[UserRole | str] = None,
+        caller_mahalla_id: Optional[int] = None,
     ) -> PersonResponseSchema:
         person = (
             await db.execute(
@@ -455,7 +540,12 @@ class PersonService:
                 .options(selectinload(PersonCategoryAssignment.category))
             )
         ).all()
-        return cls._format_person(person, assignments=assignments)
+        return cls._format_person(
+            person,
+            assignments=assignments,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
+        )
 
     @classmethod
     async def get_assignments(
@@ -536,7 +626,14 @@ class PersonService:
                     filtered.append(a)
             assignments = filtered
 
-        return [cls._format_assignment(a) for a in assignments]
+        return [
+            cls._format_assignment(
+                a,
+                caller_role=caller_role,
+                caller_mahalla_id=caller_mahalla_id,
+            )
+            for a in assignments
+        ]
 
     @classmethod
     async def get_remaining_days_stats(

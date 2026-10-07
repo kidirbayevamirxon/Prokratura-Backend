@@ -53,6 +53,18 @@ class AssignmentResponseSchema(BaseModel):
     days_remaining: Optional[int] = None
     is_overdue: bool
     status: AssignmentStatus
+    am_i_connected: bool = Field(
+        False,
+        description="Whether the authenticated user is connected / responsible for this assignment",
+    )
+    ami_i_conntected: bool = Field(
+        False,
+        description="Whether the authenticated user is connected / responsible for this assignment (user requested spelling)",
+    )
+    ami_i_connected: bool = Field(
+        False,
+        description="Alias for am_i_connected",
+    )
     created_at: datetime
 
 
