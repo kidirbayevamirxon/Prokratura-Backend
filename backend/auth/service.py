@@ -6,13 +6,30 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.schemas.register import RegisterSchema
 from backend.auth.schemas.token import TokenRes
+from backend.auth.schemas.device import (
+    DeviceRegisterChallengeResponse,
+    DeviceRegisterVerifyRequest,
+    DeviceLoginChallengeResponse,
+    DeviceLoginVerifyRequest,
+    DeviceTransferTokenResponse,
+)
+from backend.auth.webauthn_utils import (
+    generate_challenge,
+    create_challenge_token,
+    verify_challenge_token,
+    parse_and_verify_client_data,
+    parse_attestation,
+    verify_assertion_signature,
+    urlsafe_b64encode,
+)
 from db.connection import get_async_db
 from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
+from db.models.user_device import UserDevice
 
 ACCESS_SECRET = os.getenv("ACCESS_SECRET", "prokratura_access_secret_key_change_in_production")
 REFRESH_SECRET = os.getenv("REFRESH_SECRET", "prokratura_refresh_secret_key_change_in_production")
@@ -27,6 +44,7 @@ class TokenPayload(TypedDict):
     login: Optional[str]
     phone: str
     role: str
+    ver: Optional[int]  # user.token_version for instant session revocation
     exp: Optional[int]
 
 
@@ -80,6 +98,7 @@ class AuthServices:
             "login": user.login,
             "phone": user.phone,
             "role": user.role.value,
+            "ver": user.token_version,
         }
         access_token = cls.create_access_token(payload)
         refresh_token = cls.create_refresh_token(payload)
@@ -174,8 +193,256 @@ class AuthServices:
             "login": user.login,
             "phone": user.phone,
             "role": user.role.value,
+            "ver": user.token_version,
         }
         return cls.create_access_token(new_access_payload)
+
+    @classmethod
+    async def generate_device_register_challenge(
+        cls, user_id: int, db: AsyncSession
+    ) -> DeviceRegisterChallengeResponse:
+        user = await db.get(User, user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found or inactive",
+            )
+
+        challenge_b64, _ = generate_challenge()
+        challenge_token = create_challenge_token(user.id, challenge_b64, "register")
+        user_id_b64 = urlsafe_b64encode(user.id.to_bytes(8, "big"))
+
+        return DeviceRegisterChallengeResponse(
+            challenge=challenge_b64,
+            challenge_token=challenge_token,
+            rp={"name": "Prokratura Uzbekistan", "id": os.getenv("RP_ID", "localhost")},
+            user={
+                "id": user_id_b64,
+                "name": user.login or user.phone,
+                "displayName": f"{user.first_name} {user.last_name}",
+            },
+            pub_key_cred_params=[
+                {"alg": -7, "type": "public-key"},   # ES256 (ECDSA P-256)
+                {"alg": -257, "type": "public-key"}, # RS256
+            ],
+            authenticator_selection={
+                "authenticatorAttachment": "platform",
+                "userVerification": "required",
+                "residentKey": "required",
+            },
+            timeout=60000,
+        )
+
+    @classmethod
+    async def verify_device_register(
+        cls,
+        user_id: int,
+        data: DeviceRegisterVerifyRequest,
+        request_ip: Optional[str],
+        user_agent: Optional[str],
+        db: AsyncSession,
+    ) -> TokenRes:
+        # 1. Verify signed challenge token
+        try:
+            token_payload = verify_challenge_token(data.challenge_token, expected_type="register")
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+        if int(token_payload["sub"]) != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Challenge token does not match user",
+            )
+
+        expected_challenge = token_payload["challenge"]
+
+        # 2. Verify clientDataJSON
+        try:
+            parse_and_verify_client_data(data.client_data_json, expected_challenge, "webauthn.create")
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+        # 3. Parse attestationObject and extract credential data
+        try:
+            cred_id_b64, pub_key_b64, aaguid_str = parse_attestation(data.attestation_object)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to parse hardware attestation: {str(e)}",
+            )
+
+        if data.credential_id.rstrip("=") != cred_id_b64.rstrip("="):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Credential ID mismatch between request and attestation",
+            )
+
+        user = await db.get(User, user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found or inactive",
+            )
+
+        # 4. Enforce SINGLE DEVICE INVARIANT: replace/update user's active device
+        existing_device = (
+            await db.execute(select(UserDevice).where(UserDevice.user_id == user_id))
+        ).scalar_one_or_none()
+
+        if existing_device:
+            existing_device.credential_id = cred_id_b64
+            existing_device.public_key = pub_key_b64
+            existing_device.sign_count = 0
+            existing_device.aaguid = aaguid_str
+            existing_device.device_name = data.device_name or existing_device.device_name or "Hardware Key"
+            existing_device.user_agent = user_agent
+            existing_device.last_ip = request_ip
+            existing_device.is_active = True
+            existing_device.last_login_at = func.now()
+        else:
+            new_device = UserDevice(
+                user_id=user_id,
+                credential_id=cred_id_b64,
+                public_key=pub_key_b64,
+                sign_count=0,
+                aaguid=aaguid_str,
+                device_name=data.device_name or "Hardware Key",
+                user_agent=user_agent,
+                last_ip=request_ip,
+                is_active=True,
+                last_login_at=func.now(),
+            )
+            db.add(new_device)
+
+        # Invalidate previous sessions
+        user.token_version += 1
+        await db.commit()
+        await db.refresh(user)
+
+        return cls.issue_tokens(user)
+
+    @classmethod
+    async def generate_device_login_challenge(
+        cls, identifier: str, db: AsyncSession
+    ) -> DeviceLoginChallengeResponse:
+        result = await db.execute(
+            select(User).where(or_(User.login == identifier, User.phone == identifier))
+        )
+        user = result.scalar_one_or_none()
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found or inactive",
+            )
+
+        dev_result = await db.execute(
+            select(UserDevice).where(UserDevice.user_id == user.id, UserDevice.is_active == True)
+        )
+        device = dev_result.scalar_one_or_none()
+        if not device:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No registered active device for this user. Please register a device first.",
+            )
+
+        challenge_b64, _ = generate_challenge()
+        challenge_token = create_challenge_token(user.id, challenge_b64, "login")
+
+        return DeviceLoginChallengeResponse(
+            challenge=challenge_b64,
+            challenge_token=challenge_token,
+            credential_id=device.credential_id,
+            rp_id=os.getenv("RP_ID", "localhost"),
+        )
+
+    @classmethod
+    async def verify_device_login(
+        cls,
+        data: DeviceLoginVerifyRequest,
+        request_ip: Optional[str],
+        db: AsyncSession,
+    ) -> TokenRes:
+        # 1. Verify challenge token
+        try:
+            token_payload = verify_challenge_token(data.challenge_token, expected_type="login")
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+        user_id = int(token_payload["sub"])
+        expected_challenge = token_payload["challenge"]
+
+        user = await db.get(User, user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found or inactive",
+            )
+
+        # 2. Get registered active device
+        dev_result = await db.execute(
+            select(UserDevice).where(UserDevice.user_id == user.id, UserDevice.is_active == True)
+        )
+        device = dev_result.scalar_one_or_none()
+        if not device:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active device registered for this user",
+            )
+
+        # Enforce single device identity
+        if data.credential_id.rstrip("=") != device.credential_id.rstrip("="):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Device mismatch: This credential is not the active registered device for this user",
+            )
+
+        # 3. Verify clientDataJSON
+        try:
+            parse_and_verify_client_data(data.client_data_json, expected_challenge, "webauthn.get")
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+        # 4. Verify cryptographic signature from hardware chip
+        try:
+            new_sign_count = verify_assertion_signature(
+                device.public_key,
+                data.authenticator_data,
+                data.client_data_json,
+                data.signature,
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Hardware signature verification failed: {str(e)}",
+            )
+
+        # Check monotonic counter if supported
+        if new_sign_count > 0 and new_sign_count <= device.sign_count:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Potential authenticator clone or replay attack detected",
+            )
+
+        device.sign_count = new_sign_count
+        device.last_login_at = func.now()
+        if request_ip:
+            device.last_ip = request_ip
+
+        await db.commit()
+        await db.refresh(user)
+
+        return cls.issue_tokens(user)
+
+    @classmethod
+    async def create_transfer_token(cls, user_id: int) -> DeviceTransferTokenResponse:
+        """Create a 5-minute single-use transfer token allowing new device enrollment."""
+        challenge_b64, _ = generate_challenge()
+        transfer_token = create_challenge_token(user_id, challenge_b64, "register", expires_in=300)
+        return DeviceTransferTokenResponse(
+            transfer_token=transfer_token,
+            expires_in=300,
+            message="Device transfer token valid for 5 minutes. Use on new PC to bind its hardware key.",
+        )
 
 
 class AuthGuard:
@@ -197,9 +464,15 @@ class AuthGuard:
 
         user_id = int(payload["sub"])
         result = await db.execute(
-            select(User.id, User.login, User.phone, User.role, User.mahalla_id, User.is_active).where(
-                User.id == user_id
-            )
+            select(
+                User.id,
+                User.login,
+                User.phone,
+                User.role,
+                User.mahalla_id,
+                User.is_active,
+                User.token_version,
+            ).where(User.id == user_id)
         )
         row = result.first()
         if not row:
@@ -208,11 +481,19 @@ class AuthGuard:
                 detail="User not found",
             )
 
-        uid, login, phone, role, mahalla_id, is_active = row
+        uid, login, phone, role, mahalla_id, is_active, token_version = row
         if not is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User account is inactive",
+            )
+
+        # Enforce instant session invalidation when device is reset/changed
+        token_ver = payload.get("ver")
+        if token_ver is not None and token_ver != token_version:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session revoked or device changed. Please log in again.",
             )
 
         if role not in self.roles:
@@ -237,4 +518,18 @@ prokuror_or_admin_guard = AuthGuard([UserRole.ADMIN, UserRole.PROKUROR])
 rais_guard = AuthGuard([UserRole.ADMIN, UserRole.PROKUROR, UserRole.MAHALLA_RAISI])
 mahalla_guard = AuthGuard([UserRole.ADMIN, UserRole.PROKUROR, *MAHALLA_SEVEN_ROLES])
 all_guard = AuthGuard([UserRole.ADMIN, UserRole.PROKUROR, *MAHALLA_SEVEN_ROLES])
+
+optional_security = HTTPBearer(auto_error=False)
+
+
+async def optional_guard(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[UserAuth]:
+    if not credentials:
+        return None
+    try:
+        return await all_guard(credentials=credentials, db=db)
+    except HTTPException:
+        return None
 

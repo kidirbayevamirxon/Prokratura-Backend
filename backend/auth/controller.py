@@ -1,13 +1,23 @@
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from backend.auth.schemas.login import LoginSchema
 from backend.auth.schemas.register import RegisterSchema
 from backend.auth.schemas.token import TokenRes, RefreshRequest, RefreshResponse, MeResponseSchema
-from backend.auth.service import AuthServices, UserAuth, all_guard, admin_guard
+from backend.auth.schemas.device import (
+    DeviceRegisterChallengeResponse,
+    DeviceRegisterVerifyRequest,
+    DeviceLoginChallengeRequest,
+    DeviceLoginChallengeResponse,
+    DeviceLoginVerifyRequest,
+)
+from backend.auth.webauthn_utils import verify_challenge_token
+from backend.auth.service import AuthServices, UserAuth, all_guard, admin_guard, optional_guard
 from db.connection import get_async_db
 from db.models.user import User
+from db.models.user_device import UserDevice
 
 router = APIRouter(
     prefix="/auth",
@@ -83,3 +93,114 @@ async def get_me(
         previous_workplace=user.previous_workplace,
         is_active=user.is_active,
     )
+
+
+# ==============================================================================
+# Hardware Chip Device Authentication (WebAuthn / FIDO2)
+# ==============================================================================
+
+@router.post(
+    "/device/register/challenge",
+    response_model=DeviceRegisterChallengeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get WebAuthn creation options to register hardware device (Authenticated or Transfer Token)",
+)
+async def device_register_challenge(
+    transfer_token: Optional[str] = Query(None, description="Optional transfer token for registering new PC"),
+    current_user: Optional[UserAuth] = Depends(optional_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    user_id: Optional[int] = None
+    if current_user:
+        user_id = current_user["id"]
+    elif transfer_token:
+        try:
+            token_payload = verify_challenge_token(transfer_token, expected_type="register")
+            user_id = int(token_payload["sub"])
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required: Provide Bearer token or valid transfer_token",
+        )
+
+    return await AuthServices.generate_device_register_challenge(user_id=user_id, db=db)
+
+
+@router.post(
+    "/device/register/verify",
+    response_model=TokenRes,
+    status_code=status.HTTP_201_CREATED,
+    summary="Verify hardware attestation and bind PC hardware key to user",
+)
+async def device_register_verify(
+    data: DeviceRegisterVerifyRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_async_db),
+):
+    # Challenge token contains user_id
+    try:
+        token_payload = verify_challenge_token(data.challenge_token, expected_type="register")
+        user_id = int(token_payload["sub"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    return await AuthServices.verify_device_register(
+        user_id=user_id,
+        data=data,
+        request_ip=client_ip,
+        user_agent=user_agent,
+        db=db,
+    )
+
+
+@router.post(
+    "/device/login/challenge",
+    response_model=DeviceLoginChallengeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Request login challenge for registered hardware device",
+)
+async def device_login_challenge(
+    data: DeviceLoginChallengeRequest,
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await AuthServices.generate_device_login_challenge(identifier=data.identifier, db=db)
+
+
+@router.post(
+    "/device/login/verify",
+    response_model=TokenRes,
+    status_code=status.HTTP_200_OK,
+    summary="Verify hardware signature from PC chip and issue session tokens",
+)
+async def device_login_verify(
+    data: DeviceLoginVerifyRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_async_db),
+):
+    client_ip = request.client.host if request.client else None
+    return await AuthServices.verify_device_login(data=data, request_ip=client_ip, db=db)
+
+
+@router.get(
+    "/device/status",
+    summary="Check device binding status for current authenticated user",
+)
+async def get_my_device_status(
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    result = await db.execute(
+        select(UserDevice).where(UserDevice.user_id == current_user["id"], UserDevice.is_active == True)
+    )
+    device = result.scalar_one_or_none()
+    return {
+        "has_registered_device": device is not None,
+        "device_name": device.device_name if device else None,
+        "registered_at": device.registered_at if device else None,
+        "last_login_at": device.last_login_at if device else None,
+    }

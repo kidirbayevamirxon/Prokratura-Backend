@@ -1,5 +1,6 @@
 from db.models.mahalla import Mahalla
 from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
+from db.models.user_device import UserDevice
 from db.models.category import Category
 from db.models.person import Person
 from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
@@ -14,6 +15,7 @@ __all__ = [
     "User",
     "UserRole",
     "MAHALLA_SEVEN_ROLES",
+    "UserDevice",
     "Category",
     "Person",
     "PersonCategoryAssignment",

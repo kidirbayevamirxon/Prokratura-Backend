@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,7 @@ from backend.users.schemas.create import UserCreateSchema
 from backend.users.schemas.patch import UserUpdateSchema
 from backend.users.schemas.get import PaginatedUserSchema, UserResponseSchema
 from db.models.user import User, UserRole, MAHALLA_SEVEN_ROLES
+from db.models.user_device import UserDevice
 from db.models.mahalla import Mahalla
 
 
@@ -36,7 +37,9 @@ class UserService:
                 )
             # Enforce single active prokuror rule
             existing_prokuror = await db.execute(
-                select(User.id).where(User.role == UserRole.PROKUROR, User.is_active == True)
+                select(User.id).where(
+                    User.role == UserRole.PROKUROR, User.is_active == True
+                )
             )
             if existing_prokuror.scalars().first():
                 raise HTTPException(
@@ -149,7 +152,9 @@ class UserService:
         # Rais can only see users in their own mahalla
         if caller_role == UserRole.MAHALLA_RAISI:
             if caller_mahalla_id is None:
-                return PaginatedUserSchema(items=[], total=0, page=page, page_size=page_size)
+                return PaginatedUserSchema(
+                    items=[], total=0, page=page, page_size=page_size
+                )
             query = query.where(User.mahalla_id == caller_mahalla_id)
             count_query = count_query.where(User.mahalla_id == caller_mahalla_id)
 
@@ -183,7 +188,11 @@ class UserService:
 
         total = (await db.execute(count_query)).scalar() or 0
 
-        query = query.order_by(User.id.desc()).offset((page - 1) * page_size).limit(page_size)
+        query = (
+            query.order_by(User.id.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
         result = await db.execute(query)
         users = result.scalars().all()
 
@@ -256,7 +265,10 @@ class UserService:
 
         # Prokuror cannot modify Admin or another Prokuror
         if caller_role == UserRole.PROKUROR:
-            if user.role in [UserRole.ADMIN, UserRole.PROKUROR] and user.id != caller_id:
+            if (
+                user.role in [UserRole.ADMIN, UserRole.PROKUROR]
+                and user.id != caller_id
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Prokuror cannot modify Admin or Prokuror accounts",
@@ -425,3 +437,89 @@ class UserService:
         await db.delete(user)
         await db.commit()
         return True
+
+    @staticmethod
+    async def reset_user_device(
+        user_id: int,
+        caller_id: int,
+        caller_role: UserRole,
+        db: AsyncSession,
+    ) -> Dict[str, Any]:
+        target_user = await db.get(User, user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User {user_id} not found",
+            )
+
+        # Permissions:
+        # Admin can reset anyone's PC (their own, other admins, prokurors, mahalla officials)
+        # Prokuror can reset Mahalla officials or their own PC, but NOT other Prokurors or Admins
+        if caller_role == UserRole.ADMIN:
+            pass  # Allowed
+        elif caller_role == UserRole.PROKUROR:
+            if target_user.role in [UserRole.ADMIN, UserRole.PROKUROR] and target_user.id != caller_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Prokuror can only reset PC for Mahalla officials or their own device",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admin and Prokuror can reset devices",
+            )
+
+        # Unlink device
+        device_result = await db.execute(
+            select(UserDevice).where(UserDevice.user_id == user_id)
+        )
+        device = device_result.scalar_one_or_none()
+        if device:
+            await db.delete(device)
+
+        # Invalidate active sessions of target user
+        target_user.token_version += 1
+        await db.commit()
+        await db.refresh(target_user)
+
+        return {
+            "message": f"Device unlinked successfully for user {target_user.login or target_user.phone}. User may now enroll a new PC.",
+            "user_id": user_id,
+            "status": "device_reset",
+        }
+
+    @staticmethod
+    async def get_user_device(
+        user_id: int,
+        caller_id: int,
+        caller_role: UserRole,
+        caller_mahalla_id: Optional[int],
+        db: AsyncSession,
+    ) -> Optional[UserDevice]:
+        target_user = await db.get(User, user_id)
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User {user_id} not found",
+            )
+
+        # Permissions to view device
+        if caller_role == UserRole.ADMIN:
+            pass
+        elif caller_role == UserRole.PROKUROR:
+            if target_user.role in [UserRole.ADMIN, UserRole.PROKUROR] and target_user.id != caller_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Prokuror cannot inspect devices of other prosecutors or admins",
+                )
+        elif user_id != caller_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view your own device status",
+            )
+
+        device_result = await db.execute(
+            select(UserDevice).where(UserDevice.user_id == user_id, UserDevice.is_active == True)
+        )
+        return device_result.scalar_one_or_none()
+

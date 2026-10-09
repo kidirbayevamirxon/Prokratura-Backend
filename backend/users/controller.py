@@ -6,6 +6,12 @@ from backend.auth.service import (
     prokuror_or_admin_guard,
     all_guard,
     UserAuth,
+    AuthServices,
+)
+from backend.auth.schemas.device import (
+    DeviceResetResponse,
+    DeviceTransferTokenResponse,
+    UserDeviceInfo,
 )
 from backend.users.schemas.create import UserCreateSchema
 from backend.users.schemas.patch import UserUpdateSchema
@@ -65,6 +71,23 @@ async def get_users(
     )
 
 
+# ==============================================================================
+# Device Management (Reset PC & Transfer PC)
+# Placed before /{user_id} to avoid route shadowing
+# ==============================================================================
+
+@router.post(
+    "/me/device-transfer-token",
+    response_model=DeviceTransferTokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Generate a 5-minute single-use transfer token to bind a new PC (Self-service planned upgrade)",
+)
+async def generate_my_device_transfer_token(
+    current_user: UserAuth = Depends(all_guard),
+):
+    return await AuthServices.create_transfer_token(user_id=current_user["id"])
+
+
 @router.get(
     "/{user_id}",
     response_model=UserResponseSchema,
@@ -118,6 +141,49 @@ async def upload_user_photo(
     return await UserService.upload_photo(
         user_id=user_id,
         photo_file=photo,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
+    )
+
+
+@router.post(
+    "/{user_id}/reset-device",
+    response_model=DeviceResetResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Reset/unlink a user's PC device (Admin can reset anyone; Prokuror can reset Mahalla officials)",
+)
+async def reset_user_device(
+    user_id: int,
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    result = await UserService.reset_user_device(
+        user_id=user_id,
+        caller_id=current_user["id"],
+        caller_role=current_user["role"],
+        db=db,
+    )
+    return DeviceResetResponse(
+        message=result["message"],
+        user_id=result["user_id"],
+        status=result["status"],
+    )
+
+
+@router.get(
+    "/{user_id}/device",
+    response_model=Optional[UserDeviceInfo],
+    summary="Get active hardware device metadata for a user",
+)
+async def get_user_device_info(
+    user_id: int,
+    current_user: UserAuth = Depends(all_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await UserService.get_user_device(
+        user_id=user_id,
         caller_id=current_user["id"],
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],

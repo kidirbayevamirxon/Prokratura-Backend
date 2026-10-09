@@ -18,6 +18,8 @@ dependencies = [
     "sqlalchemy>=2.0.44",
     "uvicorn>=0.38.0",
     "pydantic>=2.10.0",
+    "fido2>=2.2.1",
+    "cryptography>=50.0.2",
 ]
 
 [dependency-groups]

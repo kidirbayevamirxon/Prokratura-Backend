@@ -20,7 +20,7 @@ from db.models.assignment import PersonCategoryAssignment, AssignmentStatus
 from db.models.document import CheckInDocument, CheckInDocType, CheckInDocStatus
 from backend.auth.service import AuthServices
 
-TABLES_TO_CLEAN = "users, mahallas, mahalla_stats, categories, persons, person_category_assignments, check_in_documents"
+TABLES_TO_CLEAN = "user_devices, users, mahallas, mahalla_stats, categories, persons, person_category_assignments, check_in_documents"
 
 
 @pytest_asyncio.fixture(autouse=True)

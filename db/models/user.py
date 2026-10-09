@@ -2,13 +2,14 @@ from enum import Enum
 import datetime
 from typing import Optional, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import BigInteger, Enum as SQLEnum, ForeignKey, String
+from sqlalchemy import BigInteger, Enum as SQLEnum, ForeignKey, Integer, String
 from sqlalchemy.sql import func
 
 from db.connection import Base
 
 if TYPE_CHECKING:
     from db.models.mahalla import Mahalla
+    from db.models.user_device import UserDevice
 
 
 class UserRole(str, Enum):
@@ -48,6 +49,7 @@ class User(Base):
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(server_default="t", default=True)
+    token_version: Mapped[int] = mapped_column(Integer, server_default="1", default=1, nullable=False)
 
     mahalla_id: Mapped[Optional[int]] = mapped_column(
         BigInteger,
@@ -69,5 +71,8 @@ class User(Base):
 
     mahalla: Mapped[Optional["Mahalla"]] = relationship(
         "Mahalla", back_populates="members", lazy="selectin"
+    )
+    device: Mapped[Optional["UserDevice"]] = relationship(
+        "UserDevice", back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
 
