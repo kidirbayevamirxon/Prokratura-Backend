@@ -256,7 +256,13 @@ class AuthServices:
                 )
 
         challenge_b64, _ = generate_challenge()
-        challenge_token = create_challenge_token(user.id, challenge_b64, "register", is_transfer=is_transfer)
+        challenge_token = create_challenge_token(
+            user.id,
+            challenge_b64,
+            "register",
+            is_transfer=is_transfer,
+            caller_role=caller_role.value if caller_role else (user.role.value if user else None),
+        )
         user_id_b64 = urlsafe_b64encode(user.id.to_bytes(8, "big"))
         rp_id = get_auth_rp_id(request)
 
@@ -336,6 +342,16 @@ class AuthServices:
             )
 
         # 4. Enforce SINGLE DEVICE INVARIANT: replace/update user's active device
+        if caller_role is None:
+            token_role = token_payload.get("caller_role")
+            if token_role:
+                try:
+                    caller_role = UserRole(token_role)
+                except ValueError:
+                    pass
+            elif user and user.role:
+                caller_role = user.role
+
         existing_device = (
             await db.execute(select(UserDevice).where(UserDevice.user_id == user_id))
         ).scalar_one_or_none()

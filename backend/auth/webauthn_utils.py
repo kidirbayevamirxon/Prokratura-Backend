@@ -38,13 +38,21 @@ def generate_challenge(byte_length: int = 32) -> Tuple[str, bytes]:
     return urlsafe_b64encode(raw), raw
 
 
-def create_challenge_token(user_id: int, challenge_b64: str, token_type: str, expires_in: int = 300, is_transfer: bool = False) -> str:
+def create_challenge_token(
+    user_id: int,
+    challenge_b64: str,
+    token_type: str,
+    expires_in: int = 300,
+    is_transfer: bool = False,
+    caller_role: Optional[str] = None,
+) -> str:
     """Create a tamper-proof signed challenge token valid for 5 minutes."""
     payload = {
         "sub": str(user_id),
         "challenge": challenge_b64,
         "type": token_type,
         "is_transfer": is_transfer,
+        "caller_role": caller_role,
         "exp": int(time.time()) + expires_in,
     }
     return jwt.encode(payload, WEBAUTHN_SECRET, algorithm=ALGORITHM)

@@ -19,7 +19,6 @@ from backend.categories.controller import router as categories_router
 from backend.persons.controller import router as persons_router
 from backend.documents.controller import router as documents_router
 from backend.files.controller import router as files_router
-from backend.devices.controller import router as devices_router
 
 app = FastAPI(
     title="Prokratura Uzbekistan API",
@@ -37,7 +36,6 @@ app.include_router(categories_router)
 app.include_router(persons_router)
 app.include_router(documents_router)
 app.include_router(files_router)
-app.include_router(devices_router)
 
 app.add_middleware(
     CORSMiddleware,

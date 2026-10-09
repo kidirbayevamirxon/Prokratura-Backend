@@ -317,3 +317,114 @@ async def test_device_transfer_token_flow(client: AsyncClient, admin_token: str)
     )
     assert new_reg_res.status_code == 201
     assert "access_token" in new_reg_res.json()
+
+
+@pytest.mark.asyncio
+async def test_option_a_password_login_blocked_when_device_bound(
+    client: AsyncClient,
+    admin_user: User,
+    admin_token: str,
+    db_session,
+):
+    """Test Option A: Password login is blocked with 403 when hardware device is bound."""
+    # 1. Before device registration, password login succeeds
+    login_before = await client.post(
+        "/auth/login",
+        json={"login": admin_user.login, "password": "admin123"},
+    )
+    assert login_before.status_code == 200
+
+    # 2. Register hardware device
+    ch_res = await client.post(
+        "/auth/device/register/challenge",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    ch_data = ch_res.json()
+    _, cred_id, cd_b64, att_b64 = create_simulated_webauthn_registration(ch_data["challenge"])
+    reg_res = await client.post(
+        "/auth/device/register/verify",
+        json={
+            "challenge_token": ch_data["challenge_token"],
+            "credential_id": cred_id,
+            "client_data_json": cd_b64,
+            "attestation_object": att_b64,
+            "device_name": "Admin YubiKey",
+        },
+    )
+    assert reg_res.status_code == 201
+
+    # 3. Now password login MUST fail with 403 Forbidden (Option A)
+    login_after = await client.post(
+        "/auth/login",
+        json={"login": admin_user.login, "password": "admin123"},
+    )
+    assert login_after.status_code == 403
+    assert "apparat xavfsizlik qurilmasi biriktirilgan" in login_after.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_regular_user_cannot_change_or_remove_device(
+    client: AsyncClient,
+    rais_user: User,
+    rais_token: str,
+    prokuror_user: User,
+    prokuror_token: str,
+    db_session,
+):
+    """Test that regular users cannot change or remove a paired device; only Prokuror/Admin can."""
+    # 1. Rais pairs their initial device
+    ch_res = await client.post(
+        "/auth/device/register/challenge",
+        headers={"Authorization": f"Bearer {rais_token}"},
+    )
+    assert ch_res.status_code == 200
+    ch_data = ch_res.json()
+    _, cred_id, cd_b64, att_b64 = create_simulated_webauthn_registration(ch_data["challenge"])
+    reg_res = await client.post(
+        "/auth/device/register/verify",
+        json={
+            "challenge_token": ch_data["challenge_token"],
+            "credential_id": cred_id,
+            "client_data_json": cd_b64,
+            "attestation_object": att_b64,
+            "device_name": "Rais Laptop",
+        },
+    )
+    assert reg_res.status_code == 201
+    rais_dev_token = reg_res.json()["access_token"]
+
+    # 2. Rais tries to change/re-register their device directly -> 403 Forbidden
+    ch_change = await client.post(
+        "/auth/device/register/challenge",
+        headers={"Authorization": f"Bearer {rais_dev_token}"},
+    )
+    assert ch_change.status_code == 403
+    assert "faqat Prokuror yoki Admin" in ch_change.json()["detail"]
+
+    # 3. Rais cannot generate transfer token -> 403 Forbidden
+    transfer_res = await client.post(
+        "/users/me/device-transfer-token",
+        headers={"Authorization": f"Bearer {rais_dev_token}"},
+    )
+    assert transfer_res.status_code == 403
+
+    # 4. Rais cannot unbind/reset device -> 403 Forbidden
+    reset_res = await client.post(
+        f"/users/{rais_user.id}/reset-device",
+        headers={"Authorization": f"Bearer {rais_dev_token}"},
+    )
+    assert reset_res.status_code == 403
+
+    # 5. Prokuror resets the device -> 200 OK
+    prok_reset = await client.post(
+        f"/users/{rais_user.id}/reset-device",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert prok_reset.status_code == 200
+
+    # 6. Device is reset; Rais can now pair a new device or login with password
+    login_unbound = await client.post(
+        "/auth/login",
+        json={"login": rais_user.login, "password": "rais123"},
+    )
+    assert login_unbound.status_code == 200
