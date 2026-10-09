@@ -2,12 +2,23 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional, MutableMapping, Any, List
 from typing_extensions import TypedDict
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+def get_auth_rp_id(request: Optional[Request] = None) -> str:
+    env_rp = os.getenv("RP_ID") or os.getenv("WEBAUTHN_RP_ID")
+    if env_rp:
+        return env_rp
+    if request:
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+        if host:
+            return host.split(":")[0]
+    return "localhost"
 
 from backend.auth.schemas.register import RegisterSchema
 from backend.auth.schemas.token import TokenRes
@@ -167,6 +178,20 @@ class AuthServices:
                 detail="Invalid login or password",
             )
 
+        # Option A: Strict Hardware Binding
+        # If user has an active registered hardware device, block password-only login.
+        device_result = await db.execute(
+            select(UserDevice.id).where(
+                UserDevice.user_id == user.id,
+                UserDevice.is_active == True,
+            )
+        )
+        if device_result.scalar_one_or_none() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Ushbu hisobga apparat xavfsizlik qurilmasi biriktirilgan. Iltimos, biriktirilgan qurilma (barmoq izi / apparat kalit) orqali kiring.",
+            )
+
         return cls.issue_tokens(user)
 
     @classmethod
@@ -199,7 +224,12 @@ class AuthServices:
 
     @classmethod
     async def generate_device_register_challenge(
-        cls, user_id: int, db: AsyncSession
+        cls,
+        user_id: int,
+        db: AsyncSession,
+        caller_role: Optional[UserRole] = None,
+        is_transfer: bool = False,
+        request: Optional[Request] = None,
     ) -> DeviceRegisterChallengeResponse:
         user = await db.get(User, user_id)
         if not user or not user.is_active:
@@ -208,14 +238,32 @@ class AuthServices:
                 detail="User not found or inactive",
             )
 
+        # Once pairing device, changing or removing it should only be accessible to prokuror and admin
+        existing_device = (
+            await db.execute(
+                select(UserDevice).where(
+                    UserDevice.user_id == user_id,
+                    UserDevice.is_active == True,
+                )
+            )
+        ).scalar_one_or_none()
+
+        if existing_device and not is_transfer:
+            if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Biriktirilgan qurilmani faqat Prokuror yoki Admin o'zgartirishi mumkin.",
+                )
+
         challenge_b64, _ = generate_challenge()
-        challenge_token = create_challenge_token(user.id, challenge_b64, "register")
+        challenge_token = create_challenge_token(user.id, challenge_b64, "register", is_transfer=is_transfer)
         user_id_b64 = urlsafe_b64encode(user.id.to_bytes(8, "big"))
+        rp_id = get_auth_rp_id(request)
 
         return DeviceRegisterChallengeResponse(
             challenge=challenge_b64,
             challenge_token=challenge_token,
-            rp={"name": "Prokratura Uzbekistan", "id": os.getenv("RP_ID", "localhost")},
+            rp={"name": "Prokratura Uzbekistan", "id": rp_id},
             user={
                 "id": user_id_b64,
                 "name": user.login or user.phone,
@@ -241,6 +289,8 @@ class AuthServices:
         request_ip: Optional[str],
         user_agent: Optional[str],
         db: AsyncSession,
+        caller_role: Optional[UserRole] = None,
+        is_transfer: bool = False,
     ) -> TokenRes:
         # 1. Verify signed challenge token
         try:
@@ -255,6 +305,7 @@ class AuthServices:
             )
 
         expected_challenge = token_payload["challenge"]
+        is_transfer = is_transfer or token_payload.get("is_transfer", False)
 
         # 2. Verify clientDataJSON
         try:
@@ -288,6 +339,13 @@ class AuthServices:
         existing_device = (
             await db.execute(select(UserDevice).where(UserDevice.user_id == user_id))
         ).scalar_one_or_none()
+
+        if existing_device and not is_transfer:
+            if caller_role not in [UserRole.ADMIN, UserRole.PROKUROR]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Biriktirilgan qurilmani faqat Prokuror yoki Admin o'zgartirishi mumkin.",
+                )
 
         if existing_device:
             existing_device.credential_id = cred_id_b64
@@ -323,7 +381,10 @@ class AuthServices:
 
     @classmethod
     async def generate_device_login_challenge(
-        cls, identifier: str, db: AsyncSession
+        cls,
+        identifier: str,
+        db: AsyncSession,
+        request: Optional[Request] = None,
     ) -> DeviceLoginChallengeResponse:
         result = await db.execute(
             select(User).where(or_(User.login == identifier, User.phone == identifier))
@@ -347,12 +408,13 @@ class AuthServices:
 
         challenge_b64, _ = generate_challenge()
         challenge_token = create_challenge_token(user.id, challenge_b64, "login")
+        rp_id = get_auth_rp_id(request)
 
         return DeviceLoginChallengeResponse(
             challenge=challenge_b64,
             challenge_token=challenge_token,
             credential_id=device.credential_id,
-            rp_id=os.getenv("RP_ID", "localhost"),
+            rp_id=rp_id,
         )
 
     @classmethod

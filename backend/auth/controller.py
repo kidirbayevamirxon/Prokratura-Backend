@@ -16,7 +16,7 @@ from backend.auth.schemas.device import (
 from backend.auth.webauthn_utils import verify_challenge_token
 from backend.auth.service import AuthServices, UserAuth, all_guard, admin_guard, optional_guard
 from db.connection import get_async_db
-from db.models.user import User
+from db.models.user import User, UserRole
 from db.models.user_device import UserDevice
 
 router = APIRouter(
@@ -106,17 +106,23 @@ async def get_me(
     summary="Get WebAuthn creation options to register hardware device (Authenticated or Transfer Token)",
 )
 async def device_register_challenge(
+    request: Request,
     transfer_token: Optional[str] = Query(None, description="Optional transfer token for registering new PC"),
     current_user: Optional[UserAuth] = Depends(optional_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
     user_id: Optional[int] = None
+    is_transfer = False
+    caller_role: Optional[UserRole] = None
+
     if current_user:
         user_id = current_user["id"]
+        caller_role = UserRole(current_user["role"])
     elif transfer_token:
         try:
             token_payload = verify_challenge_token(transfer_token, expected_type="register")
             user_id = int(token_payload["sub"])
+            is_transfer = True
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     else:
@@ -125,7 +131,13 @@ async def device_register_challenge(
             detail="Authentication required: Provide Bearer token or valid transfer_token",
         )
 
-    return await AuthServices.generate_device_register_challenge(user_id=user_id, db=db)
+    return await AuthServices.generate_device_register_challenge(
+        user_id=user_id,
+        db=db,
+        caller_role=caller_role,
+        is_transfer=is_transfer,
+        request=request,
+    )
 
 
 @router.post(
@@ -137,6 +149,7 @@ async def device_register_challenge(
 async def device_register_verify(
     data: DeviceRegisterVerifyRequest,
     request: Request,
+    current_user: Optional[UserAuth] = Depends(optional_guard),
     db: AsyncSession = Depends(get_async_db),
 ):
     # Challenge token contains user_id
@@ -146,6 +159,7 @@ async def device_register_verify(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    caller_role = UserRole(current_user["role"]) if current_user else None
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
 
@@ -155,6 +169,7 @@ async def device_register_verify(
         request_ip=client_ip,
         user_agent=user_agent,
         db=db,
+        caller_role=caller_role,
     )
 
 
@@ -166,9 +181,12 @@ async def device_register_verify(
 )
 async def device_login_challenge(
     data: DeviceLoginChallengeRequest,
+    request: Request,
     db: AsyncSession = Depends(get_async_db),
 ):
-    return await AuthServices.generate_device_login_challenge(identifier=data.identifier, db=db)
+    return await AuthServices.generate_device_login_challenge(
+        identifier=data.identifier, db=db, request=request
+    )
 
 
 @router.post(

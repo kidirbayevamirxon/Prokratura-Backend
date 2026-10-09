@@ -80,10 +80,11 @@ async def get_users(
     "/me/device-transfer-token",
     response_model=DeviceTransferTokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Generate a 5-minute single-use transfer token to bind a new PC (Self-service planned upgrade)",
+    summary="Generate a 5-minute single-use transfer token to bind a new PC (Admin or Prokuror)",
+    dependencies=[Depends(prokuror_or_admin_guard)],
 )
 async def generate_my_device_transfer_token(
-    current_user: UserAuth = Depends(all_guard),
+    current_user: UserAuth = Depends(prokuror_or_admin_guard),
 ):
     return await AuthServices.create_transfer_token(user_id=current_user["id"])
 
