@@ -280,9 +280,8 @@ class AuthServices:
                 {"alg": -257, "type": "public-key"}, # RS256
             ],
             authenticator_selection={
-                "authenticatorAttachment": "platform",
-                "userVerification": "required",
-                "residentKey": "required",
+                "userVerification": "preferred",
+                "residentKey": "preferred",
             },
             timeout=60000,
         )
