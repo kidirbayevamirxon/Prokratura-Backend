@@ -994,4 +994,56 @@ async def test_employer_requests_extension_via_patch_document(
     assert patched_doc["doc_type"] == "request_extension"
 
 
+@pytest.mark.asyncio
+async def test_mahalla_document_seen_by_prokuror(
+    client: AsyncClient,
+    prokuror_token: str,
+    inspector_token: str,
+    sample_assignment: PersonCategoryAssignment,
+):
+    today = datetime.date.today()
+    fake_photo = io.BytesIO(b"\xff\xd8\xff\xe0" + b"mahalla photo proof")
+
+    # 1. Mahalla inspector uploads document
+    res = await client.post(
+        "/documents",
+        headers={"Authorization": f"Bearer {inspector_token}"},
+        data={
+            "assignment_id": str(sample_assignment.id),
+            "check_in_date": str(today),
+            "description": "Mahalla xodimi tekshiruvi",
+        },
+        files={"photo": ("visit.jpg", fake_photo, "image/jpeg")},
+    )
+    assert res.status_code == 201
+    doc = res.json()
+    doc_id = doc["id"]
+    assert doc["is_from_prokuror"] is False
+    assert doc["is_seen"] is False
+    assert doc["seen_at"] is None
+    assert doc["seen_by_id"] is None
+
+    # 2. Prokuror views the document details -> MUST mark seen
+    prok_res = await client.get(
+        f"/documents/{doc_id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert prok_res.status_code == 200
+    seen_doc = prok_res.json()
+    assert seen_doc["is_seen"] is True
+    assert seen_doc["seen_at"] is not None
+    assert seen_doc["seen_by_name"] == "Alisher Navoiy"
+
+    # 3. In documents list, prokuror sees the document with seen info
+    list_res = await client.get(
+        f"/documents?assignment_id={sample_assignment.id}",
+        headers={"Authorization": f"Bearer {prokuror_token}"},
+    )
+    assert list_res.status_code == 200
+    target_item = [item for item in list_res.json()["items"] if item["id"] == doc_id][0]
+    assert target_item["is_seen"] is True
+    assert target_item["seen_by_name"] == "Alisher Navoiy"
+
+
+
 

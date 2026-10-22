@@ -55,6 +55,19 @@ class DocumentService:
             doc.submitted_by and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
         )
 
+        if submitter_is_prokuror:
+            # Sent by Prokuror -> Seen when Mahalla official opens it
+            effective_seen_at = doc.seen_at
+            effective_seen_by_id = doc.seen_by_id
+            effective_seen_by_name = seen_by_name
+            is_seen = doc.seen_at is not None
+        else:
+            # Sent by Mahalla -> Seen when Prokuror opens or reviews it
+            effective_seen_at = doc.seen_at or doc.reviewed_at
+            effective_seen_by_id = doc.seen_by_id or doc.reviewed_by_id
+            effective_seen_by_name = seen_by_name or reviewer_name
+            is_seen = effective_seen_at is not None
+
         return DocumentResponseSchema(
             id=doc.id,
             assignment_id=doc.assignment_id,
@@ -84,10 +97,10 @@ class DocumentService:
             reviewed_by_id=doc.reviewed_by_id,
             reviewed_by_name=reviewer_name,
             reviewed_at=doc.reviewed_at,
-            seen_at=doc.seen_at,
-            seen_by_id=doc.seen_by_id,
-            seen_by_name=seen_by_name,
-            is_seen=doc.seen_at is not None,
+            seen_at=effective_seen_at,
+            seen_by_id=effective_seen_by_id,
+            seen_by_name=effective_seen_by_name,
+            is_seen=is_seen,
             created_at=doc.created_at,
         )
 
@@ -167,9 +180,10 @@ class DocumentService:
             await db.refresh(existing_doc)
             return await cls.get_document_by_id(
                 existing_doc.id,
-                caller_role=UserRole.ADMIN,
-                caller_mahalla_id=None,
+                caller_role=caller_role,
+                caller_mahalla_id=caller_mahalla_id,
                 db=db,
+                caller_id=caller_id,
             )
 
         assignment = await db.scalar(
@@ -246,8 +260,8 @@ class DocumentService:
             doc_frequency_days = effective_freq
             doc_new_date = new_date or (doc_due_date if effective_freq else None)
             doc_requested_date = requested_date
-            # Update assignment's current due date to match this new task's deadline
-            if assignment:
+            # Prokuror-sent tasks have their own deadline on the document without altering the regular assignment schedule
+            if assignment and not assignment.next_check_in_due:
                 if not assignment.frequency_days and effective_freq:
                     assignment.frequency_days = effective_freq
                 assignment.next_check_in_due = doc_due_date
@@ -283,9 +297,10 @@ class DocumentService:
         # Fetch with relationships for response
         return await cls.get_document_by_id(
             doc.id,
-            caller_role=UserRole.ADMIN,
-            caller_mahalla_id=None,
+            caller_role=caller_role,
+            caller_mahalla_id=caller_mahalla_id,
             db=db,
+            caller_id=caller_id,
         )
 
     @classmethod
@@ -323,6 +338,9 @@ class DocumentService:
         doc.status = data.status
         doc.reviewed_by_id = reviewer_id
         doc.reviewed_at = now
+        if doc.seen_at is None:
+            doc.seen_at = now
+            doc.seen_by_id = reviewer_id
 
         effective_new_date = data.new_date
         if effective_new_date:
@@ -831,24 +849,44 @@ class DocumentService:
         }
         caller_role_value = caller_role.value if hasattr(caller_role, "value") else str(caller_role)
 
-        # When the employee assigned to this role views a document sent by Prokuror / Admin:
-        # Mark as seen (seen_at, seen_by_id), but DO NOT mark completed (status remains pending).
-        if (
-            caller_role_value in assigned_role_values
-            and doc.mahalla_id == caller_mahalla_id
-            and doc.submitted_by
-            and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
-        ):
-            if doc.seen_at is None:
-                doc.seen_at = datetime.now()
-                doc.seen_by_id = caller_id
-                seen_user = None
-                if caller_id:
-                    seen_user = await db.get(User, caller_id)
-                    doc.seen_by = seen_user
-                await db.commit()
-                if seen_user:
-                    doc.seen_by = seen_user
+        # The creator of the document cannot mark it as seen by recipient
+        if caller_id is not None and caller_id != doc.submitted_by_id:
+            # Case 1: When the employee assigned to this role views a document sent by Prokuror / Admin:
+            # Mark as seen (seen_at, seen_by_id), but DO NOT mark completed (status remains pending).
+            if (
+                caller_role_value in assigned_role_values
+                and doc.mahalla_id == caller_mahalla_id
+                and doc.submitted_by
+                and doc.submitted_by.role in [UserRole.PROKUROR, UserRole.ADMIN]
+            ):
+                if doc.seen_at is None:
+                    doc.seen_at = datetime.now()
+                    doc.seen_by_id = caller_id
+                    seen_user = None
+                    if caller_id:
+                        seen_user = await db.get(User, caller_id)
+                        doc.seen_by = seen_user
+                    await db.commit()
+                    if seen_user:
+                        doc.seen_by = seen_user
+
+            # Case 2: When Prokuror or Admin views a document sent by Mahalla:
+            # Mark as seen by Prokuror / Admin.
+            elif (
+                caller_role in [UserRole.PROKUROR, UserRole.ADMIN]
+                and doc.submitted_by
+                and doc.submitted_by.role not in [UserRole.PROKUROR, UserRole.ADMIN]
+            ):
+                if doc.seen_at is None:
+                    doc.seen_at = datetime.now()
+                    doc.seen_by_id = caller_id
+                    seen_user = None
+                    if caller_id:
+                        seen_user = await db.get(User, caller_id)
+                        doc.seen_by = seen_user
+                    await db.commit()
+                    if seen_user:
+                        doc.seen_by = seen_user
 
         return cls._format_document(doc)
 
@@ -1044,6 +1082,10 @@ class DocumentService:
         doc.new_date = data.new_date
         if doc.assignment:
             doc.assignment.next_check_in_due = data.new_date
+        if doc.seen_at is None:
+            doc.seen_at = datetime.now()
+            doc.seen_by_id = prosecutor_id
+
         doc.requested_date = None
 
         comment_text = f" Izoh: {data.comment.strip()}" if data.comment and data.comment.strip() else ""
@@ -1092,6 +1134,10 @@ class DocumentService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Check-in document not found",
             )
+
+        if doc.seen_at is None:
+            doc.seen_at = datetime.now()
+            doc.seen_by_id = prosecutor_id
 
         doc.requested_date = None
 
