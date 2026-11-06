@@ -6,6 +6,7 @@ from sqlalchemy import BigInteger, Enum as SQLEnum, ForeignKey, Integer, String
 from sqlalchemy.sql import func
 
 from db.connection import Base
+from db.models.base_enum import RobustEnumType
 
 if TYPE_CHECKING:
     from db.models.mahalla import Mahalla
@@ -22,6 +23,15 @@ class UserRole(str, Enum):
     PROFILAKTIKA_INSPEKTORI = "profilaktika_inspektori"
     SOLIQ_INSPEKTORI = "soliq_inspektori"
     IJTIMOIY_XODIM = "ijtimoiy_xodim"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            val_lower = value.lower()
+            for member in cls:
+                if member.value == val_lower:
+                    return member
+        return None
 
 
 # The 7 members of a Mahalla ("Mahalla yettiligi")
@@ -45,7 +55,7 @@ class User(Base):
     login: Mapped[Optional[str]] = mapped_column(unique=True, index=True, nullable=True)
     password: Mapped[Optional[str]] = mapped_column(nullable=True)  # Nullable for external auth (e-imzo/myid)
     role: Mapped[UserRole] = mapped_column(
-        SQLEnum(UserRole, name="user_role", native_enum=False),
+        RobustEnumType(UserRole),
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(server_default="t", default=True)

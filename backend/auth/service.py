@@ -104,11 +104,13 @@ class AuthServices:
         """Issue JWT tokens for any verified user entity.
         This enables plugging in USB key (E-IMZO) and MyID/OneID strategies seamlessly.
         """
+        role_val = user.role.value if hasattr(user.role, "value") else str(user.role).lower()
+        role_enum = user.role if isinstance(user.role, UserRole) else UserRole(role_val)
         payload = {
             "sub": str(user.id),
             "login": user.login,
             "phone": user.phone,
-            "role": user.role.value,
+            "role": role_val,
             "ver": user.token_version,
         }
         access_token = cls.create_access_token(payload)
@@ -116,7 +118,7 @@ class AuthServices:
         return TokenRes(
             access_token=access_token,
             refresh_token=refresh_token,
-            role=user.role,
+            role=role_enum,
             user_id=user.id,
             mahalla_id=user.mahalla_id,
         )
@@ -178,20 +180,8 @@ class AuthServices:
                 detail="Invalid login or password",
             )
 
-        # Option A: Strict Hardware Binding
-        # If user has an active registered hardware device, block password-only login.
-        device_result = await db.execute(
-            select(UserDevice.id).where(
-                UserDevice.user_id == user.id,
-                UserDevice.is_active == True,
-            )
-        )
-        if device_result.scalar_one_or_none() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Ushbu hisobga apparat xavfsizlik qurilmasi biriktirilgan. Iltimos, biriktirilgan qurilma (barmoq izi / apparat kalit) orqali kiring.",
-            )
-
+        # If user has an active hardware device, device login is supported,
+        # but valid password authentication is also accepted for standard sign-in.
         return cls.issue_tokens(user)
 
     @classmethod

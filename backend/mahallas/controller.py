@@ -14,6 +14,7 @@ from backend.mahallas.schemas.stats import (
     MahallaStatsCreateOrUpdateSchema,
     MahallaStatsResponseSchema,
 )
+from backend.mahallas.schemas.radar import SituationalRadarResponse
 from backend.mahallas.service import MahallaService
 from db.connection import get_async_db
 from db.models.user import UserRole
@@ -55,6 +56,22 @@ async def get_mahallas(
         search=search,
         caller_role=current_user["role"],
         caller_mahalla_id=current_user["mahalla_id"],
+    )
+
+
+@router.get(
+    "/situational-radar",
+    response_model=SituationalRadarResponse,
+    summary="Get real-time situational radar & risk heatmap data for all mahallas (Admin, Prokuror, Rais)",
+)
+async def get_situational_radar(
+    current_user: UserAuth = Depends(rais_guard),
+    db: AsyncSession = Depends(get_async_db),
+):
+    return await MahallaService.get_situational_radar(
+        caller_role=current_user["role"],
+        caller_mahalla_id=current_user["mahalla_id"],
+        db=db,
     )
 
 

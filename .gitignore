@@ -1,14 +1,16 @@
 # Python-generated files
 __pycache__/
-*.py[oc]
+*.py[cod]
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 
 # Virtual environments
-.venv
-mchs-backend
+.venv/
+venv/
+env/
+mchs-backend/
 
 # Environment variables & secrets
 .env
@@ -20,4 +22,13 @@ docker-compose.yml
 docker-compose.yaml
 mchs-docker-compose.yml
 mchs-docker-compose.yaml
-front-prok
+
+# Frontend
+front-prok/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

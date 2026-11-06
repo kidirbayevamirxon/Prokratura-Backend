@@ -6,6 +6,7 @@ from sqlalchemy import BigInteger, Text, Date, DateTime, ForeignKey, Enum as SQL
 from sqlalchemy.sql import func
 
 from db.connection import Base
+from db.models.base_enum import RobustEnumType
 
 if TYPE_CHECKING:
     from db.models.document import CheckInDocument
@@ -18,6 +19,15 @@ class DocumentMessageType(str, Enum):
     EXTENSION_GRANTED = "extension_granted"
     EXTENSION_REJECTED = "extension_rejected"
     SYSTEM = "system"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            val_lower = value.lower()
+            for member in cls:
+                if member.value == val_lower:
+                    return member
+        return None
 
 
 class DocumentMessage(Base):
@@ -37,7 +47,7 @@ class DocumentMessage(Base):
     )
     message: Mapped[str] = mapped_column(Text, nullable=False)
     message_type: Mapped[DocumentMessageType] = mapped_column(
-        SQLEnum(DocumentMessageType, name="document_message_type", native_enum=False, length=50),
+        RobustEnumType(DocumentMessageType),
         default=DocumentMessageType.TEXT,
         nullable=False,
     )

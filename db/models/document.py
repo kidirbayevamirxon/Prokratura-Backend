@@ -6,6 +6,7 @@ from sqlalchemy import BigInteger, String, Text, Date, ForeignKey, Enum as SQLEn
 from sqlalchemy.sql import func
 
 from db.connection import Base
+from db.models.base_enum import RobustEnumType
 
 if TYPE_CHECKING:
     from db.models.assignment import PersonCategoryAssignment
@@ -22,11 +23,29 @@ class CheckInDocType(str, Enum):
     REQUEST_EXTENSION = "request_extension"
     EXTENSION_REQUEST = "extension_request"
 
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            val_lower = value.lower()
+            for member in cls:
+                if member.value == val_lower:
+                    return member
+        return None
+
 
 class CheckInDocStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            val_lower = value.lower()
+            for member in cls:
+                if member.value == val_lower:
+                    return member
+        return None
 
 
 class CheckInDocument(Base):
@@ -64,7 +83,7 @@ class CheckInDocument(Base):
     )
 
     doc_type: Mapped[CheckInDocType] = mapped_column(
-        SQLEnum(CheckInDocType, name="checkin_doc_type", native_enum=False, length=50),
+        RobustEnumType(CheckInDocType),
         default=CheckInDocType.REGULAR,
         nullable=False,
     )
@@ -79,7 +98,7 @@ class CheckInDocument(Base):
     frequency_days: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     status: Mapped[CheckInDocStatus] = mapped_column(
-        SQLEnum(CheckInDocStatus, name="checkin_doc_status", native_enum=False),
+        RobustEnumType(CheckInDocStatus),
         default=CheckInDocStatus.PENDING,
         nullable=False,
     )

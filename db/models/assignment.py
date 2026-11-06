@@ -6,6 +6,7 @@ from sqlalchemy import BigInteger, Date, JSON, ForeignKey, Enum as SQLEnum
 from sqlalchemy.sql import func
 
 from db.connection import Base
+from db.models.base_enum import RobustEnumType
 
 if TYPE_CHECKING:
     from db.models.person import Person
@@ -19,6 +20,15 @@ class AssignmentStatus(str, Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
     REMOVED = "removed"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            val_lower = value.lower()
+            for member in cls:
+                if member.value == val_lower:
+                    return member
+        return None
 
 
 class PersonCategoryAssignment(Base):
@@ -46,7 +56,7 @@ class PersonCategoryAssignment(Base):
     assigned_roles: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     next_check_in_due: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True, index=True)
     status: Mapped[AssignmentStatus] = mapped_column(
-        SQLEnum(AssignmentStatus, name="assignment_status", native_enum=False),
+        RobustEnumType(AssignmentStatus),
         default=AssignmentStatus.ACTIVE,
         nullable=False,
     )
